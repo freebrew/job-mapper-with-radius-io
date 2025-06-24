@@ -1,94 +1,55 @@
 # Job Mapper With Radius In/Out
 
-A WordPress plugin that visualises job listings from an **Apify** actor on a Google Map. Jobs are plotted as coloured pins inside or outside a configurable radius around a chosen point.
+**WordPress plugin** that visualises job postings from an Apify dataset on a Google Map. Jobs are filtered to appear *inside* or *outside* a configurable radius from a set centre point, and visibility can be restricted to specific logged-in users.
 
-Blue pins  ‑ **full-time**
-Green pins ‑ **part-time**
+## Key Features
 
-## Features
+- **Google Maps visualisation** – plots each job as an interactive marker and draws a radius circle.
+- **Radius filtering** – toggle between showing jobs *inside* or *outside* the circle.
+- **Apify integration** – fetches the latest run dataset from a specified Actor (API key required) with optional fallback URLs.
+- **Transient caching** – dataset is cached for 10 minutes; manual refresh available in admin.
+- **Admin UI**
+  - Top-level menu **User Map Radius** with settings page.
+  - Configure Apify API key, Actor ID, fallback URLs, centre latitude/longitude, radius (km/mi), inside/outside toggle, and allowed users list.
+  - **Jobs Dataset** submenu uses WP_List_Table to list fetched jobs (title, company, type, salary, city, lat, lng, distance).
+  - **Refresh Dataset** button clears cache instantly.
+- **Smart defaults** – if allowed-users list is empty, any logged-in user may view the map.
+- **Responsive map** – full-width, 800 px height container.
+- **Security & Standards** – built following WP coding standards, utilises nonces, sanitisation & escaping, uses WordPress transients & hooks.
 
-* Plots jobs fetched from the latest successful run of any Apify actor (e.g. `dataset_indeed-jobs-scraper`).
-* Top-level WordPress admin menu ("User Map Radius") with intuitive settings panel.
-* Per-user visibility control – only selected user IDs can see the map.
-* Inside/outside radius toggle and customisable radius size.
-* Caching of Apify results for 10 minutes to minimise API calls.
-* Strictly typed PHP 7.4+ code following WP coding standards.
+## Installation
 
-## File Structure
+1. Clone or download this repository into your `wp-content/plugins` directory.
+2. Ensure the folder is named `google-maps-radius` (or similar).
+3. Activate **Job Mapper With Radius In/Out** via *Plugins → Installed Plugins*.
+4. Visit **User Map Radius → Settings** to enter your Apify credentials and map parameters.
 
-```
-job-mapper-with-radius-io/
-├── google-maps-radius.php   # Main plugin file – all PHP logic lives here
-├── user-map-radius.css      # (Optional) CSS overrides for map/layout
-└── README.md                # You are here
-```
+## Usage
 
-> **Note:** Only `google-maps-radius.php` is required for the plugin to work. The CSS file is optional; create it to add custom styles.
+Add the shortcode `[user_map_radius]` anywhere in a post or page to display the map for authorised users.
 
-## Quick Start
+## Changelog
 
-1. **Clone/fork** this repository and copy the folder into `wp-content/plugins/`.
-2. Rename the folder if you wish (WordPress uses the folder name as the plugin slug).
-3. Activate **Job Mapper With Radius In/Out** from the WP admin Plugins page.
-4. Open **User Map Radius → Settings** in the sidebar and fill in:
-   * **Apify API Key** – found in your Apify console.
-   * **Apify Actor ID** – e.g. `TrtlecxAsNRbKl1na`.
-   * **Google Maps API Key** – edit line `wp_enqueue_script('google-maps-api', ...)` in `google-maps-radius.php`.
-   * **Centre Lat/Lng** – coordinates of the circle centre.
-   * **Radius (m)** – radius in metres.
-   * **Filter Mode** – show jobs *inside* or *outside* the circle.
-   * **Allowed Users** – multi-select list of WP users permitted to view the map.
-5. Add `[user_map_radius]` to any post/page. Only allowed users will see the map.
+### 1.1.0 – 2025-06-24
+- Moved plugin settings to top-level **User Map Radius** menu.
+- Added settings: Apify API key, Actor ID, centre lat/lng, radius, inside/outside toggle, allowed users.
+- Implemented Jobs Dataset table with refresh button and 10-minute transient cache.
+- Added fallback Run/API URLs with `{DATASET_ID}` placeholder support.
+- Improved data retrieval: Accept header, NDJSON parsing.
+- Enhanced map: info-window content, salary label, marker filtering logic re-enabled.
+- Increased map height to 800 px, removed external marker icon.
+- Allowed-users empty list now permits all logged-in users.
+- Various bug fixes: mixed-content warnings, missing icon handling, robust error logging.
 
-## How It Works
+### 1.0.0 – Initial release
+- Basic Google Map with job markers and radius filtering.
 
-```
-Apify Actor ─► Latest Run ─► Default Dataset ─► JSON Items ─► Plugin
-                                                          │
-                           Haversine distance calculation ◄┘
-                                       │
-                WordPress transient cache (10 minutes)
-                                       │
-    Google Maps JS API renders pins + circle on the front-end
-```
+## Roadmap
 
-### Key Functions (in `google-maps-radius.php`)
+- Gutenberg block for map embedding.
+- Multiple radius circles / polygon support.
+- Cron task to auto-refresh dataset.
+- Pro add-ons for advanced analytics and custom marker icons.
 
-| Function | Purpose |
-|----------|---------|
-| `enqueue_scripts()` | Loads Google Maps JS & optional CSS. |
-| `print_inline_js()` | Passes PHP data to JS and initialises map with pins. |
-| `fetch_apify_jobs()` | Calls Apify REST API for the latest run + dataset. |
-| `get_filtered_jobs()` | Filters dataset by distance and formats marker data. |
-| `haversine()` | Returns distance in metres between two lat/lng pairs. |
-| Settings API callbacks | `sanitize_user_ids()`, `sanitize_general_settings()` |
-
-## Customisation Tips
-
-* Change pin colours by editing the hex values in `print_inline_js()`.
-* Override default map zoom or styles by tweaking the `google.maps.Map` options.
-* Add more job fields to the info window by adjusting `$info_parts` in `get_filtered_jobs()`.
-* To support multiple actors, extend the settings array and loops accordingly.
-
-## Development & Contribution
-
-1. Create a feature branch: `git checkout -b feature/my-change`.
-2. Make your edits following WP coding standards (`phpcs --standard=WordPress`).
-3. Commit with descriptive messages; open a PR to `main`.
-4. Ensure no sensitive keys are committed; use environment variables or placeholders.
-
-### Debugging
-
-* Enable WordPress debugging in `wp-config.php` (`WP_DEBUG`, `WP_DEBUG_LOG`).
-* View cached dataset via `wp transient get usgrm_jobs_{hash}`.
-* Clear the cache by deleting the transient or waiting 10 minutes.
-
-## Security
-
-* All external data is sanitised/escaped before output.
-* API keys are stored in the WP options table, not hard-coded.
-* Nonces are not required because settings use the WP Settings API.
-
-## License
-
-[MIT](LICENSE) – Feel free to fork, modify and share. Pull requests welcome!
+---
+© 2025 Job Mapper. Licensed under the GPL-2.0-or-later. 

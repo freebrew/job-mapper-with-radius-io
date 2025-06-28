@@ -11,14 +11,25 @@
     /**
      * Initialize the admin interface
      */
-    function initAdmin() {
-        initGooglePlaces();
+     function initAdmin() {
         initTabSwitching();
         initLocationManagement();
         initAjaxHandlers();
         initCronControls();
         updateCronStatus();
+        
+        // Initialize Google Places - will be called by callback or retry mechanism
+        initGooglePlaces();
     }
+
+    /**
+     * Global callback function for Google Maps API
+     * This is called by the Google Maps API when it's loaded
+     */
+    window.initAdminGooglePlaces = function() {
+        console.log('Google Maps API loaded via callback');
+        initGooglePlaces();
+    };
 
     /**
      * Initialize Google Places API for address autocomplete
@@ -26,13 +37,19 @@
     function initGooglePlaces() {
         console.log('initGooglePlaces called');
         
-        if (typeof google === 'undefined' || !google.maps) {
-            console.warn('Google Maps API not loaded, will retry in 1 second');
+        if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+            console.warn('Google Maps API or Places library not loaded, will retry in 1 second');
             setTimeout(initGooglePlaces, 1000);
             return;
         }
 
-        console.log('Google Maps API loaded successfully');
+        console.log('Google Maps API and Places library loaded successfully');
+
+        // Prevent duplicate initialization
+        if (map && placesService) {
+            console.log('Google Places already initialized, skipping');
+            return;
+        }
 
         // Initialize map for Places service
         const mapDiv = document.createElement('div');
@@ -42,10 +59,14 @@
         });
         placesService = new google.maps.places.PlacesService(map);
 
-        // Initialize existing autocomplete fields
+        // Initialize existing autocomplete fields (avoid duplicates)
         $('.location-address-input').each(function() {
-            console.log('Initializing autocomplete for existing field:', this);
-            initAutocomplete(this);
+            // Check if this field already has autocomplete initialized
+            if (!$(this).data('autocomplete-initialized')) {
+                console.log('Initializing autocomplete for existing field:', this);
+                initAutocomplete(this);
+                $(this).data('autocomplete-initialized', true);
+            }
         });
         
         console.log('Google Places initialization complete');
@@ -62,50 +83,72 @@
             console.log('google:', typeof google);
             console.log('google.maps:', typeof google?.maps);
             console.log('google.maps.places:', typeof google?.maps?.places);
-            return;
+            return false;
+        }
+
+        // Check if already initialized
+        if ($(input).data('autocomplete-initialized')) {
+            console.log('Autocomplete already initialized for this input, skipping');
+            return true;
         }
 
         console.log('Google Maps API is available, creating autocomplete');
 
-        const autocomplete = new google.maps.places.Autocomplete(input, {
-            types: ['geocode'],
-            fields: ['address_components', 'formatted_address', 'geometry']
-        });
+        try {
+            const autocomplete = new google.maps.places.Autocomplete(input, {
+                types: ['geocode'],
+                fields: ['address_components', 'formatted_address', 'geometry']
+            });
 
-        autocomplete.addListener('place_changed', function() {
-            console.log('Place changed event triggered');
-            const place = autocomplete.getPlace();
-            console.log('Selected place:', place);
-            
-            if (!place.geometry) {
-                console.error('No geometry found for selected place');
-                return;
-            }
+            autocomplete.addListener('place_changed', function() {
+                console.log('Place changed event triggered');
+                const place = autocomplete.getPlace();
+                console.log('Selected place:', place);
+                
+                if (!place.geometry) {
+                    console.error('No geometry found for selected place');
+                    return;
+                }
 
-            const $row = $(input).closest('.location-row');
-            console.log('Found location row:', $row.length);
-            
-            const lat = place.geometry.location.lat();
-            const lng = place.geometry.location.lng();
-            console.log('Coordinates:', lat, lng);
+                const $row = $(input).closest('.location-row');
+                console.log('Found location row:', $row.length);
+                
+                const lat = place.geometry.location.lat();
+                const lng = place.geometry.location.lng();
+                console.log('Coordinates:', lat, lng);
 
-            const $latInput = $row.find('.location-lat-input');
-            const $lngInput = $row.find('.location-lng-input');
-            
-            console.log('Lat input found:', $latInput.length);
-            console.log('Lng input found:', $lngInput.length);
+                const $latInput = $row.find('.location-lat-input');
+                const $lngInput = $row.find('.location-lng-input');
+                
+                console.log('Lat input found:', $latInput.length);
+                console.log('Lng input found:', $lngInput.length);
 
-            $latInput.val(lat);
-            $lngInput.val(lng);
-            
-            // Update address field with formatted address
-            $(input).val(place.formatted_address);
-            
-            console.log('Coordinates updated - Lat:', $latInput.val(), 'Lng:', $lngInput.val());
-        });
+                if ($latInput.length && $lngInput.length) {
+                    $latInput.val(lat.toFixed(6));
+                    $lngInput.val(lng.toFixed(6));
+                    
+                    // Update address field with formatted address
+                    $(input).val(place.formatted_address);
+                    
+                    console.log('Coordinates updated - Lat:', $latInput.val(), 'Lng:', $lngInput.val());
+                    
+                    // Trigger change event to ensure any other handlers are notified
+                    $latInput.trigger('change');
+                    $lngInput.trigger('change');
+                } else {
+                    console.error('Could not find lat/lng input fields in the location row');
+                }
+            });
 
-        autocompleteFields.push(autocomplete);
-        console.log('Autocomplete field added to array. Total fields:', autocompleteFields.length);
+            autocompleteFields.push(autocomplete);
+            $(input).data('autocomplete-initialized', true);
+            console.log('Autocomplete field added to array. Total fields:', autocompleteFields.length);
+            return true;
+            
+        } catch (error) {
+            console.error('Error initializing autocomplete:', error);
+            return false;
+        }
     }
 
     /**
@@ -175,20 +218,40 @@
             $('#locations-container').append(newRow);
             console.log('New location row added');
             
-            // Initialize autocomplete for new address field with retry mechanism
+            // Initialize autocomplete for new address field with enhanced retry mechanism
             const addressInput = newRow.find('.location-address-input')[0];
             if (addressInput) {
-                // Try immediately
-                initAutocomplete(addressInput);
-                console.log('Autocomplete initialized for new address field');
+                console.log('Attempting to initialize autocomplete for new address field');
                 
-                // Also try again after a short delay in case Google Maps wasn't ready
-                setTimeout(function() {
-                    if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-                        console.log('Re-initializing autocomplete after delay');
-                        initAutocomplete(addressInput);
-                    }
-                }, 500);
+                                 // Function to try initializing autocomplete
+                 function tryInitAutocomplete(retryCount = 0) {
+                     if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+                         console.log('Google Maps API available, initializing autocomplete (attempt ' + (retryCount + 1) + ')');
+                         const success = initAutocomplete(addressInput);
+                         if (success) {
+                             console.log('Autocomplete successfully initialized for new location');
+                             return true;
+                         } else if (retryCount < 5) {
+                             console.log('Autocomplete initialization failed, retrying...');
+                             setTimeout(function() {
+                                 tryInitAutocomplete(retryCount + 1);
+                             }, 300);
+                         } else {
+                             console.error('Failed to initialize autocomplete after 5 attempts');
+                         }
+                     } else if (retryCount < 10) {
+                         console.log('Google Maps API not ready, retrying in ' + (retryCount + 1) * 200 + 'ms (attempt ' + (retryCount + 1) + '/10)');
+                         setTimeout(function() {
+                             tryInitAutocomplete(retryCount + 1);
+                         }, (retryCount + 1) * 200);
+                     } else {
+                         console.error('Failed to initialize autocomplete after 10 attempts - Google Maps API not available');
+                     }
+                     return false;
+                 }
+                
+                // Try to initialize immediately and with retries
+                tryInitAutocomplete();
             } else {
                 console.error('Address input not found in new row');
             }
@@ -469,16 +532,10 @@
         });
     });
 
-    // Initialize Google Places when API is loaded - Set up global callback
-    window.initAdminGooglePlaces = function() {
-        console.log('Google Maps API callback triggered');
-        initGooglePlaces();
-    };
-
-    // Fallback: Also try to initialize if Google is already loaded
-    if (typeof google !== 'undefined' && google.maps) {
+    // Fallback: Try to initialize if Google is already loaded when document is ready
+    if (typeof google !== 'undefined' && google.maps && google.maps.places) {
         console.log('Google Maps already loaded, initializing immediately');
-        initGooglePlaces();
+        setTimeout(initGooglePlaces, 100); // Small delay to ensure DOM is ready
     }
 
 })(jQuery); 

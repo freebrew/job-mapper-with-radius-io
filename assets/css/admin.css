@@ -1,0 +1,539 @@
+/**
+ * Admin interface styles for User Map Radius plugin
+ * Provides styling for tabbed interface, location management, and mobile responsiveness
+ */
+
+/* ==========================================================================
+   Tabbed Interface
+   ========================================================================== */
+
+.nav-tab-wrapper {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ccd0d4;
+}
+
+.nav-tab {
+    background: #f1f1f1;
+    border: 1px solid #ccd0d4;
+    border-bottom: none;
+    color: #555;
+    text-decoration: none;
+    padding: 10px 15px;
+    margin: 0 2px -1px 0;
+    display: inline-block;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.nav-tab:hover {
+    background: #fafafa;
+    color: #333;
+}
+
+.nav-tab-active {
+    background: #fff;
+    border-bottom: 1px solid #fff;
+    color: #333;
+    font-weight: 600;
+}
+
+.tab-content {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    min-height: 400px;
+}
+
+/* ==========================================================================
+   Location Management
+   ========================================================================== */
+
+.location-row {
+    background: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.location-row:hover {
+    background: #f5f5f5;
+    border-color: #999;
+}
+
+.location-row h4 {
+    margin: 0 0 15px 0;
+    padding: 0;
+    font-size: 16px;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+.location-row .form-table {
+    margin: 0;
+    background: transparent;
+}
+
+.location-row .form-table th {
+    width: 150px;
+    padding: 8px 0;
+    font-weight: 600;
+    color: #555;
+}
+
+.location-row .form-table td {
+    padding: 8px 0;
+}
+
+/* Compact Location Row Styles */
+.location-row-compact {
+    padding: 10px 15px;
+    margin-bottom: 8px;
+}
+
+.location-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ddd;
+}
+
+.location-title {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.location-fields {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.location-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.location-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    margin: 0;
+}
+
+.location-field input,
+.location-field select {
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+.location-field-address {
+    flex: 1;
+    min-width: 200px;
+}
+
+.location-field-address input {
+    width: 100%;
+}
+
+.location-field-coords input {
+    width: 80px;
+}
+
+.location-field-radius input {
+    width: 70px;
+}
+
+.location-field-mode select {
+    width: 80px;
+}
+
+.remove-location {
+    color: #a00;
+    text-decoration: none;
+    font-weight: normal;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.remove-location:hover {
+    color: #dc3232;
+    background: #fff;
+    text-decoration: none;
+}
+
+#locations-container {
+    margin-bottom: 20px;
+}
+
+#add-location {
+    background: #0073aa;
+    border-color: #006799;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+#add-location:hover {
+    background: #005a87;
+    border-color: #004a6b;
+}
+
+/* ==========================================================================
+   Status Indicators and Feedback
+   ========================================================================== */
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.status-success {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.status-error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.status-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+.status-info {
+    background: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+/* Spinner styles */
+.spinner.is-active {
+    visibility: visible;
+    margin: 0 5px;
+}
+
+/* ==========================================================================
+   Form Enhancements
+   ========================================================================== */
+
+.form-table th {
+    vertical-align: top;
+    padding-top: 12px;
+}
+
+.form-table .description {
+    margin-top: 5px;
+    font-style: italic;
+    color: #666;
+}
+
+.regular-text {
+    width: 350px;
+}
+
+.small-text {
+    width: 80px;
+}
+
+/* Address autocomplete styling */
+.location-address-input {
+    position: relative;
+}
+
+.pac-container {
+    z-index: 10000;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.pac-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.pac-item:hover {
+    background: #f5f5f5;
+}
+
+.pac-item-selected {
+    background: #e6f3ff;
+}
+
+/* ==========================================================================
+   Sync and Cron Controls
+   ========================================================================== */
+
+#cron-status, #cache-info {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+    border-left: 4px solid #0073aa;
+}
+
+#sync-log {
+    margin-top: 15px;
+}
+
+#sync-log .wp-list-table {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+#sync-log .wp-list-table th {
+    background: #f1f1f1;
+    font-weight: 600;
+}
+
+#sync-log .wp-list-table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+/* Button styling */
+.button-primary {
+    background: #0073aa;
+    border-color: #006799;
+}
+
+.button-primary:hover {
+    background: #005a87;
+    border-color: #004a6b;
+}
+
+/* ==========================================================================
+   API Connection Testing
+   ========================================================================== */
+
+#connection-status, #sync-status, #geolocation-status {
+    margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ==========================================================================
+   Mobile Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .mobile-tabs .nav-tab {
+        display: block;
+        margin: 0 0 -1px 0;
+        width: 100%;
+        text-align: center;
+        border-radius: 0;
+    }
+    
+    .mobile-tabs .nav-tab:first-child {
+        border-radius: 4px 4px 0 0;
+    }
+    
+    .mobile-tabs .nav-tab:last-child {
+        border-radius: 0 0 4px 4px;
+        border-bottom: 1px solid #ccd0d4;
+    }
+    
+    .mobile-tabs .nav-tab-active:last-child {
+        border-bottom: 1px solid #fff;
+    }
+    
+    .tab-content {
+        padding: 15px;
+    }
+    
+    .location-row .form-table th {
+        width: auto;
+        display: block;
+        padding: 8px 0 4px 0;
+    }
+    
+    .location-row .form-table td {
+        display: block;
+        padding: 0 0 12px 0;
+    }
+    
+    .regular-text {
+        width: 100%;
+        max-width: 350px;
+    }
+    
+    .location-row h4 {
+        font-size: 14px;
+    }
+    
+    .remove-location {
+        float: none;
+        display: inline-block;
+        margin-top: 5px;
+    }
+
+    /* Compact location row mobile styles */
+    .location-fields {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .location-field {
+        width: 100%;
+    }
+
+    .location-field input,
+    .location-field select {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .location-field-coords,
+    .location-field-radius,
+    .location-field-mode {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .location-field-coords label,
+    .location-field-radius label,
+    .location-field-mode label {
+        min-width: 60px;
+        flex-shrink: 0;
+    }
+
+    .location-field-coords input {
+        width: 100px;
+        flex-shrink: 0;
+    }
+
+    .location-field-radius input {
+        width: 80px;
+        flex-shrink: 0;
+    }
+
+    .location-field-mode select {
+        width: 100px;
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-tab {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+    
+    .tab-content {
+        padding: 10px;
+    }
+    
+    .location-row {
+        padding: 10px;
+    }
+    
+    .regular-text, .small-text {
+        width: 100%;
+    }
+    
+    .button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .form-table th, .form-table td {
+        padding: 5px 0;
+    }
+}
+
+/* ==========================================================================
+   Accessibility Improvements
+   ========================================================================== */
+
+.nav-tab:focus {
+    outline: 2px solid #005a87;
+    outline-offset: -2px;
+}
+
+.button:focus {
+    outline: 2px solid #005a87;
+    outline-offset: 2px;
+}
+
+.location-address-input:focus {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .location-row {
+        border-width: 2px;
+    }
+    
+    .nav-tab-active {
+        border-width: 2px;
+    }
+    
+    .status-indicator {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .nav-tab,
+    .location-row,
+    .remove-location,
+    #add-location {
+        transition: none;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .nav-tab-wrapper,
+    .button,
+    #add-location,
+    .remove-location {
+        display: none;
+    }
+    
+    .tab-content {
+        border: none;
+        padding: 0;
+    }
+    
+    .location-row {
+        background: transparent;
+        border: 1px solid #000;
+        page-break-inside: avoid;
+    }
+} 

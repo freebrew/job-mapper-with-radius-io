@@ -1,0 +1,102 @@
+#usgrm-map {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+/* User Map Radius responsive layout */
+.usgrm-wrapper { 
+    display: flex; 
+    gap: 10px; 
+    position: relative;
+}
+
+/* Mobile stacking based on user-agent */
+.usgrm-wrapper.mobile { 
+    flex-direction: row; 
+}
+
+.usgrm-wrapper.mobile #usgrm-map { 
+    order: 1; 
+    flex: 1 1 auto; 
+    min-width: 0; 
+    height: 400px; 
+}
+
+.usgrm-wrapper.mobile #usgrm-sidepanel { 
+    order: 2; 
+    flex: 0 0 0px; 
+    max-width: 0px; 
+    max-height: 100vh; 
+    overflow: auto; 
+    padding: 8px; 
+    display: block;
+    position: fixed;
+    top: 0;
+    right: 0;
+    background: white;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    z-index: 999;
+    transition: all 0.3s ease;
+}
+
+.usgrm-wrapper.mobile.panel-open #usgrm-sidepanel {
+    flex: 0 0 300px;
+    max-width: 300px;
+    width: 300px;
+}
+
+.usgrm-toggle-btn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    padding: 8px 12px;
+    background: #0073aa;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.usgrm-toggle-btn:hover {
+    background: #005a87;
+}
+
+#usgrm-sidepanel .close {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 20px;
+    text-decoration: none;
+    color: #666;
+    cursor: pointer;
+}
+
+#usgrm-sidepanel .close:hover {
+    color: #333;
+}
+
+@media (max-width: 640px) {
+    /* Fallback for small viewports without mobile detection */
+    .usgrm-wrapper:not(.mobile) { 
+        flex-direction: column; 
+    }
+    
+    .usgrm-wrapper:not(.mobile) #usgrm-map { 
+        height: 400px; 
+        order: 1; 
+    }
+    
+    .usgrm-wrapper:not(.mobile) #usgrm-sidepanel { 
+        width: 100%; 
+        max-height: 300px; 
+        overflow: auto; 
+        padding: 8px; 
+        order: 2; 
+        position: static;
+        box-shadow: none;
+    }
+}
+  

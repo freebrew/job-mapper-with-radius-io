@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+  <link rel="apple-touch-icon" href="/icon-512.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <title>JobRadius - Multi-Radius Job Search</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- App CSS -->
+
+  <!-- Google Maps JS API (V3 / WebGL) - async with callback -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmp1baOjfcRmzDa30XDncsvOJaSdkHrwk&libraries=places,geometry&v=beta&map_ids=1a69e9680804148ef13dfe31&loading=async&callback=initMapCallback">
+    </script>
+
+  <!-- Define explicit global callbacks for GSI to prevent race condition crashes -->
+  <script>
+    window.googleMapsLoaded = false;
+    window.initMapCallback = function () {
+      window.googleMapsLoaded = true;
+      document.dispatchEvent(new Event('google-maps-loaded'));
+    };
+
+    window.handleGoogleLogin = async function (response) {
+      if (!response || !response.credential) return;
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Google login failed');
+
+        // Store token and update UI — same as email login
+        localStorage.setItem('jobradius_token', data.token);
+        localStorage.setItem('jobradius_user', JSON.stringify(data.user));
+
+        document.getElementById('modal-overlay').classList.add('hidden');
+        document.getElementById('auth-modal').classList.add('hidden');
+
+        const displayName = data.user.name || data.user.email.split('@')[0];
+        document.getElementById('btn-login').innerText = displayName;
+
+        // Show admin gear for admin user
+        if (data.user.email === 'bruno.brottes@gmail.com') {
+          const adminBtn = document.getElementById('btn-admin-panel');
+          if (adminBtn) adminBtn.classList.remove('hidden');
+        }
+      } catch (e) {
+        console.error('Google login error:', e);
+        document.getElementById('auth-modal').querySelector('form')
+          .insertAdjacentHTML('beforebegin', `<p style="color:#ef4444;text-align:center;margin-bottom:8px;">${e.message}</p>`);
+      }
+    };
+  </script>
+
+  <!-- Google Identity Services (Sign-In) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script type="module" crossorigin src="/assets/index-BCbqLmMu.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BO7Okn74.css">
+</head>
+
+<body>
+  <div id="app">
+    <!-- Background Map Layer -->
+    <div id="map"></div>
+
+    <!-- UI Overlay -->
+    <div id="ui-container">
+      <!-- Top Toolbar -->
+      <header class="glass-panel">
+        <div class="logo">
+          <span class="neon-text">Job</span>Radius
+        </div>
+        <div class="search-controls">
+          <input type="text" id="job-keyword" placeholder="e.g. React Developer" class="neumorphic-input">
+          <input type="text" id="map-search-box" placeholder="Location Center (e.g. Austin, TX)"
+            class="neumorphic-input">
+          <button id="btn-search" class="btn-primary">Search</button>
+        </div>
+        <div class="user-controls" style="display:flex; align-items:center;">
+          <!-- UI Theme merged into a single styling context — no selector needed -->
+          <button id="btn-admin-panel" class="btn-secondary hidden"
+            style="padding: 6px 10px; font-size: 1.2rem; display:flex; align-items:center; justify-content:center; border:none; background:transparent;"
+            title="Admin Dashboard">⚙️</button>
+          <button id="btn-login" class="btn-secondary">Login</button>
+          <button id="btn-subscribe" class="btn-accent">Get 24hr Pass</button>
+        </div>
+      </header>
+
+      <!-- Main Workspace -->
+      <main>
+        <!-- Left: Radius Controls (Floating) -->
+        <div class="floating-panel radius-controls glass-panel">
+          <h3>Radius Zones</h3>
+          <div id="radius-list"></div>
+          <div class="radius-actions" style="display:flex; gap:8px; margin-bottom: 12px;">
+            <button id="btn-add-inclusive" class="btn-zone-add inclusive"
+              style="flex:1; padding:6px 4px; font-size:0.8rem;"><span class="icon">+</span> Include</button>
+            <button id="btn-add-exclusive" class="btn-zone-add exclusive"
+              style="flex:1; padding:6px 4px; font-size:0.8rem;"><span class="icon">-</span> Exclude</button>
+          </div>
+
+          <div class="transit-controls"
+            style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--border-glass); padding-top: 12px;">
+            <h4 style="margin:0; font-size:0.85rem;">Transit</h4>
+            <select id="route-mode" class="neumorphic-select"
+              style="padding: 4px 8px; font-size: 0.8rem; width: 130px;">
+              <option value="TRANSIT">Public Transit</option>
+              <option value="DRIVING">Driving</option>
+              <option value="WALKING">Walking</option>
+              <option value="BICYCLING">Cycling</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Right: Job Listings Panel -->
+        <aside class="side-panel glass-panel" id="job-panel">
+          <div class="panel-header">
+            <h2>Matching Jobs <span id="job-count" class="badge">0</span></h2>
+            <div class="sort-controls">
+              Sort: <span class="active">Highest Pay</span>
+            </div>
+          </div>
+          <div class="job-list" id="job-list-container">
+            <!-- Jobs rendered here by JS -->
+            <div class="empty-state">
+              Enter a location and keywords to find jobs in your radius.
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <!-- Detailed Job Info Overlay (hidden by default) -->
+    <div id="job-mini-panel" class="glass-panel hidden">
+      <button id="btn-close-detail" class="close-btn">&times;</button>
+      <div id="job-detail-content"></div>
+      <div class="action-buttons mt-4">
+        <button id="btn-route-here" class="btn-primary tooltip" data-tooltip="Show Transit Route">🚗 Route</button>
+        <button id="btn-add-note" class="btn-secondary">📝 Note</button>
+        <button id="btn-hide-job" class="btn-danger tooltip" data-tooltip="Hide forever">👁️‍🗨️ Hide</button>
+      </div>
+      <!-- Note Form -->
+      <div id="note-form" class="hidden mt-4 pt-4 border-t">
+        <textarea placeholder="Followup context, contact names..." class="neumorphic-input w-full" rows="3"></textarea>
+        <button class="btn-primary w-full mt-2">Save Note</button>
+      </div>
+    </div>
+
+    <!-- Modals Layer -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+
+      <!-- Auth Modal -->
+      <div id="auth-modal" class="glass-panel modal hidden">
+        <button class="close-btn" data-modal="auth-modal">&times;</button>
+        <h2 style="margin-bottom: 20px; text-align: center;">Sign In / Sign Up</h2>
+
+        <!-- Google Sign In Button Container -->
+        <div id="g_id_onload" data-client_id="376054036107-fbmv5igfipl58u93f101qnsp16dif2fp.apps.googleusercontent.com"
+          data-context="signin" data-ux_mode="popup" data-auto_prompt="false" data-callback="handleGoogleLogin">
+        </div>
+        <div style="display:flex; justify-content:center; margin-bottom: 20px;">
+          <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
+            data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+        </div>
+
+        <!-- Standard Email Auth (Fallback) -->
+        <div class="divider"><span>OR EMAIL</span></div>
+
+        <form id="auth-form" style="margin-top: 16px;">
+          <input type="email" id="auth-email" placeholder="Email Address" class="neumorphic-input w-full"
+            style="margin-bottom: 12px" required>
+          <input type="password" id="auth-password" placeholder="Password" class="neumorphic-input w-full"
+            style="margin-bottom: 16px" required>
+          <button type="submit" class="btn-primary w-full">Continue</button>
+        </form>
+      </div>
+
+      <!-- Payment Modal -->
+      <div id="payment-modal" class="glass-panel modal hidden">
+        <button class="close-btn" data-modal="payment-modal">&times;</button>
+        <h2 style="margin-bottom: 8px; text-align: center; color: var(--accent-cyan);">JobRadius 24hr Pass</h2>
+        <p style="color: var(--text-secondary); text-align: center; margin-bottom: 20px; font-size: 0.95rem;">Unlock
+          premium features, unlimited radius searching, and advanced filters for 24 hours.</p>
+        <h1 style="text-align: center; margin-bottom: 24px; font-size: 2.5rem;">$4.99</h1>
+        <button id="btn-checkout" class="btn-primary w-full">Pay with Stripe</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Slide-out Panel -->
+  <div id="admin-panel" class="glass-panel admin-hidden">
+    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="margin:0; color:var(--accent-cyan); font-size:1.4rem;">Admin Dashboard</h2>
+      <button id="btn-close-admin" class="close-btn" style="position:static; margin-left:auto;">&times;</button>
+    </div>
+
+    <div class="admin-section mt-4 pt-4" style="border-top:1px solid var(--border-glass);">
+      <h3 style="margin-bottom:8px; font-size:1rem;">Platform Metrics</h3>
+      <div id="admin-metrics-content" style="font-size:0.9rem; line-height:1.6; margin-top:12px;">
+        <div style="text-align:center; padding:20px; color:var(--text-secondary);">Loading metrics...</div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <!-- Entry Script -->
+</body>
+
+</html>

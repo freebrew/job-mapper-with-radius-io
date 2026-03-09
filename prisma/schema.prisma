@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String         @id @default(uuid())
+  email              String         @unique
+  passwordHash       String
+  name               String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  
+  // Stripe Data
+  stripeCustomerId   String?        @unique
+  subscriptionStatus String         @default("inactive") // inactive, day_pass, active, canceled
+  
+  // Relations
+  searchProfiles     SearchProfile[]
+  jobNotes           UserJobNote[]
+  payments           Payment[]
+  subscriptions      Subscription[]
+  alerts             Alert[]
+}
+
+model SearchProfile {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name            String?        // e.g "Developer Jobs Near Home"
+  centerLat       Float          // Center point for radii
+  centerLng       Float
+  centerAddress   String
+  
+  // Storing simple JSON arrays for radiuses.
+  // Each object: { radiusMeters: number, type: 'inclusive' | 'exclusive' }
+  radiuses        Json           @default("[]")
+  
+  keywords        String?        // e.g. "React, Node.js"
+  jobType         String?        // Full-time, Contract, etc
+  minSalary       Int?
+  
+  isActiveAlert   Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  jobResults      JobResult[]
+  alerts          Alert[]
+}
+
+model JobResult {
+  id              String         @id @default(uuid())
+  searchProfileId String
+  searchProfile   SearchProfile  @relation(fields: [searchProfileId], references: [id], onDelete: Cascade)
+  
+  indeedJobId     String         
+  title           String
+  company         String
+  location        String?
+  
+  lat             Float
+  lng             Float
+  
+  payMin          Int?
+  payMax          Int?
+  payExact        Int?
+  payPeriod       String?        // hourly, yearly
+  
+  rating          Float?
+  indeedUrl       String
+  description     String?
+  
+  postedDate      DateTime?
+  scrapedAt       DateTime       @default(now())
+
+  notes           UserJobNote[]
+  
+  @@unique([searchProfileId, indeedJobId])
+}
+
+model UserJobNote {
+  id                  String     @id @default(uuid())
+  userId              String
+  user                User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobResultId         String
+  jobResult           JobResult  @relation(fields: [jobResultId], references: [id], onDelete: Cascade)
+  
+  noteText            String?
+  isHidden            Boolean    @default(false)
+  followUpDate        DateTime?
+  documentsSubmitted  Boolean    @default(false)
+  companyContact      String?
+  
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@unique([userId, jobResultId])
+}
+
+model Payment {
+  id                String      @id @default(uuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id])
+  
+  stripePaymentId   String      @unique
+  amount            Int         // in cents
+  currency          String      @default("usd")
+  status            String
+  type              String      // "day_pass", "subscription"
+  
+  createdAt         DateTime    @default(now())
+}
+
+model Subscription {
+  id                     String    @id @default(uuid())
+  userId                 String
+  user                   User      @relation(fields: [userId], references: [id])
+  
+  stripeSubscriptionId   String    @unique
+  plan                   String    // e.g., "monthly_pro"
+  status                 String    // "active", "canceled", "past_due"
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model Alert {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  searchProfileId String
+  searchProfile   SearchProfile @relation(fields: [searchProfileId], references: [id], onDelete: Cascade)
+  
+  type            String        // "new_jobs", "job_updated"
+  message         String
+  isRead          Boolean       @default(false)
+  
+  createdAt       DateTime      @default(now())
+}

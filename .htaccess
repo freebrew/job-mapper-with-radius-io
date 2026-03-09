@@ -1,0 +1,31 @@
+# JobRadius - Apache config
+# PHP-based reverse proxy: /api/* → api/proxy.php → Node.js on port 3001
+# Exception: /api/auth/google has its own dedicated PHP proxy
+
+Options -Indexes
+
+# Enable mod_rewrite
+RewriteEngine On
+
+# SPECIAL CASE: Route /api/auth/google to its dedicated PHP proxy
+RewriteRule ^api/auth/google$ /api/auth/google.php [L]
+
+# Route all other /api/* requests through the general PHP reverse proxy
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(api/.*)$ /api/proxy.php [QSA,L]
+
+# Serve built assets from /dist directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} ^/assets/
+RewriteRule ^assets/(.*)$ /dist/assets/$1 [L]
+
+# Serve index.html from dist for all SPA routes
+RewriteCond %{REQUEST_URI} !^/api
+RewriteCond %{REQUEST_URI} !^/dist
+RewriteCond %{REQUEST_URI} !^/cgi-bin
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ /dist/index.html [L]
+
+# Default landing: redirect root to dist/index.html
+DirectoryIndex dist/index.html index.html

@@ -60,8 +60,11 @@ router.get('/google/callback', async (req, res) => {
             { expiresIn: '7d' }
         );
 
+        // Strip sensitive info from user payload for client
+        const safeUser = { id: user.id, email: user.email, name: user.name, subscriptionStatus: user.subscriptionStatus, dayPassExpiresAt: user.dayPassExpiresAt };
+
         // Redirect back to app with token in URL fragment (never hits server logs)
-        res.redirect(`/?google_token=${encodeURIComponent(token)}&google_name=${encodeURIComponent(user.name || googleEmail)}&google_email=${encodeURIComponent(user.email)}`);
+        res.redirect(`/?google_token=${encodeURIComponent(token)}&google_user=${encodeURIComponent(JSON.stringify(safeUser))}`);
     } catch (err) {
         console.error('[Auth/Google/Callback] Error:', err.message);
         res.redirect('/?auth_error=server_error');
@@ -140,7 +143,7 @@ router.post('/register', async (req, res, next) => {
         const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
         res.status(201).json({
             message: 'Registration successful', token,
-            user: { id: user.id, email: user.email, name: user.name, subscriptionStatus: user.subscriptionStatus }
+            user: { id: user.id, email: user.email, name: user.name, subscriptionStatus: user.subscriptionStatus, dayPassExpiresAt: user.dayPassExpiresAt }
         });
     } catch (err) { next(err); }
 });
@@ -159,7 +162,7 @@ router.post('/login', async (req, res, next) => {
         const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
         res.json({
             message: 'Login successful', token,
-            user: { id: user.id, email: user.email, name: user.name, subscriptionStatus: user.subscriptionStatus }
+            user: { id: user.id, email: user.email, name: user.name, subscriptionStatus: user.subscriptionStatus, dayPassExpiresAt: user.dayPassExpiresAt }
         });
     } catch (err) { next(err); }
 });
@@ -169,7 +172,7 @@ router.get('/me', requireAuth, async (req, res, next) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
-            select: { id: true, email: true, name: true, subscriptionStatus: true, createdAt: true }
+            select: { id: true, email: true, name: true, subscriptionStatus: true, dayPassExpiresAt: true, createdAt: true }
         });
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json({ user });

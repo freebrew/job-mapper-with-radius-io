@@ -219,6 +219,55 @@ class JobRadiusApp {
             localStorage.removeItem('jobradius_token');
             localStorage.removeItem('jobradius_user');
         }
+
+        this.checkPremiumStatus();
+    }
+
+    checkPremiumStatus() {
+        const userStr = localStorage.getItem('jobradius_user');
+        if (!userStr) {
+            this.isPremium = false;
+            return;
+        }
+
+        const user = JSON.parse(userStr);
+        // If they are an active monthly subscriber, they bypass the timer
+        if (user.subscriptionStatus === 'active') {
+            this.isPremium = true;
+            this.btnSubscribe.innerText = "Premium Active";
+            return;
+        }
+
+        // Check the 24-hour pass
+        if (user.dayPassExpiresAt) {
+            const expiresDate = new Date(user.dayPassExpiresAt);
+
+            // Clear any existing timer
+            if (this.premiumTimerToken) clearInterval(this.premiumTimerToken);
+
+            this.premiumTimerToken = setInterval(() => {
+                const now = new Date();
+                const diffTime = expiresDate - now;
+
+                if (diffTime <= 0) {
+                    // Expired
+                    clearInterval(this.premiumTimerToken);
+                    this.isPremium = false;
+                    this.btnSubscribe.innerText = "Get 24hr Pass";
+                } else {
+                    this.isPremium = true;
+                    // Format diff into HHh MMm SSs
+                    const hours = Math.floor(diffTime / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
+                    this.btnSubscribe.innerText = `${hours}h ${minutes}m ${seconds}s Left`;
+                }
+            }, 1000); // tick every second
+
+        } else {
+            this.isPremium = false;
+            this.btnSubscribe.innerText = "Get 24hr Pass";
+        }
     }
 
 
@@ -608,9 +657,11 @@ class JobRadiusApp {
             ? job.url
             : `https://www.indeed.com/jobs?q=${encodeURIComponent(job.title + ' ' + (job.company || ''))}&l=${encodeURIComponent(job.location || 'Remote')}&fromage=30`;
 
+        const displayCompany = this.isPremium ? job.company : 'Premium Required';
+
         this.jobDetailContent.innerHTML = `
             <h2 style="color: var(--accent-cyan); margin-bottom: 4px;">${job.title}</h2>
-            <h4 style="color: var(--text-secondary); margin-bottom: 12px; font-weight: 500;">🏢 ${job.company}</h4>
+            <h4 style="color: var(--text-secondary); margin-bottom: 12px; font-weight: 500;">${this.isPremium ? '🏢' : '🔒'} ${displayCompany}</h4>
             <div style="display:flex; justify-content:space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-glass); padding-bottom: 12px;">
                 <span style="color:#10b981; font-weight:bold;">${job.payMin ? `💰 $${job.payMin.toLocaleString()}` : 'Pay N/A'}</span>
                 <span>⭐ ${job.rating || 'New'}</span>
@@ -945,6 +996,26 @@ class JobRadiusApp {
             this.modalOverlay.classList.remove('hidden');
             this.authModal.classList.remove('hidden');
             return;
+        }
+
+        // ── PREMIUM GATE: Must have an active pass to search ──
+        if (!this.isPremium) {
+            // Immediately sync with the server to ensure their timer hasn't expired or actually started recently on another tab
+            try {
+                const authRes = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                const authData = await authRes.json();
+                if (authData.user) {
+                    localStorage.setItem('jobradius_user', JSON.stringify(authData.user));
+                    this.checkPremiumStatus();
+                }
+            } catch (e) { }
+
+            // If still not premium even after DB check, throw modal
+            if (!this.isPremium) {
+                this.modalOverlay.classList.remove('hidden');
+                this.paymentModal.classList.remove('hidden');
+                return;
+            }
         }
 
         // If user typed a location but didn't select autocomplete, geocode it
@@ -1404,6 +1475,14 @@ class JobRadiusApp {
 
     _replotLockedJobs() {
         if (!this.mapController.map) return;
+
+        // ── PREMIUM GATE: Pins are wiped from map if pass expired ──
+        if (!this.isPremium) {
+            this.lockedMarkers.forEach(m => m.setMap(null));
+            this.lockedMarkers = [];
+            return;
+        }
+
         // Remove existing locked markers and redraw all
         this.lockedMarkers.forEach(m => m.setMap(null));
         this.lockedMarkers = [];

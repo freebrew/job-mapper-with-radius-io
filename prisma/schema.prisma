@@ -21,6 +21,7 @@ model User {
   // Stripe Data
   stripeCustomerId   String?        @unique
   subscriptionStatus String         @default("inactive") // inactive, day_pass, active, canceled
+  dayPassExpiresAt   DateTime?
   
   // Relations
   searchProfiles     SearchProfile[]

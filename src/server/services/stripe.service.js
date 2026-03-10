@@ -55,10 +55,14 @@ const handleWebhookEvent = async (event) => {
         if (session.metadata.type === 'day_pass') {
             const userId = session.metadata.userId;
 
-            // Update User status in DB
+            // Update User status and timer in DB (24 hours from now)
+            const twentyFourHoursFromNow = new Date(Date.now() + 24 * 60 * 60 * 1000);
             await prisma.user.update({
                 where: { id: userId },
-                data: { subscriptionStatus: 'day_pass' }
+                data: {
+                    subscriptionStatus: 'day_pass',
+                    dayPassExpiresAt: twentyFourHoursFromNow
+                }
             });
 
             // Log payment

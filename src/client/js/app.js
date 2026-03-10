@@ -282,6 +282,22 @@ class JobRadiusApp {
             });
         }
 
+        // F11 Fullscreen Mobile Toggle
+        const btnFullscreen = document.getElementById('btn-fullscreen');
+        if (btnFullscreen) {
+            btnFullscreen.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch((err) => {
+                        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+        }
+
         // JDS Minimize Handle
         const jdsHandle = document.querySelector('#job-detail-sheet .sheet-handle');
         if (jdsHandle && this.jobDetailSheet) {
@@ -550,6 +566,7 @@ class JobRadiusApp {
                 Click "Apply for Job" below to view the full listing and description on Indeed.
                 <br><br>Location: ${job.location || 'Remote'}
             </p>
+            ${job.snippet ? `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border-left:3px solid var(--accent-cyan); margin-bottom:16px; font-size:0.9rem; line-height:1.4; color:var(--text-secondary);">"${job.snippet}"</div>` : ''}
             <a href="${applyUrl}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display:block; text-align:center; text-decoration:none;">Apply for Job</a>
             <div id="route-steps" style="margin-top:12px;"></div>
         `;

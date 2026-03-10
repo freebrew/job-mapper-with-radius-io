@@ -92,7 +92,7 @@ export class MapController {
         // We push the camera "North" by using a negative Y offset, which pushes the circle SOUTH.
         let yOffset = 30; // Default desktop navbar offset
         if (window.innerWidth < 1200) {
-            yOffset = -window.innerHeight * 0.18; // Pull map content down by 18% of screen height
+            yOffset = -window.innerHeight * 0.28; // Pull map content down by 28% of screen height
         }
 
         return {

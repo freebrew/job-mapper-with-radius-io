@@ -964,7 +964,7 @@ button {
 
   .top-tab {
     flex: 1;
-    padding: 12px 0;
+    padding: 12px 2px;
     background: rgba(12, 20, 33, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -973,6 +973,9 @@ button {
     color: var(--text-secondary);
     font-size: 0.85rem;
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .top-tab.active {
@@ -1016,21 +1019,24 @@ button {
   /* Row 1: logo (left) + user controls (right) */
   .logo {
     display: block;
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     order: 1;
     flex: 0 0 auto;
+    margin-right: auto;
   }
 
   .user-controls {
     order: 2;
-    flex: 0 0 auto;
-    margin-left: auto;
-    gap: 8px;
+    flex: 0 1 auto;
+    display: flex;
+    gap: 4px;
+    align-items: center;
   }
 
   .user-controls button {
-    padding: 6px 12px;
-    font-size: 0.82rem;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    white-space: nowrap;
   }
 
   /* Row 2: search controls full width */

@@ -97,6 +97,7 @@ class JobRadiusApp {
 
             this.setupListeners();
             this.setupSearchBox();
+            this._populateJobAutocomplete();
             this.setupModals();
 
             // Restore session from localStorage (persist login across refreshes)
@@ -162,6 +163,28 @@ class JobRadiusApp {
         }
     }
 
+    _populateJobAutocomplete() {
+        const datalist = document.getElementById('job-titles');
+        if (!datalist) return;
+
+        const commonJobs = [
+            "Software Developer", "Frontend Developer", "Backend Developer", "Full Stack Developer",
+            "Data Analyst", "Data Scientist", "Product Manager", "Project Manager",
+            "Registered Nurse", "Licensed Practical Nurse", "Medical Assistant",
+            "Teacher", "Tutor", "Substitute Teacher", "Graphic Designer", "UX Designer",
+            "Sales Representative", "Account Executive", "Customer Service Representative",
+            "Marketing Manager", "Social Media Manager", "Content Writer",
+            "Administrative Assistant", "Executive Assistant", "Receptionist",
+            "Barista", "Bartender", "Server", "Chef", "Line Cook",
+            "Retail Sales Associate", "Store Manager", "Cashier",
+            "Warehouse Worker", "Delivery Driver", "Truck Driver",
+            "Electrician", "Plumber", "Carpenter", "Construction Worker",
+            "Security Guard", "Cleaner", "Janitor", "Maintenance Technician"
+        ];
+
+        datalist.innerHTML = commonJobs.sort().map(job => `<option value="${job}">`).join('');
+    }
+
     /**
      * Restores login state from localStorage without a new network request.
      * Called on every startup so the user doesn't have to re-login after refresh.
@@ -173,7 +196,18 @@ class JobRadiusApp {
 
         try {
             const user = JSON.parse(userStr);
-            const displayName = user.name || user.email.split('@')[0];
+            let displayName = user.name || user.email.split('@')[0];
+
+            // Consolidate name for mobile screens (Initials only)
+            if (window.innerWidth < 768 && user.name) {
+                const parts = user.name.split(' ').filter(p => p.trim() !== '');
+                if (parts.length >= 2) {
+                    displayName = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                } else if (parts.length === 1) {
+                    displayName = parts[0].substring(0, 2).toUpperCase();
+                }
+            }
+
             this.btnLogin.innerText = displayName;
 
             if (user.email === 'bruno.brottes@gmail.com' && this.btnAdminPanel) {

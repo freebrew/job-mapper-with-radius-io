@@ -48,6 +48,7 @@ function _buildClass() {
             // IMPORTANT: Do NOT do any DOM re-insertion here (no _raiseToTop call).
             // DOM re-insertion mid-pointer-sequence kills the click in Google Maps panes.
             this.div.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent bubbling up to the map which closes the sheets
                 if (e.target.closest('.jo-actions') ||
                     e.target.closest('.jo-note-form') ||
                     e.target.tagName === 'A') return;
@@ -196,13 +197,22 @@ function _buildClass() {
             if (!j.payMin && !j.payMax) {
                 return '<span class="jo-pay-na">Salary N/A</span>';
             }
-            if (j.payMin && j.payMax && j.payMin !== j.payMax) {
-                const lo = this._fmtAbbrev(j.payMin);
-                const hi = this._fmtFull(j.payMax);
+
+            // Annualize hourly rates (40 hours/week * 52 weeks = 2080 hours)
+            let min = j.payMin;
+            let max = j.payMax;
+            if (j.payHourly) {
+                if (min) min *= 2080;
+                if (max) max *= 2080;
+            }
+
+            if (min && max && min !== max) {
+                const lo = this._fmtAbbrev(min);
+                const hi = this._fmtFull(max);
                 return `<span class="jo-pay-hero">${lo}\u2013${hi}</span>`;
             }
             // Single value — use full format so it reads cleanly
-            const val = j.payMax || j.payMin;
+            const val = max || min;
             return `<span class="jo-pay-hero">${this._fmtFull(val)}</span>`;
         }
 

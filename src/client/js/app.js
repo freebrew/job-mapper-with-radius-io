@@ -1090,12 +1090,21 @@ class JobRadiusApp {
         const JobListUI = document.getElementById('job-list-container');
         if (JobListUI && !append) JobListUI.innerHTML = '';
 
+        let mobileOmittedCount = 0;
+
         jobs.forEach(j => {
             // Skip jobs without valid coordinates
             if (j.lat == null || j.lng == null || isNaN(j.lat) || isNaN(j.lng)) {
                 console.warn('[plot] Skipping job with invalid coords:', j.title);
                 return;
             }
+
+            // Mobile specific filtering: Omit jobs without a listed salary
+            if (window.innerWidth < 768 && !j.payMin && !j.payMax) {
+                mobileOmittedCount++;
+                return;
+            }
+
             // Don't re-add if already shown as a locked marker
             if (this.lockedJobs.has(j.indeedJobId)) return;
 
@@ -1142,6 +1151,51 @@ class JobRadiusApp {
 
         // Always re-plot locked jobs after a fresh search clear
         if (!append) this._replotLockedJobs();
+
+        // Show toast if mobile filtered out jobs
+        if (mobileOmittedCount > 0) {
+            this._showToast(`Omitted ${mobileOmittedCount} jobs without salary data to save screen space.`);
+        }
+    }
+
+    // ── UI Helpers ────────────────────────────────────────────────
+
+    _showToast(message) {
+        let toast = document.getElementById('jr-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'jr-toast';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%) translateY(20px);
+                background: rgba(15, 23, 42, 0.9);
+                border: 1px solid rgba(255,255,255,0.1);
+                color: #fff;
+                padding: 10px 20px;
+                border-radius: 20px;
+                font-size: 0.85rem;
+                z-index: 9999;
+                opacity: 0;
+                transition: transform 0.3s ease, opacity 0.3s ease;
+                pointer-events: none;
+                text-align: center;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            `;
+            document.body.appendChild(toast);
+        }
+        toast.innerText = message;
+        // Trigger animation
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+            if (toast.timeoutId) clearTimeout(toast.timeoutId);
+            toast.timeoutId = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+            }, 3500);
+        });
     }
 
     // ── Job Locking ───────────────────────────────────────────────

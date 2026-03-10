@@ -894,13 +894,12 @@ button {
     left: 10px;
     right: 10px;
     border-radius: var(--radius-lg);
-    height: 60px;
-    padding: 0 15px;
+    height: auto;
+    padding: 12px 15px;
     z-index: var(--z-ui);
   }
 
   .logo {
-    font-size: 1.2rem;
     display: none;
     /* Hide logo to save space for search */
   }
@@ -908,25 +907,24 @@ button {
   .search-controls {
     width: 100%;
     margin: 0;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .search-controls input {
     font-size: 16px;
     /* Prevents iOS auto-zoom */
-    padding: 8px 12px;
+    padding: 10px 12px;
   }
 
-  #job-keyword {
-    display: none;
-    /* Hide keyword on narrow mobile by default */
-  }
-
+  #job-keyword,
   #map-search-box {
-    flex: 1;
+    width: 100%;
   }
 
   #btn-search {
-    padding: 8px 12px;
+    width: 100%;
+    padding: 10px 12px;
   }
 
   .user-controls {

@@ -20,8 +20,10 @@ class JobRadiusApp {
         this.btnAddInclusive = document.getElementById('btn-add-inclusive');
         this.btnAddExclusive = document.getElementById('btn-add-exclusive');
         this.radiusList = document.getElementById('radius-list');
+        this.radiusPanel = document.getElementById('radius-panel'); // Mobile Bottom Sheet
 
-        // Phase 6 UI Elements
+        // Mobile Elements
+        this.btnMobileZones = document.getElementById('btn-mobile-zones');
         this.btnLogin = document.getElementById('btn-login');
         this.btnSubscribe = document.getElementById('btn-subscribe');
         this.btnCheckout = document.getElementById('btn-checkout');
@@ -209,6 +211,20 @@ class JobRadiusApp {
         this.jobKeyword.addEventListener('keydown', triggerOnEnter);
         this.searchInput.addEventListener('keydown', triggerOnEnter);
 
+        // Mobile Interaction: Toggle Radius Bottom-Sheet natively
+        if (this.btnMobileZones && this.radiusPanel) {
+            this.btnMobileZones.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.radiusPanel.classList.toggle('sheet-open');
+            });
+        }
+
+        // Close Bottom Sheets if map is clicked (we can hook into map clicks later or globally)
+        document.getElementById('map').addEventListener('click', () => {
+            if (this.radiusPanel) this.radiusPanel.classList.remove('sheet-open');
+            if (this.jobMiniPanel) this.jobMiniPanel.classList.remove('sheet-open');
+        });
+
         // Radius Management — inline address picker for each zone
         this.btnAddInclusive.addEventListener('click', () => this._showZoneAddressForm('inclusive'));
         this.btnAddExclusive.addEventListener('click', () => this._showZoneAddressForm('exclusive'));
@@ -298,7 +314,11 @@ class JobRadiusApp {
 
         // Job Mini Panel Close
         this.btnCloseDetail.addEventListener('click', () => {
-            this.jobMiniPanel.classList.add('hidden');
+            if (window.innerWidth < 768) {
+                this.jobMiniPanel.classList.remove('sheet-open');
+            } else {
+                this.jobMiniPanel.classList.add('hidden');
+            }
             this.clearRoute();
         });
 
@@ -417,6 +437,7 @@ class JobRadiusApp {
         `;
 
         this.jobMiniPanel.classList.remove('hidden');
+        this.jobMiniPanel.classList.add('sheet-open');
         this.noteForm.classList.add('hidden'); // Reset note form
 
         // Cinematic fly to job location — tilt 60, north heading, auto-reset via shortest angle
@@ -1008,6 +1029,10 @@ class JobRadiusApp {
                 {
                     isLocked: false,
                     onExpand: (o) => {
+                        if (window.innerWidth < 768) {
+                            this.showJobDetail(o.job);
+                            return;
+                        }
                         if (this._expandedOverlay && this._expandedOverlay !== o) {
                             this._expandedOverlay.collapse();
                         }
@@ -1092,6 +1117,10 @@ class JobRadiusApp {
                 {
                     isLocked: true,
                     onExpand: (o) => {
+                        if (window.innerWidth < 768) {
+                            this.showJobDetail(o.job);
+                            return;
+                        }
                         if (this._expandedOverlay && this._expandedOverlay !== o) {
                             this._expandedOverlay.collapse();
                         }

@@ -875,3 +875,169 @@ button {
   color: #10b981;
   font-weight: 600;
 }
+
+/* =========================================
+   MOBILE RESPONSIVE OVERRIDES (max-width: 767px)
+   Converts desktop side-panels to Bottom Sheets
+========================================= */
+@media (max-width: 767px) {
+
+  /* Hide desktop-only elements */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Header becomes a floating search bar */
+  header {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    border-radius: var(--radius-lg);
+    height: 60px;
+    padding: 0 15px;
+    z-index: var(--z-ui);
+  }
+
+  .logo {
+    font-size: 1.2rem;
+    display: none;
+    /* Hide logo to save space for search */
+  }
+
+  .search-controls {
+    width: 100%;
+    margin: 0;
+  }
+
+  .search-controls input {
+    font-size: 16px;
+    /* Prevents iOS auto-zoom */
+    padding: 8px 12px;
+  }
+
+  #job-keyword {
+    display: none;
+    /* Hide keyword on narrow mobile by default */
+  }
+
+  #map-search-box {
+    flex: 1;
+  }
+
+  #btn-search {
+    padding: 8px 12px;
+  }
+
+  .user-controls {
+    display: none;
+    /* Move to a menu later */
+  }
+
+  /* Main container constraints */
+  main {
+    padding: 0;
+    pointer-events: none;
+    /* Let clicks pass to map */
+  }
+
+  /* Floating Action Buttons */
+  #mobile-fabs {
+    position: absolute;
+    bottom: 24px;
+    left: 16px;
+    z-index: var(--z-ui);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: auto;
+  }
+
+  .fab {
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s;
+  }
+
+  .fab:active {
+    transform: scale(0.95);
+  }
+
+  /* Bottom Sheets (replaces floating-panel & side-panel) */
+  .bottom-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    border-radius: 24px 24px 0 0;
+    max-height: 50vh;
+    /* Default collapsed height */
+    transform: translateY(110%);
+    /* Hidden by default */
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    pointer-events: auto;
+    will-change: transform;
+    border-bottom: none;
+    padding-top: 10px;
+    /* Space for handle */
+  }
+
+  .sheet-open {
+    transform: translateY(0);
+  }
+
+  .sheet-handle {
+    width: 40px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    margin: 0 auto 15px;
+  }
+
+  /* Specific mobile panel overrides */
+  #radius-panel {
+    z-index: calc(var(--z-ui) + 1);
+  }
+
+  #job-panel {
+    z-index: calc(var(--z-ui) + 2);
+    /* When jobs arrive, it acts as a peeking sheet */
+    max-height: 80vh;
+  }
+
+  /* Modals (Auth / Subscribe) */
+  .modal {
+    width: 90%;
+    max-width: none;
+    min-width: 0;
+    margin: 0 auto;
+    max-height: 90vh;
+    padding: 24px 20px;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Admin Panel Fullscreen Mobile Override */
+  #admin-panel {
+    width: 100%;
+    height: 100%;
+    right: -100%;
+    /* off-screen to start */
+    border-radius: 0;
+  }
+
+  #admin-panel:not(.admin-hidden) {
+    right: 0;
+  }
+}
+
+/* Desktop definitions for mobile-only classes */
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+}

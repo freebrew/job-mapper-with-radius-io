@@ -201,11 +201,11 @@
         <!-- Standard Email Auth (Fallback) -->
         <div class="divider"><span>OR EMAIL</span></div>
 
-        <form id="auth-form" style="margin-top: 16px;">
+        <form id="auth-form" novalidate style="margin-top: 16px;">
           <input type="email" id="auth-email" placeholder="Email Address" class="neumorphic-input w-full"
-            style="margin-bottom: 12px" required>
+            style="margin-bottom: 12px" autocomplete="username" required>
           <input type="password" id="auth-password" placeholder="Password" class="neumorphic-input w-full"
-            style="margin-bottom: 16px" required>
+            style="margin-bottom: 16px" autocomplete="current-password" required>
           <button type="submit" class="btn-primary w-full">Continue</button>
         </form>
       </div>

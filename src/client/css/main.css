@@ -420,6 +420,14 @@ button {
   align-items: center;
 }
 
+/* Suppress any stray error text injected by the Google GSI library into the onload div */
+#g_id_onload {
+  display: none;
+  overflow: hidden;
+  height: 0;
+  width: 0;
+}
+
 .modal {
   position: relative;
   width: 400px;

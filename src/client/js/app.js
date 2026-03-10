@@ -35,7 +35,10 @@ class JobRadiusApp {
         this.authModal = document.getElementById('auth-modal');
         this.paymentModal = document.getElementById('payment-modal');
         this.modalOverlay = document.getElementById('modal-overlay');
-        this.jobMiniPanel = document.getElementById('job-mini-panel');
+        this.jobDetailSheet = document.getElementById('job-detail-sheet');
+        this.jdsMiniTitle = document.getElementById('jds-mini-title');
+        this.jdsMiniPay = document.getElementById('jds-mini-pay');
+        this.btnJdsExpand = document.getElementById('btn-jds-expand');
         this.btnCloseDetail = document.getElementById('btn-close-detail');
         this.jobDetailContent = document.getElementById('job-detail-content');
         this.btnRouteHere = document.getElementById('btn-route-here');
@@ -251,11 +254,28 @@ class JobRadiusApp {
             });
         }
 
-        // Close Bottom Sheets if map is clicked (we can hook into map clicks later or globally)
+        // Close Panels if map is clicked
         document.getElementById('map').addEventListener('click', () => {
-            if (this.radiusPanel) this.radiusPanel.classList.remove('sheet-open');
-            if (this.jobMiniPanel) this.jobMiniPanel.classList.remove('sheet-open');
+            if (window.innerWidth < 768) {
+                if (this.header) this.header.classList.remove('panel-open');
+                if (this.radiusPanel) this.radiusPanel.classList.remove('panel-open');
+                if (this.tabSearch) this.tabSearch.classList.remove('active');
+                if (this.tabRadius) this.tabRadius.classList.remove('active');
+            }
+            if (this.jobDetailSheet) {
+                this.jobDetailSheet.classList.add('hidden');
+                this.jobDetailSheet.classList.remove('sheet-fullscreen');
+                this.jobDetailSheet.classList.remove('sheet-minimized');
+            }
         });
+
+        // JDS Expand button
+        if (this.btnJdsExpand && this.jobDetailSheet) {
+            this.btnJdsExpand.addEventListener('click', () => {
+                this.jobDetailSheet.classList.remove('sheet-minimized');
+                this.jobDetailSheet.classList.add('sheet-fullscreen');
+            });
+        }
 
         // Radius Management — inline address picker for each zone
         this.btnAddInclusive.addEventListener('click', () => this._showZoneAddressForm('inclusive'));
@@ -468,8 +488,12 @@ class JobRadiusApp {
             <div id="route-steps" style="margin-top:12px;"></div>
         `;
 
-        this.jobMiniPanel.classList.remove('hidden');
-        this.jobMiniPanel.classList.add('sheet-open');
+        if (this.jdsMiniTitle) this.jdsMiniTitle.textContent = job.title;
+        if (this.jdsMiniPay) this.jdsMiniPay.textContent = job.payMin ? `$${(job.payMin / 1000).toFixed(0)}k` : 'N/A';
+
+        this.jobDetailSheet.classList.remove('hidden');
+        this.jobDetailSheet.classList.remove('sheet-minimized');
+        this.jobDetailSheet.classList.add('sheet-fullscreen');
         this.noteForm.classList.add('hidden'); // Reset note form
 
         // Cinematic fly to job location — tilt 60, north heading, auto-reset via shortest angle
@@ -499,6 +523,12 @@ class JobRadiusApp {
 
                 // Orient map to north after route renders (shortest-angle turn)
                 this.mapController.resetToNorth(400);
+
+                // Mobile UX: Minimize the job panel so the user can see the route
+                if (window.innerWidth < 768 && this.jobDetailSheet) {
+                    this.jobDetailSheet.classList.remove('sheet-fullscreen');
+                    this.jobDetailSheet.classList.add('sheet-minimized');
+                }
 
                 // Show step-by-step directions inside the panel
                 const stepsDiv = document.getElementById('route-steps');
@@ -561,7 +591,9 @@ class JobRadiusApp {
         if (countEl) countEl.innerText = document.querySelectorAll('#job-list-container .job-card').length;
 
         // Close detail panel
-        this.jobMiniPanel.classList.add('hidden');
+        this.jobDetailSheet.classList.add('hidden');
+        this.jobDetailSheet.classList.remove('sheet-fullscreen');
+        this.jobDetailSheet.classList.remove('sheet-minimized');
         this.currentSelectedJob = null;
         this.clearRoute();
     }

@@ -283,9 +283,9 @@ button {
 }
 
 /* =========================================
-   DYNAMIC JOB PANEL (Mini Panel)
+   DYNAMIC JOB PANEL (Details Sheet)
    ========================================= */
-#job-mini-panel {
+#job-detail-sheet {
   position: absolute;
   bottom: 24px;
   left: 24px;
@@ -298,14 +298,18 @@ button {
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-#job-mini-panel .action-buttons {
+#jds-minimized-strip {
+  display: none;
+}
+
+#job-detail-sheet .action-buttons {
   display: flex;
   flex-wrap: nowrap;
   gap: 6px;
   margin-top: 12px;
 }
 
-#job-mini-panel .action-buttons button {
+#job-detail-sheet .action-buttons button {
   flex: 1;
   padding: 8px 4px;
   font-size: 0.8rem;
@@ -1080,11 +1084,73 @@ button {
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   }
 
+  /* Mobile Job Detail Sheet */
+  #job-detail-sheet {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    padding: 24px 16px;
+    z-index: calc(var(--z-ui) + 50);
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), height 0.35s ease;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
 
-  #job-panel {
-    z-index: calc(var(--z-ui) + 2);
-    /* When jobs arrive, it acts as a peeking sheet */
-    max-height: 80vh;
+  #job-detail-sheet.sheet-fullscreen,
+  #job-detail-sheet.sheet-minimized {
+    transform: translateY(0);
+  }
+
+  /* When minimized (Routing mode) */
+  #job-detail-sheet.sheet-minimized {
+    height: auto;
+    max-height: 80px;
+    border-radius: 20px 20px 0 0;
+    padding: 12px 16px;
+    overflow: hidden;
+  }
+
+  #job-detail-sheet.sheet-minimized #jds-fullscreen-content {
+    display: none;
+  }
+
+  #job-detail-sheet.sheet-minimized #jds-minimized-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .jds-mini-content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-right: 12px;
+  }
+
+  #jds-mini-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #jds-mini-pay {
+    font-size: 0.85rem;
+    color: var(--accent-green, #10b981);
+    margin-top: 2px;
+  }
+
+  #btn-jds-expand {
+    padding: 6px 16px;
+    font-size: 0.8rem;
+    border-radius: 20px;
   }
 
   /* Modals (Auth / Subscribe) */

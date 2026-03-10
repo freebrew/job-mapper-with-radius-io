@@ -89,6 +89,14 @@ function _buildClass() {
             if (this.expanded) return;
             this.expanded = true;
             this._noteVisible = false;
+
+            if (window.innerWidth < 768) {
+                // Mobile layout - callback handles expanding the bottom sheet
+                this.div.classList.add('job-overlay--active');
+                if (this.callbacks.onExpand) this.callbacks.onExpand(this);
+                return;
+            }
+
             this.div.classList.add('job-overlay--expanded');
             this.div.innerHTML = this._buildExpanded();
             this._wireActions();
@@ -103,6 +111,7 @@ function _buildClass() {
             if (!this.expanded) return;
             this.expanded = false;
             this.div.classList.remove('job-overlay--expanded');
+            this.div.classList.remove('job-overlay--active');
             this.div.innerHTML = this._buildCollapsed();
             this.draw();
         }
@@ -237,10 +246,21 @@ function _buildClass() {
 
         _buildCollapsed() {
             const pay = this._formatPayHero();
+            const lockIcon = this.isLocked ? ' 📌' : '';
+
+            // Mobile minimal pin (Salary Only)
+            if (window.innerWidth < 768) {
+                return `
+                    <div class="jo-collapsed mobile-minimal">
+                        <div class="jo-row-pay">${pay}${lockIcon}</div>
+                    </div>
+                    <div class="jo-arrow"></div>
+                `;
+            }
+
             const rating = this._formatRating();
             const company = this._truncate(this.job.company, 20);
             const title = this._truncate(this.job.title, 24);
-            const lockIcon = this.isLocked ? ' 📌' : '';
 
             return `
                 <div class="jo-collapsed">

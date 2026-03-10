@@ -133,19 +133,30 @@
     </div>
 
     <!-- Detailed Job Info Overlay (Desktop Popup / Mobile Bottom Sheet) -->
-    <div id="job-mini-panel" class="glass-panel bottom-sheet hidden">
-      <div class="sheet-handle mobile-only"></div>
-      <button id="btn-close-detail" class="close-btn">&times;</button>
-      <div id="job-detail-content"></div>
-      <div class="action-buttons mt-4">
-        <button id="btn-route-here" class="btn-primary tooltip" data-tooltip="Show Transit Route">🚗 Route</button>
-        <button id="btn-add-note" class="btn-secondary">📝 Note</button>
-        <button id="btn-hide-job" class="btn-danger tooltip" data-tooltip="Hide forever">👁️‍🗨️ Hide</button>
+    <div id="job-detail-sheet" class="glass-panel bottom-sheet hidden">
+      <div id="jds-minimized-strip">
+        <div class="jds-mini-content">
+          <span id="jds-mini-title">Job Title</span>
+          <span id="jds-mini-pay">$80k</span>
+        </div>
+        <button id="btn-jds-expand" class="btn-primary">Expand</button>
       </div>
-      <!-- Note Form -->
-      <div id="note-form" class="hidden mt-4 pt-4 border-t">
-        <textarea placeholder="Followup context, contact names..." class="neumorphic-input w-full" rows="3"></textarea>
-        <button class="btn-primary w-full mt-2">Save Note</button>
+
+      <div id="jds-fullscreen-content">
+        <div class="sheet-handle mobile-only"></div>
+        <button id="btn-close-detail" class="close-btn">&times;</button>
+        <div id="job-detail-content"></div>
+        <div class="action-buttons mt-4">
+          <button id="btn-route-here" class="btn-primary tooltip" data-tooltip="Show Transit Route">🚗 Route</button>
+          <button id="btn-add-note" class="btn-secondary">📝 Note</button>
+          <button id="btn-hide-job" class="btn-danger tooltip" data-tooltip="Hide forever">👁️‍🗨️ Hide</button>
+        </div>
+        <!-- Note Form -->
+        <div id="note-form" class="hidden mt-4 pt-4 border-t">
+          <textarea placeholder="Followup context, contact names..." class="neumorphic-input w-full"
+            rows="3"></textarea>
+          <button class="btn-primary w-full mt-2">Save Note</button>
+        </div>
       </div>
     </div>
 

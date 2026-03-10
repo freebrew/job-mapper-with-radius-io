@@ -44,6 +44,9 @@ function _buildClass() {
             this.div.className = 'job-overlay' + (this.isLocked ? ' job-overlay--locked' : '');
             this.div.innerHTML = this._buildCollapsed();
 
+            // Click → toggle expanded/collapsed
+            // IMPORTANT: Do NOT do any DOM re-insertion here (no _raiseToTop call).
+            // DOM re-insertion mid-pointer-sequence kills the click in Google Maps panes.
             this.div.addEventListener('click', (e) => {
                 if (e.target.closest('.jo-actions') ||
                     e.target.closest('.jo-note-form') ||
@@ -51,15 +54,12 @@ function _buildClass() {
                 this.toggle();
             });
 
-            // Raise this panel to the top of the DOM sibling stack on first pointer
-            // contact.  Using 'pointerdown' (not 'mouseenter') is critical:
-            // mouseenter fires AFTER Maps re-processes the pane's event listeners
-            // following a re-insertion, which drops the subsequent click.  pointerdown
-            // fires synchronously before Maps touches the event, so the click still
-            // arrives on the correct element.
-            this.div.addEventListener('pointerdown', (e) => {
-                this._raiseToTop();
-                // Don't stopPropagation — let the click chain continue normally
+            // Hover: bump z-index only — NEVER re-insert the DOM node here.
+            // Re-inserting on mouseenter/pointerdown breaks the Maps event chain.
+            this.div.addEventListener('mouseenter', () => this._bumpZIndex());
+            this.div.addEventListener('mouseleave', () => {
+                // Restore base z-index (expanded panel keeps its elevated z)
+                if (!this.expanded) this.div.style.zIndex = '5';
             });
 
             const panes = this.getPanes();
@@ -89,12 +89,13 @@ function _buildClass() {
             if (this.expanded) return;
             this.expanded = true;
             this._noteVisible = false;
-            // Raise to top of DOM sibling list so it paints above all other panels
-            this._raiseToTop();
             this.div.classList.add('job-overlay--expanded');
             this.div.innerHTML = this._buildExpanded();
             this._wireActions();
             this.draw();
+            // Re-insert AFTER innerHTML is set and click has completed — safe here
+            // because we are no longer inside a pointer-event sequence.
+            this._raiseToTop();
             if (this.callbacks.onExpand) this.callbacks.onExpand(this);
         }
 
@@ -131,15 +132,27 @@ function _buildClass() {
 
         /**
          * Re-insert this overlay div at the END of its parent's child list.
-         * All overlays share the same DOM parent (overlayMouseTarget pane).
-         * Within a shared stacking context, the LAST sibling in DOM order
-         * paints on top — regardless of z-index.  Re-appending is O(1) and
-         * triggers no layout reflow on the map canvas itself.
+         * Safe to call ONLY after a click has been fully processed (e.g. from expand()).
+         * NEVER call from mouseenter/pointerdown — that breaks the Maps click chain.
          */
         _raiseToTop() {
             if (this.div && this.div.parentNode) {
                 this.div.parentNode.appendChild(this.div);
             }
+        }
+
+        /**
+         * Bump this overlay's z-index above all current siblings.
+         * Safe to call from ANY event (mouseenter, pointerdown, etc.) because
+         * it only sets a CSS property — no DOM re-insertion, no event chain break.
+         */
+        _bumpZIndex() {
+            if (!this.div || !this.div.parentNode) return;
+            const siblings = Array.from(this.div.parentNode.children);
+            const maxZ = siblings.reduce((max, el) => {
+                return Math.max(max, parseInt(el.style.zIndex || '0', 10));
+            }, 0);
+            this.div.style.zIndex = String(maxZ + 1);
         }
 
         /**

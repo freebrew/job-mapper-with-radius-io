@@ -9,6 +9,17 @@ if (fs.existsSync(parentEnv)) {
     // Fall back to standard project root
     require('dotenv').config();
 }
+// ── Process-level safety net ─────────────────────────────────────────────────
+// One bad request must never crash the entire server.
+// Log all uncaught exceptions / unhandled rejections and stay alive.
+process.on('uncaughtException', (err) => {
+    console.error('[UNCAUGHT EXCEPTION]', err.message, err.stack);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('[UNHANDLED REJECTION]', reason);
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

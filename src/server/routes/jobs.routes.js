@@ -191,20 +191,32 @@ router.post('/search', requireAuth, async (req, res, next) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Transfer-Encoding', 'chunked');
 
-        // sendEvent: write NDJSON line, awaiting drain if the buffer is full
+        // sendEvent: write NDJSON line safely.
+        // - Skips silently if the client has already disconnected.
+        // - Waits for 'drain' (with a 5-second timeout) when the buffer is full.
+        // - Never throws — a stream error must not crash the server process.
+        let _clientGone = false;
+        res.on('close', () => { _clientGone = true; });
+        res.on('error', () => { _clientGone = true; });
+
         const sendEvent = (obj) => new Promise((resolve) => {
+            if (_clientGone || res.destroyed || res.writableEnded) {
+                return resolve(); // client gone — skip silently
+            }
             try {
                 const line = JSON.stringify(obj) + '\n';
                 const ok = res.write(line);
                 console.log(`[Jobs] sendEvent type=${obj.type} size=${line.length} writeOk=${ok}`);
                 if (!ok) {
-                    // Buffer full — wait for drain before continuing
-                    res.once('drain', resolve);
+                    // Buffer full — wait for drain, but don't wait forever
+                    const timer = setTimeout(resolve, 5000);
+                    res.once('drain', () => { clearTimeout(timer); resolve(); });
                 } else {
                     resolve();
                 }
             } catch (e) {
                 console.error(`[Jobs] sendEvent FAILED type=${obj.type}: ${e.message}`);
+                _clientGone = true;
                 resolve();
             }
         });
@@ -323,9 +335,11 @@ router.post('/search', requireAuth, async (req, res, next) => {
 
                     const processedChunk = (await Promise.all(chunkProms)).filter(Boolean);
 
-                    // Stream jobs in small batches to avoid buffer overflow
+                    // Stream jobs in small batches — skip entire batch if client disconnected
+                    if (_clientGone) return;
                     const BATCH = 10;
                     for (let i = 0; i < processedChunk.length; i += BATCH) {
+                        if (_clientGone) break;
                         const batch = processedChunk.slice(i, i + BATCH);
                         await sendEvent({ type: 'jobs', jobs: batch });
                     }

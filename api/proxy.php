@@ -22,7 +22,7 @@ if ($method === 'OPTIONS') {
 
 // Build target URL from the current request URI (preserve path + query string)
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
-$targetUrl  = 'http://127.0.0.1:3001' . $requestUri;
+$targetUrl  = 'http://127.0.0.1:3000' . $requestUri;
 
 // Read the raw request body (works for POST/PUT/PATCH with any content-type)
 $inputBody = file_get_contents('php://input');
@@ -138,7 +138,7 @@ if ($rawResponse === false || $curlErrno !== 0) {
     echo json_encode([
         'error'  => 'Backend service unavailable',
         'detail' => $curlError ?: 'curl errno ' . $curlErrno,
-        'port'   => 3001,
+        'port'   => 3000,
     ]);
     exit;
 }

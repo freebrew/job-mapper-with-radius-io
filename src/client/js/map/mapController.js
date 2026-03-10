@@ -87,9 +87,17 @@ export class MapController {
     _panelOffsetPx() {
         // visibleCentreX = LEFT + visibleW/2 ; mapCentreX = totalW/2
         // delta = visibleCentreX - mapCentreX = LEFT - (LEFT+RIGHT)/2 = (LEFT-RIGHT)/2
+
+        // If mobile / tablet, top drawers can obscure the top of the radius when tilted.
+        // We pull the camera "South" by adding a positive Y offset.
+        let yOffset = 30; // Default desktop navbar offset
+        if (window.innerWidth < 1200) {
+            yOffset = window.innerHeight * 0.15; // Shift center down by 15% of screen height
+        }
+
         return {
-            x: (this.LEFT_PANEL_PX - this.RIGHT_PANEL_PX) / 2,   // = -30 px
-            y: 30,                                                   // navbar offset
+            x: (this.LEFT_PANEL_PX - this.RIGHT_PANEL_PX) / 2,
+            y: yOffset,
         };
     }
 

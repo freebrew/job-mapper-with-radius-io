@@ -210,7 +210,7 @@ class JobRadiusApp {
                 if (z.markerObj) z.markerObj.setMap(null);
             });
             this.radiusManager.zones = [];
-            this.radiusManager.addZone('inclusive', 10000, { lat, lng, address: place.formatted_address });
+            this.radiusManager.addZone('inclusive', 5000, { lat, lng, address: place.formatted_address });
             this.updateRadiusUI();
 
             // Fit map around the new zone accounting for panel offsets
@@ -676,7 +676,7 @@ class JobRadiusApp {
         if (existing) existing.remove();
 
         const color = type === 'inclusive' ? '#10b981' : '#ef4444';
-        const defaultKm = type === 'inclusive' ? '10' : '5';
+        const defaultKm = type === 'inclusive' ? '5' : '5';
         const label = type === 'inclusive' ? 'Include' : 'Exclude';
 
         const form = document.createElement('div');
@@ -875,11 +875,11 @@ class JobRadiusApp {
 
         // Add first inclusive zone if none exist
         if (!this.radiusManager.getZonesData().length) {
-            this.radiusManager.addZone('inclusive', 10000, this.currentCenter);
+            this.radiusManager.addZone('inclusive', 5000, this.currentCenter);
         }
 
         // Mobile UX: Automatically close the search drawer when a search begins
-        if (window.innerWidth < 768 && this.header) {
+        if (window.innerWidth < 1200 && this.header) {
             this.header.classList.remove('panel-open');
             if (this.tabSearch) this.tabSearch.classList.remove('active');
         }
@@ -891,9 +891,7 @@ class JobRadiusApp {
         //    then fly there cinematically so tiles are ready when we arrive.
         this.mapController.prewarmTiles(this.currentCenter.lat, this.currentCenter.lng);
         setTimeout(() => {
-            this.mapController.cinematicFlyTo(this.currentCenter.lat, this.currentCenter.lng, {
-                zoom: 15, heading: 0, tilt: 60
-            });
+            this.mapController.fitAllZones(this.radiusManager);
         }, 400);
 
         // 2. Clear previous search results (locked jobs are preserved by _replotLockedJobs)

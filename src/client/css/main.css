@@ -108,14 +108,10 @@ header {
   border-bottom: 1px solid var(--border-glass);
 }
 
-.header-top-row {
-  display: contents;
-  /* Allows logo and user-controls to participate in header's flexbox */
-}
-
 .user-controls {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .logo {
@@ -905,7 +901,7 @@ button {
     display: none !important;
   }
 
-  /* Header becomes a floating search block */
+  /* Header becomes 2-row floating card */
   header {
     position: absolute;
     top: 10px;
@@ -915,49 +911,44 @@ button {
     height: auto;
     padding: 12px 15px;
     z-index: var(--z-ui);
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
-  .header-top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-  }
-
+  /* Row 1: logo (left) + user controls (right) */
   .logo {
     display: block;
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+    order: 1;
+    flex: 0 0 auto;
   }
 
   .user-controls {
-    display: flex;
+    order: 2;
+    flex: 0 0 auto;
+    margin-left: auto;
     gap: 8px;
   }
 
-  /* Make user control buttons smaller on mobile */
   .user-controls button {
     padding: 6px 12px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
   }
 
+  /* Row 2: search controls full width */
   .search-controls {
+    order: 3;
+    flex: 0 0 100%;
     width: 100%;
-    margin: 0;
     flex-direction: column;
     gap: 8px;
+    margin: 0;
   }
 
   .search-controls input {
     font-size: 16px;
-    /* Prevents iOS auto-zoom */
+    /* prevents iOS auto-zoom */
     padding: 10px 12px;
-  }
-
-  #job-keyword,
-  #map-search-box {
     width: 100%;
   }
 

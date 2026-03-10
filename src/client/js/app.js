@@ -3,6 +3,7 @@
  */
 
 import { MapController } from './map/mapController.js';
+import { createJobInfoOverlay } from './map/jobInfoOverlay.js';
 import { RadiusManager } from './map/radiusManager.js';
 
 class JobRadiusApp {
@@ -38,11 +39,15 @@ class JobRadiusApp {
         // Map Tracking Memory
         this.currentSelectedJob = null;
         this.jobMarkers = [];
+        this.lockedMarkers = []; // Separate array — never cleared by new searches
+        this.lockedJobs = new Map(); // indeedJobId → job data
         this.transitLayer = null;
         this.directionsService = null;
         this.directionsRenderer = null;
         this.hiddenJobs = new Set();
-        this.lastFetchedJobs = []; // Cache raw API results for re-filtering when zones change
+        this.lastFetchedJobs = [];
+        // Restore locked jobs from localStorage
+        this._restoreLockedJobs();
 
         // Admin Elements
         this.btnAdminPanel = document.getElementById('btn-admin-panel');
@@ -116,7 +121,7 @@ class JobRadiusApp {
 
                 setTimeout(() => {
                     this.mapController.cinematicFlyTo(this.startLocation.lat, this.startLocation.lng, {
-                        zoom: 15, heading: 0, tilt: 45
+                        zoom: 15, heading: 0, tilt: 60
                     });
                 }, 400);
             } else {
@@ -128,7 +133,7 @@ class JobRadiusApp {
                     this.searchInput.value = cached.address;
                     this.mapController.prewarmTiles(cached.lat, cached.lng);
                     setTimeout(() => {
-                        this.mapController.cinematicFlyTo(cached.lat, cached.lng, { zoom: 15, heading: 0, tilt: 45 });
+                        this.mapController.cinematicFlyTo(cached.lat, cached.lng, { zoom: 15, heading: 0, tilt: 60 });
                     }, 400);
                 }
             }
@@ -181,13 +186,17 @@ class JobRadiusApp {
 
             this.mapController.setCenter(lat, lng, 15);
 
-            // Auto-add first inclusive radius centered on search location
-            if (this.radiusManager.getZonesData().length === 0) {
-                this.radiusManager.addZone('inclusive', 10000, { lat, lng, address: place.formatted_address });
-                this.updateRadiusUI();
-                // Fit map around the new zone accounting for panel offsets
-                setTimeout(() => this.mapController.fitAllZones(this.radiusManager), 600);
-            }
+            // Clear old zones and add a new inclusive radius centered on the new search location
+            this.radiusManager.zones.forEach(z => {
+                if (z.circleObj) z.circleObj.setMap(null);
+                if (z.markerObj) z.markerObj.setMap(null);
+            });
+            this.radiusManager.zones = [];
+            this.radiusManager.addZone('inclusive', 10000, { lat, lng, address: place.formatted_address });
+            this.updateRadiusUI();
+
+            // Fit map around the new zone accounting for panel offsets
+            setTimeout(() => this.mapController.fitAllZones(this.radiusManager), 600);
         });
     }
 
@@ -221,7 +230,7 @@ class JobRadiusApp {
                 if (e.target.value === 'TRANSIT') {
                     if (!this.transitLayer) this.transitLayer = new google.maps.TransitLayer();
                     this.transitLayer.setMap(this.mapController.map);
-                    this.mapController.flyTo(this.currentCenter.lat, this.currentCenter.lng, 15, 45, 14); // Emphasize 3D transit
+                    this.mapController.flyTo(this.currentCenter.lat, this.currentCenter.lng, 15, 60, 14); // Emphasize 3D transit
                 } else {
                     if (this.transitLayer) this.transitLayer.setMap(null);
                 }
@@ -410,9 +419,9 @@ class JobRadiusApp {
         this.jobMiniPanel.classList.remove('hidden');
         this.noteForm.classList.add('hidden'); // Reset note form
 
-        // Cinematic fly to job location — tilt + heading sweep, no exceptions
+        // Cinematic fly to job location — tilt 60, north heading, auto-reset via shortest angle
         if (this.mapController) {
-            this.mapController.cinematicFlyTo(job.lat, job.lng, { zoom: 15, heading: 30, tilt: 55 });
+            this.mapController.cinematicFlyTo(job.lat, job.lng, { zoom: 17, heading: 0, tilt: 60 });
         }
     }
 
@@ -434,6 +443,9 @@ class JobRadiusApp {
 
             if (status === 'OK') {
                 this.directionsRenderer.setDirections(result);
+
+                // Orient map to north after route renders (shortest-angle turn)
+                this.mapController.resetToNorth(400);
 
                 // Show step-by-step directions inside the panel
                 const stepsDiv = document.getElementById('route-steps');
@@ -575,7 +587,7 @@ class JobRadiusApp {
             form.remove();
 
             // Fly to the new zone
-            this.mapController.cinematicFlyTo(selectedPlace.lat, selectedPlace.lng, { zoom: 12, heading: 0, tilt: 45 });
+            this.mapController.cinematicFlyTo(selectedPlace.lat, selectedPlace.lng, { zoom: 12, heading: 0, tilt: 60 });
         });
 
         // Cancel button
@@ -715,37 +727,21 @@ class JobRadiusApp {
         this.mapController.prewarmTiles(this.currentCenter.lat, this.currentCenter.lng);
         setTimeout(() => {
             this.mapController.cinematicFlyTo(this.currentCenter.lat, this.currentCenter.lng, {
-                zoom: 15, heading: 0, tilt: 45
+                zoom: 15, heading: 0, tilt: 60
             });
         }, 400);
 
-        // 2. Show a prominent loading indicator (Apify takes 10-15 seconds)
-        const container = document.getElementById('job-list-container');
-        container.innerHTML = `
-            <div style="padding:40px; text-align:center;">
-                <div style="
-                    width:40px; height:40px; margin:0 auto 16px;
-                    border:3px solid rgba(255,255,255,0.1);
-                    border-top:3px solid var(--accent-cyan);
-                    border-radius:50%;
-                    animation: spin 1s linear infinite;
-                "></div>
-                <div style="font-size:1rem; font-weight:600; color:var(--text-primary); margin-bottom:8px;">
-                    Scanning Indeed for jobs...
-                </div>
-                <div style="font-size:0.8rem; color:var(--text-secondary);">
-                    Searching "${query}" near ${this.currentCenter.address}
-                </div>
-                <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:12px; opacity:0.7;">
-                    This may take 10-20 seconds while we scrape live results
-                </div>
-            </div>
-            <style>
-                @keyframes spin { to { transform: rotate(360deg); } }
-            </style>
-        `;
+        // 2. Clear previous search results (locked jobs are preserved by _replotLockedJobs)
+        this.plotJobMarkers([], false);
 
-        // 3. Fetch from backend
+        // 3. Show the map progress overlay
+        const mapProgress = document.getElementById('map-progress-overlay');
+        const mapProgressText = document.getElementById('map-progress-text');
+        mapProgress.style.display = 'flex';
+        mapProgressText.textContent = `Searching "${query}" near ${this.currentCenter.address}`;
+        mapProgressText.classList.remove('has-results');
+
+        // 3. Fetch from backend (NDJSON streaming response)
         try {
             const token = localStorage.getItem('jobradius_token');
             const headers = { 'Content-Type': 'application/json' };
@@ -767,53 +763,143 @@ class JobRadiusApp {
                     radiuses: zones
                 })
             });
-            clearTimeout(timeoutId);
 
             if (response.status === 401) {
-                // Token rejected — could be expired or a subscription issue.
-                // Only prompt re-login if we actually have no token (truly logged out).
-                // Do NOT clear the token here — that destroys valid sessions on server restarts.
+                clearTimeout(timeoutId);
                 const existingToken = localStorage.getItem('jobradius_token');
                 if (!existingToken) {
                     this.modalOverlay.classList.remove('hidden');
                     this.authModal.classList.remove('hidden');
                 } else {
-                    // Token exists but was rejected — likely a server-side issue or restart.
-                    // Clear stale token and ask user to log in again.
                     localStorage.removeItem('jobradius_token');
                     localStorage.removeItem('jobradius_user');
                     this.btnLogin.innerText = 'Login';
                     this.modalOverlay.classList.remove('hidden');
                     this.authModal.classList.remove('hidden');
                 }
+                const container = document.getElementById('job-list-container'); // Assuming container is defined here
                 container.innerHTML = '<div class="empty-state">Session expired. Please sign in again.</div>';
                 return;
             }
             if (!response.ok) throw new Error('API Error ' + response.statusText);
-            const data = await response.json();
 
-            if (data.jobs && data.jobs.length > 0) {
-                // Cache raw jobs for re-filtering when zones change later
-                this.lastFetchedJobs = data.jobs;
+            // ── Stream NDJSON response for live progress ──
+            let accumulatedJobs = [];
 
-                // Filter: inside at least one inclusive zone AND not in any exclusion zone
-                const filteredJobs = data.jobs.filter(j =>
-                    this.radiusManager.isIncluded(j.lat, j.lng) &&
-                    !this.radiusManager.isExcluded(j.lat, j.lng)
-                );
-                this.renderJobList(filteredJobs);
-                this.plotJobMarkers(filteredJobs);
+            const updateProgress = (items) => {
+                if (mapProgressText) {
+                    mapProgressText.textContent = items > 0
+                        ? `Found ${items} job${items !== 1 ? 's' : ''} so far...`
+                        : 'Waiting for results...';
+                    if (items > 0) mapProgressText.classList.add('has-results');
+                }
+            };
 
-                // Fit map to show all zones in the visible viewport area
+            const parseNDJSONLine = (line) => {
+                if (!line.trim()) return;
+                let evt;
+                try {
+                    evt = JSON.parse(line);
+                } catch (e) {
+                    return; // malformed JSON — skip
+                }
+
+                // Handle each event type OUTSIDE the JSON parse try/catch
+                // so errors in geometry/rendering don't silently swallow job batches
+                if (evt.type === 'progress') {
+                    updateProgress(evt.items);
+                } else if (evt.type === 'status' && mapProgressText) {
+                    mapProgressText.textContent = evt.message;
+                } else if (evt.type === 'jobs' && evt.jobs) {
+                    accumulatedJobs.push(...evt.jobs);
+
+                    const filteredNewJobs = evt.jobs.filter(j => {
+                        // Jobs with null/missing coords: trust the server's fallback,
+                        // don't silently drop them
+                        if (j.lat == null || j.lng == null) return true;
+                        try {
+                            return this.radiusManager.isIncluded(j.lat, j.lng) &&
+                                !this.radiusManager.isExcluded(j.lat, j.lng);
+                        } catch (geoErr) {
+                            console.warn('[filter] geometry error, allowing job:', geoErr.message);
+                            return true; // geometry library not ready — allow all
+                        }
+                    });
+
+                    if (filteredNewJobs.length > 0) {
+                        this.plotJobMarkers(filteredNewJobs, true);
+                    } else {
+                        console.warn(`[stream] ${evt.jobs.length} jobs received but ALL filtered by zone — check radius bounds`);
+                    }
+                } else if (evt.type === 'error') {
+                    console.error('[stream] server error:', evt.message);
+                }
+            };
+
+            // Try streaming first, fallback to full-body text
+            if (response.body && response.body.getReader) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) parseNDJSONLine(line);
+                }
+                // Parse any remaining buffer
+                if (buffer.trim()) parseNDJSONLine(buffer);
+            } else {
+                // Fallback: read entire body at once
+                const rawText = await response.text();
+                for (const line of rawText.split('\n')) parseNDJSONLine(line);
+            }
+
+            clearTimeout(timeoutId);
+
+            // Hide progress overlay
+            mapProgress.style.display = 'none';
+
+            // Process final results check
+            if (accumulatedJobs.length > 0) {
+                this.lastFetchedJobs = accumulatedJobs;
+
+                // Final full filter for the sidebar list
+                const finalFiltered = accumulatedJobs.filter(j => {
+                    if (j.lat == null || j.lng == null) return true;
+                    try {
+                        return this.radiusManager.isIncluded(j.lat, j.lng) &&
+                            !this.radiusManager.isExcluded(j.lat, j.lng);
+                    } catch (e) { return true; }
+                });
+                this.renderJobList(finalFiltered);
+
                 setTimeout(() => this.mapController.fitAllZones(this.radiusManager), 600);
             } else {
-                container.innerHTML = '<div class="empty-state">No jobs found for this search. Try a different keyword or wider radius.</div>';
+                // No jobs — briefly show toast-style message
+                mapProgress.style.display = 'flex';
+                document.querySelector('.map-progress-spinner').style.display = 'none';
+                document.querySelector('.map-progress-title').textContent = 'No Results';
+                if (mapProgressText) mapProgressText.textContent = 'Apify found 0 jobs matching this criteria.';
+
+                setTimeout(() => {
+                    mapProgress.style.display = 'none';
+                    document.querySelector('.map-progress-spinner').style.display = 'block';
+                    document.querySelector('.map-progress-title').textContent = 'Generating Map Layers';
+                }, 3000);
             }
 
         } catch (e) {
             console.error("API Call Failed:", e);
-            const container = document.getElementById('job-list-container');
-            container.innerHTML = `<div class="empty-state">Search Failed: ${e.message}. Please ensure the backend server is running.</div>`;
+            mapProgress.style.display = 'flex';
+            document.querySelector('.map-progress-spinner').style.display = 'none';
+            document.querySelector('.map-progress-title').textContent = 'Search Failed';
+            mapProgressText.textContent = `${e.message}. Please ensure the backend server is running.`;
+            mapProgressText.classList.remove('has-results');
+            setTimeout(() => { mapProgress.style.display = 'none'; }, 5000);
         }
     }
 
@@ -845,7 +931,7 @@ class JobRadiusApp {
 
             // Format pay
             const payText = j.payMin
-                ? (j.payMax ? `$${(j.payMin / 1000).toFixed(0)}K - $${(j.payMax / 1000).toFixed(0)}K` : `$${j.payMin.toLocaleString()}`)
+                ? (j.payMax ? `$${Math.round(j.payMin).toLocaleString()} - $${Math.round(j.payMax).toLocaleString()}` : `$${Math.round(j.payMin).toLocaleString()}`)
                 : '';
 
             // Star rating
@@ -869,21 +955,19 @@ class JobRadiusApp {
             // Interaction
             div.addEventListener('click', () => this.showJobDetail(j));
 
-            // Map Pin Highlighting (Link Panel to Pin)
+            // Map Overlay Highlighting (Link sidebar card to map panel)
             div.addEventListener('mouseenter', () => {
                 div.style.background = 'rgba(255,255,255,0.1)';
-                const marker = this.jobMarkers[index];
-                if (marker) {
-                    marker.setAnimation(google.maps.Animation.BOUNCE);
-                    marker.setZIndex(9999); // Bring to front
+                const overlay = this.jobMarkers[index];
+                if (overlay && overlay.highlight) {
+                    overlay.highlight(true);
                 }
             });
             div.addEventListener('mouseleave', () => {
                 div.style.background = 'rgba(255,255,255,0.05)';
-                const marker = this.jobMarkers[index];
-                if (marker) {
-                    marker.setAnimation(null);
-                    marker.setZIndex(1); // Restore original
+                const overlay = this.jobMarkers[index];
+                if (overlay && overlay.highlight) {
+                    overlay.highlight(false);
                 }
             });
 
@@ -891,26 +975,152 @@ class JobRadiusApp {
         });
     }
 
-    plotJobMarkers(jobs) {
-        // Clear old markers
-        this.jobMarkers.forEach(m => m.setMap(null));
-        this.jobMarkers = [];
+    /**
+     * Plots job markers on the map.
+     * @param {Array} jobs - List of jobs to plot
+     * @param {boolean} append - If true, keeps existing markers and appends the new ones (used for streaming chunks)
+     */
+    plotJobMarkers(jobs, append = false) {
+        if (!this.mapController.map) return;
+
+        // Clear non-locked markers for fresh searches
+        if (!append) {
+            this.jobMarkers.forEach(m => m.setMap(null));
+            this.jobMarkers = [];
+            this._expandedOverlay = null;
+        }
+
+        const JobListUI = document.getElementById('job-list-container');
+        if (JobListUI && !append) JobListUI.innerHTML = '';
 
         jobs.forEach(j => {
-            // By omitting 'icon', Google Maps defaults to the standard inverted red teardrop
-            const marker = new google.maps.Marker({
-                position: { lat: j.lat, lng: j.lng },
-                map: this.mapController.map,
-                title: j.title,
-                animation: google.maps.Animation.DROP
-            });
+            // Skip jobs without valid coordinates
+            if (j.lat == null || j.lng == null || isNaN(j.lat) || isNaN(j.lng)) {
+                console.warn('[plot] Skipping job with invalid coords:', j.title);
+                return;
+            }
+            // Don't re-add if already shown as a locked marker
+            if (this.lockedJobs.has(j.indeedJobId)) return;
 
-            marker.addListener('click', () => {
-                this.showJobDetail(j);
-                // Removed mapController.flyTo() so we let showJobDetail smoothly panTo.
-            });
+            const overlay = createJobInfoOverlay(
+                { lat: j.lat, lng: j.lng },
+                j,
+                {
+                    isLocked: false,
+                    onExpand: (o) => {
+                        if (this._expandedOverlay && this._expandedOverlay !== o) {
+                            this._expandedOverlay.collapse();
+                        }
+                        this._expandedOverlay = o;
+                    },
+                    onLock: (job, locked) => {
+                        locked ? this.lockJob(job) : this.unlockJob(job);
+                    },
+                    onRoute: (job) => {
+                        this.currentSelectedJob = job;
+                        this.showInAppRoute();
+                    },
+                    onSaveNote: async (job, noteText) => {
+                        try {
+                            const token = localStorage.getItem('jobradius_token');
+                            const headers = { 'Content-Type': 'application/json' };
+                            if (token) headers['Authorization'] = `Bearer ${token}`;
+                            await fetch('/api/notes', {
+                                method: 'POST',
+                                headers,
+                                body: JSON.stringify({ jobId: job.id, title: job.title, content: noteText })
+                            });
+                        } catch (e) { console.error('[Note] Save failed:', e.message); }
+                    },
+                    onHide: (job) => { this.hideJob(job); }
+                }
+            );
+            overlay.setMap(this.mapController.map);
+            this.jobMarkers.push(overlay);
+        });
 
-            this.jobMarkers.push(marker);
+        // Always re-plot locked jobs after a fresh search clear
+        if (!append) this._replotLockedJobs();
+    }
+
+    // ── Job Locking ───────────────────────────────────────────────
+
+    lockJob(job) {
+        this.lockedJobs.set(job.indeedJobId, job);
+        this._saveLockedJobs();
+        console.log(`[Lock] Locked: "${job.title}" (${job.indeedJobId})`);
+        // Re-plot locked markers so the newly locked one gets a gold border
+        this._replotLockedJobs();
+    }
+
+    unlockJob(job) {
+        this.lockedJobs.delete(job.indeedJobId);
+        this._saveLockedJobs();
+        console.log(`[Lock] Unlocked: "${job.title}"`);
+        this._replotLockedJobs();
+    }
+
+    _saveLockedJobs() {
+        try {
+            const data = Array.from(this.lockedJobs.entries());
+            localStorage.setItem('jobradius_locked_jobs', JSON.stringify(data));
+        } catch (e) { console.warn('[Lock] Could not save to localStorage:', e.message); }
+    }
+
+    _restoreLockedJobs() {
+        try {
+            const raw = localStorage.getItem('jobradius_locked_jobs');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (!Array.isArray(data)) return;
+            data.forEach(([id, job]) => this.lockedJobs.set(id, job));
+            console.log(`[Lock] Restored ${this.lockedJobs.size} pinned jobs from localStorage`);
+        } catch (e) { console.warn('[Lock] Could not restore from localStorage:', e.message); }
+    }
+
+    _replotLockedJobs() {
+        if (!this.mapController.map) return;
+        // Remove existing locked markers and redraw all
+        this.lockedMarkers.forEach(m => m.setMap(null));
+        this.lockedMarkers = [];
+
+        this.lockedJobs.forEach((job) => {
+            if (!job.lat || !job.lng) return;
+            const overlay = createJobInfoOverlay(
+                { lat: job.lat, lng: job.lng },
+                job,
+                {
+                    isLocked: true,
+                    onExpand: (o) => {
+                        if (this._expandedOverlay && this._expandedOverlay !== o) {
+                            this._expandedOverlay.collapse();
+                        }
+                        this._expandedOverlay = o;
+                    },
+                    onLock: (j, locked) => {
+                        // Toggling off: unlock it
+                        if (!locked) this.unlockJob(j);
+                    },
+                    onRoute: (j) => {
+                        this.currentSelectedJob = j;
+                        this.showInAppRoute();
+                    },
+                    onSaveNote: async (j, noteText) => {
+                        try {
+                            const token = localStorage.getItem('jobradius_token');
+                            const headers = { 'Content-Type': 'application/json' };
+                            if (token) headers['Authorization'] = `Bearer ${token}`;
+                            await fetch('/api/notes', {
+                                method: 'POST', headers,
+                                body: JSON.stringify({ jobId: j.id, title: j.title, content: noteText })
+                            });
+                        } catch (e) { console.error('[Note] Save failed:', e.message); }
+                    },
+                    onHide: (j) => { this.unlockJob(j); this.hideJob(j); }
+                }
+            );
+            overlay.setMap(this.mapController.map);
+            this.lockedMarkers.push(overlay);
         });
     }
 

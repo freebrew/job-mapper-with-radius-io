@@ -3,6 +3,9 @@
  * JobRadius API Reverse Proxy
  * Forwards /api/* requests to the Node.js backend on port 3001.
  * Handles GET, POST, PUT, PATCH, DELETE, OPTIONS.
+ *
+ * For /api/jobs/search: streams the response in real-time (NDJSON).
+ * For all other endpoints: buffers and forwards as before.
  */
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -39,7 +42,74 @@ if ($inputBody !== '') {
     $forwardHeaders[] = 'Content-Length: ' . strlen($inputBody);
 }
 
-// Execute the proxied request
+// ── Detect if this is a streaming endpoint ──
+$isStreaming = (strpos($requestUri, '/api/jobs/search') !== false && $method === 'POST');
+
+if ($isStreaming) {
+    // ────────────────────────────────────────────────────────────────
+    // STREAMING MODE: Forward chunks in real-time using CURLOPT_WRITEFUNCTION
+    // ────────────────────────────────────────────────────────────────
+
+    // CORS + streaming headers
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    header('Content-Type: application/x-ndjson');
+    header('Cache-Control: no-cache');
+    header('X-Accel-Buffering: no'); // Disable nginx/proxy buffering if present
+
+    // Disable PHP output buffering
+    while (ob_get_level()) { ob_end_flush(); }
+    if (function_exists('apache_setenv')) {
+        apache_setenv('no-gzip', '1');
+    }
+    ini_set('zlib.output_compression', 'Off');
+
+    $headersParsed = false;
+    $httpCode = 200;
+
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $targetUrl,
+        CURLOPT_RETURNTRANSFER => false,  // Don't buffer!
+        CURLOPT_CUSTOMREQUEST  => $method,
+        CURLOPT_POSTFIELDS     => ($inputBody !== '') ? $inputBody : null,
+        CURLOPT_HTTPHEADER     => $forwardHeaders,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT        => 330,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_HEADER         => false,
+        CURLOPT_HEADERFUNCTION => function($ch, $headerLine) use (&$httpCode) {
+            // Capture status code from response headers
+            if (preg_match('/^HTTP\/\S+\s+(\d+)/', $headerLine, $m)) {
+                $httpCode = (int)$m[1];
+                http_response_code($httpCode);
+            }
+            return strlen($headerLine);
+        },
+        CURLOPT_WRITEFUNCTION  => function($ch, $data) {
+            echo $data;
+            flush();
+            return strlen($data);
+        },
+    ]);
+
+    $result = curl_exec($ch);
+    $curlErrno = curl_errno($ch);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($curlErrno !== 0) {
+        // Connection failure — Node is down
+        echo json_encode(['type' => 'error', 'message' => 'Backend unavailable: ' . $curlError]) . "\n";
+    }
+
+    exit;
+}
+
+// ────────────────────────────────────────────────────────────────
+// STANDARD MODE: Buffer entire response (non-streaming endpoints)
+// ────────────────────────────────────────────────────────────────
 $ch = curl_init();
 curl_setopt_array($ch, [
     CURLOPT_URL            => $targetUrl,
@@ -48,7 +118,7 @@ curl_setopt_array($ch, [
     CURLOPT_POSTFIELDS     => ($inputBody !== '') ? $inputBody : null,
     CURLOPT_HTTPHEADER     => $forwardHeaders,
     CURLOPT_CONNECTTIMEOUT => 5,
-    CURLOPT_TIMEOUT        => 330,   // 5.5 min — Apify scraping can be slow
+    CURLOPT_TIMEOUT        => 30,    // Normal endpoints don't need long timeouts
     CURLOPT_FOLLOWLOCATION => false,
     CURLOPT_HEADER         => true,  // Include response headers in return value
 ]);
@@ -85,7 +155,6 @@ foreach (explode("\r\n", $responseHeaders) as $line) {
     $hValue = $m[2];
     $hLower = strtolower($hName);
     if (!in_array($hLower, $skipHeaders)) {
-        // PHP headers() auto-deduplicates; send key response headers
         if (in_array($hLower, ['content-type', 'cache-control', 'set-cookie', 'www-authenticate',
                                 'x-ratelimit-limit', 'x-ratelimit-remaining'])) {
             header("$hName: $hValue", false);

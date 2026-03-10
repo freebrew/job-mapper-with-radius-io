@@ -123,8 +123,8 @@
           </div>
         </div>
 
-        <!-- Right: Job Listings Panel -->
-        <aside class="side-panel glass-panel" id="job-panel">
+        <!-- Right: Job Listings Panel (PHASED OUT — map overlays are primary UI) -->
+        <aside class="side-panel glass-panel" id="job-panel" style="display:none;">
           <div class="panel-header">
             <h2>Matching Jobs <span id="job-count" class="badge">0</span></h2>
             <div class="sort-controls">
@@ -141,8 +141,8 @@
       </main>
     </div>
 
-    <!-- Detailed Job Info Overlay (hidden by default) -->
-    <div id="job-mini-panel" class="glass-panel hidden">
+    <!-- Detailed Job Info Overlay (PHASED OUT — map overlays handle this) -->
+    <div id="job-mini-panel" class="glass-panel hidden" style="display:none;">
       <button id="btn-close-detail" class="close-btn">&times;</button>
       <div id="job-detail-content"></div>
       <div class="action-buttons mt-4">
@@ -154,6 +154,15 @@
       <div id="note-form" class="hidden mt-4 pt-4 border-t">
         <textarea placeholder="Followup context, contact names..." class="neumorphic-input w-full" rows="3"></textarea>
         <button class="btn-primary w-full mt-2">Save Note</button>
+      </div>
+    </div>
+
+    <!-- Map Progress Overlay -->
+    <div id="map-progress-overlay" class="map-progress-overlay" style="display:none;">
+      <div class="map-progress-inner">
+        <div class="map-progress-spinner"></div>
+        <div class="map-progress-title">Scanning Indeed...</div>
+        <div class="map-progress-count" id="map-progress-text">Preparing search...</div>
       </div>
     </div>
 
@@ -215,8 +224,64 @@
 
   </div>
 
+  <!-- Browser Compatibility Check — runs before app loads -->
+  <script>
+    (function () {
+      var issues = [];
+
+      // 1. ReadableStream + getReader — needed for live NDJSON job streaming
+      if (!(typeof ReadableStream !== 'undefined' &&
+        typeof ReadableStream.prototype.getReader === 'function')) {
+        issues.push('real-time job streaming (ReadableStream)');
+      }
+
+      // 2. WebGL2 — required for Google Maps vector / 3D rendering
+      try {
+        var c = document.createElement('canvas');
+        if (!c.getContext('webgl2')) issues.push('3D map rendering (WebGL2)');
+      } catch (e) { issues.push('3D map rendering (WebGL2)'); }
+
+      // 3. localStorage — session, location cache, locked jobs
+      try {
+        localStorage.setItem('__jr_compat__', '1');
+        localStorage.removeItem('__jr_compat__');
+      } catch (e) { issues.push('session storage'); }
+
+      // 4. ES Modules support — entire app won't boot without it
+      // (this script itself runs, so we can at least check via feature detect)
+      if (typeof Symbol === 'undefined' || typeof Promise === 'undefined') {
+        issues.push('modern JavaScript (ES Modules)');
+      }
+
+      if (issues.length > 0) {
+        window.addEventListener('DOMContentLoaded', function () {
+          var banner = document.createElement('div');
+          banner.id = 'compat-banner';
+          banner.style.cssText = [
+            'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:99999',
+            'background:linear-gradient(90deg,#92400e,#b45309)',
+            'color:#fef3c7', 'font-family:system-ui,sans-serif',
+            'font-size:13px', 'padding:10px 16px',
+            'display:flex', 'align-items:center', 'gap:12px',
+            'box-shadow:0 2px 8px rgba(0,0,0,0.4)'
+          ].join(';');
+          banner.innerHTML =
+            '<span style="font-size:18px">⚠️</span>' +
+            '<span style="flex:1"><strong>Reduced Experience:</strong> Your browser or an extension is blocking: ' +
+            '<em>' + issues.join(', ') + '</em>. ' +
+            'For the full 3D map &amp; live job results, use <strong>Chrome</strong> or <strong>Edge</strong> with ad-blockers disabled.</span>' +
+            '<button onclick="document.getElementById(\'compat-banner\').remove()" ' +
+            'style="background:rgba(0,0,0,0.3);border:none;color:#fef3c7;border-radius:4px;' +
+            'padding:4px 10px;cursor:pointer;font-size:14px;flex-shrink:0">✕ Dismiss</button>';
+          document.body.prepend(banner);
+        });
+      }
+    })();
+  </script>
+
   <!-- Entry Script -->
   <script type="module" src="./js/app.js"></script>
+
 </body>
 
 </html>

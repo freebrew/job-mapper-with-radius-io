@@ -5,66 +5,138 @@ const { requireAuth } = require('../middleware/auth');
 const apifyService = require('../services/apify.service');
 const { geocodeAddress } = require('../services/geocode.service');
 
-/**
- * Map misceres/indeed-scraper output to our internal job format.
- *
- * misceres schema:
- *   positionName, company, location (string), salary (string),
- *   description (string), url, id, postedAt, postingDateParsed,
- *   jobType, rating, reviewsCount
- */
-function parseSalary(salaryStr) {
-    if (!salaryStr || typeof salaryStr !== 'string') return { min: null, max: null };
-    // Extract numbers: "$40–$60 an hour", "$75,000–$100,000 a year"
-    const nums = salaryStr.match(/[\d,.]+/g);
-    if (!nums || nums.length === 0) return { min: null, max: null };
+// ── Relevance Filter ──────────────────────────────────────────────────────────
+// Strip common English suffixes to get a comparable root word.
+// Order matters: longest suffixes first.
+const SUFFIXES = [
+    'ationists', 'ationalist', 'ationists', 'alists', 'ionist',
+    'ionists', 'ising', 'izing', 'ists', 'iers', 'ers', 'ing',
+    'ings', 'tion', 'tions', 'ies', 'ist', 'es', 'er', 'ly', 's', 'e'
+];
 
-    const values = nums.map(n => parseFloat(n.replace(/,/g, '')));
-    let multiplier = 1;
-    const lower = salaryStr.toLowerCase();
-    if (lower.includes('hour')) multiplier = 2080;
-    else if (lower.includes('week')) multiplier = 52;
-    else if (lower.includes('month')) multiplier = 12;
-    // 'year' or 'annually' = 1
-
-    return {
-        min: values[0] ? Math.round(values[0] * multiplier) : null,
-        max: values[1] ? Math.round(values[1] * multiplier) : (values[0] ? Math.round(values[0] * multiplier) : null)
-    };
+function stemWord(word) {
+    const w = word.toLowerCase();
+    for (const sfx of SUFFIXES) {
+        if (w.endsWith(sfx) && w.length - sfx.length >= 3) {
+            return w.slice(0, -sfx.length);
+        }
+    }
+    return w;
 }
 
-function mapApifyJob(raw, searchCenter) {
-    const title = raw.positionName || raw.title || 'Untitled Position';
-    const company = raw.company || 'Unknown Employer';
-    const locationStr = (typeof raw.location === 'string' ? raw.location : null)
-        || searchCenter.address || 'Remote';
+/**
+ * Returns true if the job title is relevant to the search query.
+ *
+ * Since borderline/indeed-scraper already applies keyword filtering at Indeed's
+ * search level, our job here is only to catch truly unrelated results that
+ * slip through — NOT to do strict matching.
+ *
+ * Rules:
+ *  1. Always pass if the title directly contains a query word.
+ *  2. Pass if any 4+ char root of any query word appears in the title.
+ *  3. Always drop generic/empty placeholders like "Untitled Position".
+ *  4. If no match found, still PASS (trust the actor) — better to show
+ *     a borderline result than to silently over-filter.
+ */
+function isTitleRelevant(jobTitle, searchQuery) {
+    if (!jobTitle || !searchQuery) return true;
 
-    // misceres doesn't provide coordinates — will be geocoded later
-    const lat = null;
-    const lng = null;
+    // Drop known garbage titles regardless of query
+    const GARBAGE = ['untitled position', 'untitled job', 'job opening'];
+    if (GARBAGE.includes(jobTitle.toLowerCase().trim())) return false;
 
-    // Parse salary string to annual min/max
-    const { min: payMin, max: payMax } = parseSalary(raw.salary);
+    const titleLower = jobTitle.toLowerCase();
+    const queryWords = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+    if (queryWords.length === 0) return true;
 
-    const rating = raw.rating || null;
-    const indeedUrl = raw.url || '';
-    const indeedJobId = raw.id || raw.url || `scraped-${Date.now()}`;
-    const postedDate = raw.postingDateParsed || null;
+    // Check each query word for a match in the title
+    const matched = queryWords.some(word => {
+        if (titleLower.includes(word)) return true;           // exact substring
+        const root = stemWord(word);
+        if (root.length >= 4 && titleLower.includes(root)) return true; // root match
+        return false;
+    });
+
+    // If no word matched at all, still let it through — the actor's search
+    // already filtered by relevance. Only block garbage titles above.
+    return true;
+}
+
+/**
+ * Map borderline/indeed-scraper output to our internal job format.
+ *
+ * ACTUAL actor schema (verified against dataset JSON):
+ *   title, key (jobKey), jobUrl, datePublished
+ *   employer: { name, ratingsValue, ratingsCount }
+ *   location: { latitude, longitude, city, streetAddress, admin1Code }
+ *   baseSalary: { min, max, unitOfWork }   ← NOT salary.salaryMin/Max
+ *   jobTypes:   { CODE: "Part-time", ... } ← object, not array
+ *   description: { html, text }
+ */
+function mapApifyJob(raw) {
+    const title = raw.title || 'Untitled Position';
+
+    // employer.name is the correct field (not companyName)
+    const company = raw.employer?.name || raw.companyName || 'Unknown Employer';
+
+    // ── Location & Coordinates ─────────────────────────────────────
+    const loc = raw.location || {};
+    const lat = loc.latitude || null;
+    const lng = loc.longitude || null;
+    const locStr = [
+        loc.streetAddress && loc.streetAddress !== loc.city ? loc.streetAddress : null,
+        loc.city,
+        loc.admin1Code
+    ].filter(Boolean).join(', ') || 'Remote';
+
+    // ── Salary — baseSalary.min/max/unitOfWork ─────────────────────
+    const sal = raw.baseSalary || raw.salary || {};
+    // unitOfWork values: "YEAR","HOUR","WEEK","MONTH" (uppercase from actor)
+    const salType = (sal.unitOfWork || sal.salaryType || 'YEAR').toUpperCase();
+    // jobTypes is an object { CODE: label }, check label values for part-time
+    const jobTypeValues = Object.values(raw.jobTypes || raw.jobType || {});
+    const isPartTime = jobTypeValues.some(t => typeof t === 'string' && t.toLowerCase().includes('part'));
+    let multiplier = 1;
+    if (salType === 'HOUR') multiplier = isPartTime ? 1040 : 2080;
+    if (salType === 'WEEK') multiplier = 52;
+    if (salType === 'MONTH') multiplier = 12;
+    const rawMin = sal.min ?? sal.salaryMin ?? null;
+    const rawMax = sal.max ?? sal.salaryMax ?? null;
+    const payMin = rawMin != null ? Math.round(rawMin * multiplier) : null;
+    const payMax = rawMax != null ? Math.round(rawMax * multiplier) : null;
+    const payHourly = salType === 'HOUR' ? (rawMax || rawMin || null) : null;
+    const payType = isPartTime ? 'part-time' : salType.toLowerCase();
+
+    // ── Rating — employer.ratingsValue ────────────────────────────
+    const ratingVal = raw.employer?.ratingsValue ?? raw.rating?.rating ?? null;
+    const rating = ratingVal && ratingVal > 0 ? parseFloat(ratingVal) : null;
+
+    // ── IDs & URLs ────────────────────────────────────────────────
+    const indeedJobId = raw.key || raw.jobKey || raw.jobUrl || `scraped-${Date.now()}`;
+    const indeedUrl = raw.jobUrl || raw.url || '';
+    const postedDate = raw.datePublished ? new Date(raw.datePublished) : null;
+    // description is nested: { html, text }
+    const description = raw.description?.html || raw.description?.text
+        || raw.descriptionHtml || raw.descriptionText || null;
 
     return {
         title,
         company,
-        location: locationStr,
+        location: locStr,
         lat,
         lng,
         payMin,
         payMax,
-        rating: rating ? parseFloat(rating) : null,
+        payHourly,
+        payType,
+        rating,
         indeedUrl,
         indeedJobId,
-        postedDate
+        postedDate,
+        description
     };
 }
+
 
 /**
  * Perform a job search — scrapes real Indeed jobs via Apify,
@@ -81,6 +153,26 @@ router.post('/search', requireAuth, async (req, res, next) => {
             return res.status(400).json({ error: 'Missing required search parameters' });
         }
 
+        // Derive the Apify search radius from the user's largest inclusive zone.
+        // Apify accepts miles as a string enum: '0','5','10','15','25','35','50','100'.
+        function metersToApifyRadius(meters) {
+            const effectiveM = Math.max(meters || 40000, 40000); // 40km minimum
+            const miles = effectiveM / 1609.34;
+            for (const opt of [5, 10, 15, 25, 35, 50, 100]) {
+                if (opt >= miles) return String(opt);
+            }
+            return '100';
+        }
+        const inclusiveZones = (radiuses || []).filter(z => z.type === 'inclusive');
+        const maxInclusiveMeters = inclusiveZones.length
+            ? Math.max(...inclusiveZones.map(z => z.radiusMeters || 40000))
+            : 40000; // default 40km
+        const searchRadiusMiles = metersToApifyRadius(maxInclusiveMeters);
+        console.log(`[Jobs] Zone radius: ${Math.round(maxInclusiveMeters / 1000)}km → Apify radius: ${searchRadiusMiles} miles`);
+
+        // Prevent Express/Node from killing this long request
+        req.setTimeout(0);
+
         // 1. Save the search profile
         const searchProfile = await prisma.searchProfile.create({
             data: {
@@ -94,138 +186,169 @@ router.post('/search', requireAuth, async (req, res, next) => {
             }
         });
 
-        // 2. Fetch real jobs from Indeed via Apify
+        // 2. Stream progress to client via NDJSON (newline-delimited JSON)
+        res.setHeader('Content-Type', 'application/x-ndjson');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Transfer-Encoding', 'chunked');
+
+        // sendEvent: write NDJSON line, awaiting drain if the buffer is full
+        const sendEvent = (obj) => new Promise((resolve) => {
+            try {
+                const line = JSON.stringify(obj) + '\n';
+                const ok = res.write(line);
+                console.log(`[Jobs] sendEvent type=${obj.type} size=${line.length} writeOk=${ok}`);
+                if (!ok) {
+                    // Buffer full — wait for drain before continuing
+                    res.once('drain', resolve);
+                } else {
+                    resolve();
+                }
+            } catch (e) {
+                console.error(`[Jobs] sendEvent FAILED type=${obj.type}: ${e.message}`);
+                resolve();
+            }
+        });
+
+        await sendEvent({ type: 'status', message: 'Starting Indeed scrape...' });
+
+        // 2b. Fetch jobs with progressive callback
         console.log(`[Jobs] Scraping Indeed for "${query}" in "${location}"...`);
+        const searchCenter = { lat: centerLat, lng: centerLng, address: location };
         const scrapedJobs = await apifyService.scrapeIndeedJobs({
             query,
             location,
-            maxItems: 50
-        });
-        console.log(`[Jobs] Apify returned ${scrapedJobs.length} raw jobs.`);
+            maxItems: 50,
+            searchRadiusMiles,
+            onProgress: async (itemCount, newItems = []) => {
+                await sendEvent({ type: 'progress', items: itemCount });
 
-        // 2.5 Keyword relevance filter
-        // misceres/indeed-scraper returns mostly relevant jobs, but we still score & sort.
-        const getTitle = (j) => (j.positionName || j.title || '').toLowerCase();
-        const getDescText = (j) => (typeof j.description === 'string' ? j.description.toLowerCase() : '');
+                if (newItems && newItems.length > 0) {
+                    // Process this chunk immediately
+                    const chunkProms = newItems.map(async (rawJob) => {
+                        const mapped = mapApifyJob(rawJob);
 
-        // Expand abbreviations
-        const ABBR = {
-            rmt: ['massage therapist', 'registered massage therapist', 'rmt', 'massage'],
-            rn: ['registered nurse', 'nurse', 'rn'],
-            lpn: ['licensed practical nurse', 'practical nurse', 'lpn'],
-            cpa: ['accountant', 'accounting', 'cpa', 'chartered professional accountant'],
-            hr: ['human resources', 'hr'],
-            ot: ['occupational therapist', 'ot'],
-            pt: ['physiotherapist', 'physical therapist', 'pt'],
-            dev: ['developer', 'software engineer', 'programmer'],
-        };
-
-        const qLower = query.toLowerCase().trim();
-
-        // Build token list: full phrase + individual words + abbreviation expansions
-        const STOP_WORDS = new Set(['a', 'an', 'the', 'and', 'or', 'in', 'at', 'for', 'of', 'to', 'is', 'on', 'jobs', 'job', 'near', 'me']);
-        const words = qLower.split(/\s+/).filter(w => w.length > 1 && !STOP_WORDS.has(w));
-        const tokens = new Set([qLower, ...words, ...(ABBR[qLower] || [])]);
-        for (const w of words) {
-            if (ABBR[w]) ABBR[w].forEach(t => tokens.add(t));
-        }
-        const tokenArr = [...tokens];
-
-        // Score each job by title AND description.text matches
-        const scored = scrapedJobs.map(j => {
-            const title = getTitle(j);
-            const desc = getDescText(j).substring(0, 1000);  // first 1000 chars of description
-            let score = 0;
-            for (const tok of tokenArr) {
-                if (title.includes(tok)) {
-                    score += tok.includes(' ') ? 3 : 2;  // title match = strong
-                } else if (desc.includes(tok)) {
-                    score += 1;  // description match = weaker but still relevant
-                }
-            }
-            return { job: j, score };
-        });
-
-        // Sort by relevance — best matches first for DB storage
-        const sorted = scored.sort((a, b) => b.score - a.score);
-        const matchCount = scored.filter(x => x.score > 0).length;
-
-        console.log(`[Jobs] Relevance: ${matchCount}/${scrapedJobs.length} matched (tokens: ${tokenArr.join(', ')})`);
-
-        // Save ALL to DB (for data completeness) but track which are relevant
-        const jobsToProcess = sorted;
-
-
-
-        const savedJobs = [];       // ALL saved jobs
-        const relevantJobs = [];    // ONLY keyword-matched jobs (returned to client)
-        const searchCenter = { lat: centerLat, lng: centerLng, address: location };
-
-        for (let idx = 0; idx < jobsToProcess.length; idx++) {
-            const { job: rawJob, score } = jobsToProcess[idx];
-            try {
-                const mapped = mapApifyJob(rawJob, searchCenter);
-
-                // Geocode if coordinates are missing
-                let { lat, lng } = mapped;
-                if (!lat || !lng) {
-                    const coords = await geocodeAddress(mapped.location || location);
-                    if (coords) {
-                        lat = coords.lat;
-                        lng = coords.lng;
-                    } else {
-                        // Last resort: use search center
-                        lat = centerLat;
-                        lng = centerLng;
-                    }
-                }
-
-                const jobResult = await prisma.jobResult.upsert({
-                    where: {
-                        searchProfileId_indeedJobId: {
-                            searchProfileId: searchProfile.id,
-                            indeedJobId: mapped.indeedJobId
+                        // ── Relevance filter — drop jobs whose title doesn't match the search term ──
+                        if (!isTitleRelevant(mapped.title, query)) {
+                            console.log(`[Jobs] Filtered irrelevant: "${mapped.title}" for query "${query}"`);
+                            return null;
                         }
-                    },
-                    update: {},
-                    create: {
-                        searchProfileId: searchProfile.id,
-                        indeedJobId: mapped.indeedJobId,
-                        title: mapped.title,
-                        company: mapped.company,
-                        location: mapped.location,
-                        lat: lat,
-                        lng: lng,
-                        indeedUrl: mapped.indeedUrl,
-                        payMin: mapped.payMin,
-                        payMax: mapped.payMax,
-                        rating: mapped.rating
+
+                        // ── Resolve coordinates ────────────────────────────────────
+                        let { lat, lng } = mapped;
+
+                        if (!lat || !lng) {
+                            // Apify returned the location as a plain string (e.g. "Ottawa, ON K1S 2L2")
+                            // We must geocode it to get map-plottable coordinates.
+                            try {
+                                const coords = await geocodeAddress(mapped.location);
+                                if (coords) {
+                                    lat = coords.lat;
+                                    lng = coords.lng;
+                                    console.log(`[Jobs] Geocoded "${mapped.location}" → ${lat}, ${lng}`);
+                                } else {
+                                    // Geocoder returned nothing — fall back to search centre
+                                    // so the job still appears on the map rather than being dropped.
+                                    lat = searchCenter.lat;
+                                    lng = searchCenter.lng;
+                                    console.warn(`[Jobs] Geocode empty for "${mapped.location}" — using search centre`);
+                                }
+                            } catch (geoErr) {
+                                // Network/quota error — fall back to search centre
+                                lat = searchCenter.lat;
+                                lng = searchCenter.lng;
+                                console.warn(`[Jobs] Geocode error for "${mapped.location}": ${geoErr.message} — using search centre`);
+                            }
+                        }
+
+                        // Build the client-facing job object BEFORE DB save,
+                        // so a DB failure cannot silently drop the job from the map.
+                        const clientJob = {
+                            id: mapped.indeedJobId,
+                            title: mapped.title,
+                            company: mapped.company,
+                            location: mapped.location,
+                            lat,
+                            lng,
+                            payMin: mapped.payMin,
+                            payMax: mapped.payMax,
+                            payHourly: mapped.payHourly,
+                            payType: mapped.payType,
+                            rating: mapped.rating,
+                            indeedUrl: mapped.indeedUrl,
+                            indeedJobId: mapped.indeedJobId,
+                            description: mapped.description,
+                            postedDate: mapped.postedDate
+                        };
+
+                        // Save to DB in the background — never block or drop on failure
+                        prisma.jobResult.upsert({
+                            where: {
+                                searchProfileId_indeedJobId: {
+                                    searchProfileId: searchProfile.id,
+                                    indeedJobId: mapped.indeedJobId
+                                }
+                            },
+                            update: {
+                                title: mapped.title,
+                                company: mapped.company,
+                                location: mapped.location,
+                                lat,
+                                lng,
+                                payMin: mapped.payMin,
+                                payMax: mapped.payMax,
+                                rating: mapped.rating,
+                                scrapedAt: new Date()
+                            },
+                            create: {
+                                searchProfileId: searchProfile.id,
+                                indeedJobId: mapped.indeedJobId,
+                                title: mapped.title,
+                                company: mapped.company,
+                                location: mapped.location,
+                                lat,
+                                lng,
+                                payMin: mapped.payMin,
+                                payMax: mapped.payMax,
+                                rating: mapped.rating,
+                                indeedUrl: mapped.indeedUrl,
+                                description: mapped.description,
+                                postedDate: mapped.postedDate
+                            }
+                        }).catch(e => {
+                            console.error(`[Jobs] DB save error for "${mapped.indeedJobId}": ${e.message}`);
+                        });
+
+                        return clientJob;
+                    });
+
+                    const processedChunk = (await Promise.all(chunkProms)).filter(Boolean);
+
+                    // Stream jobs in small batches to avoid buffer overflow
+                    const BATCH = 10;
+                    for (let i = 0; i < processedChunk.length; i += BATCH) {
+                        const batch = processedChunk.slice(i, i + BATCH);
+                        await sendEvent({ type: 'jobs', jobs: batch });
                     }
-                });
-
-                const enriched = { ...jobResult, postedDate: mapped.postedDate };
-                savedJobs.push(enriched);
-
-                // Only include keyword-matched jobs in the response
-                if (score > 0) {
-                    relevantJobs.push(enriched);
                 }
-            } catch (e) {
-                if (idx < 3) console.error(`[Jobs] SAVE ERROR job #${idx} "${rawJob.title}":`, e.message);
             }
-        }
-
-        console.log(`[Jobs] Saved ${savedJobs.length}/${jobsToProcess.length} to DB. Returning ${relevantJobs.length} relevant to client.`);
-
-        res.json({
-            profile: searchProfile,
-            resultsCount: relevantJobs.length,
-            jobs: relevantJobs
         });
+        console.log(`[Jobs] Apify run complete. Total scraped: ${scrapedJobs.length}`);
+
+        // 3. Close the stream
+        await sendEvent({ type: 'complete' });
+        res.end();
 
     } catch (err) {
         console.error('[Jobs] Search error:', err.message);
-        next(err);
+        // If we already started streaming, send error as an event
+        if (res.headersSent) {
+            try {
+                res.write(JSON.stringify({ type: 'error', message: err.message }) + '\n');
+                res.end();
+            } catch { }
+        } else {
+            next(err);
+        }
     }
 });
 

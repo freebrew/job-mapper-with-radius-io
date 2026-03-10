@@ -15,7 +15,7 @@ if (!window.ANIM_CONFIG) {
  * Map Controller
  * Universal Map ID: 1a69e9680804148ef13dfe31  (WebGL vector map)
  *
- * TILT: Enforced via `map.setTilt(45)` on every idle AND in every moveCamera call.
+ * TILT: Enforced via `map.setTilt(60)` on every idle AND in every moveCamera call.
  *       `map.getTilt()` can return null on vector maps; we use `setTilt` which is
  *       unconditional, not guarded by a comparison.
  *
@@ -51,7 +51,7 @@ export class MapController {
             colorScheme: 'DARK',
             disableDefaultUI: true,
             zoomControl: true,
-            tilt: 45,
+            tilt: 60,
             heading: 0,
             tiltInteractionEnabled: true,    // Allow Ctrl+drag to tilt
             headingInteractionEnabled: true,    // Allow Ctrl+drag to rotate
@@ -64,11 +64,14 @@ export class MapController {
             this._idleBusy = true;
 
             const tilt = this.map.getTilt();
-            if (tilt !== null && tilt !== undefined && tilt < 40) {
-                this.map.moveCamera({ tilt: 45 });
+            if (tilt !== null && tilt !== undefined && tilt < 55) {
+                this.map.moveCamera({ tilt: 60 });
             }
 
-            this._resetToNorth();
+            // NOTE: _resetToNorth() intentionally NOT called here.
+            // Calling it on idle caused a distracting slow-rotation effect
+            // whenever the map was at rest. Heading resets to 0 only happen
+            // during explicit flyTo animations (heading: 0 is passed in).
 
             // Release guard after a short delay so the idle triggered by
             // our own corrections doesn't re-enter.
@@ -142,12 +145,12 @@ export class MapController {
         if (!this.map) return;
         const zoom = 15;
         const adj = this._adjustedCenter(lat, lng, zoom);
-        this.map.moveCamera({ center: adj, zoom, tilt: 45, heading: 0 });
-        this.map.setTilt(45);
+        this.map.moveCamera({ center: adj, zoom, tilt: 60, heading: 0 });
+        this.map.setTilt(60);
         setTimeout(() => {
             if (!this._flying) {
-                this.map.moveCamera({ center: adj, zoom: zoom - 1, tilt: 45, heading: 0 });
-                this.map.setTilt(45);
+                this.map.moveCamera({ center: adj, zoom: zoom - 1, tilt: 60, heading: 0 });
+                this.map.setTilt(60);
             }
         }, 700);
     }
@@ -196,40 +199,45 @@ export class MapController {
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    _resetToNorth() {
+    /**
+     * Rotate to true north via the shortest angle (left or right, whichever < 180°).
+     * Fires automatically after every cinematicFlyTo and can be called directly.
+     * @param {number} [delayMs=0]  Optional extra delay before the animation starts.
+     */
+    _resetToNorthShortest(delayMs = 0) {
         if (!this.map) return;
-        const h = this.map.getHeading() || 0;
-        if (Math.abs(h) < 2) return;
+        // Normalise current heading into [-180, 180]
+        let h = (this.map.getHeading() || 0) % 360;
+        if (h > 180) h -= 360;
+        if (h < -180) h += 360;
+        if (Math.abs(h) < 1) return;   // already north — nothing to do
+
         const { northResetMs = 8, frameMs = 180 } = window.ANIM_CONFIG;
         this._northTimers.forEach(t => clearTimeout(t));
         this._northTimers = [];
-
-        // Suppress idle handler during the entire north-reset animation
         this._idleBusy = true;
 
         for (let i = 1; i <= northResetMs; i++) {
             const t = this._ease(i / northResetMs);
             this._northTimers.push(setTimeout(() => {
-                let heading = h * (1 - t);
-                while (heading > 180) heading -= 360;
-                while (heading < -180) heading += 360;
-                this.map.moveCamera({ heading });
-            }, i * frameMs));
+                // Interpolate from h → 0 using the signed shortest delta
+                this.map.moveCamera({ heading: h * (1 - t) });
+            }, delayMs + i * frameMs));
         }
 
-        // Release idle guard after full animation completes
-        const totalMs = northResetMs * frameMs;
-        this._northTimers.push(setTimeout(() => {
-            this._idleBusy = false;
-        }, totalMs + 100));
+        const totalMs = delayMs + northResetMs * frameMs;
+        this._northTimers.push(setTimeout(() => { this._idleBusy = false; }, totalMs + 100));
     }
+
+    /** Public alias for use by external callers (e.g. after route render). */
+    resetToNorth(delayMs = 0) { this._resetToNorthShortest(delayMs); }
 
     /**
      * Fly to a location.
      * • LOCAL (< 50 km): single smooth phase — no zoom-out drama.
      * • LONG-DISTANCE (> 50 km): 3-phase pull-back → pan → zoom-in.
      */
-    cinematicFlyTo(lat, lng, { zoom = 15, heading = 0, tilt = 45 } = {}) {
+    cinematicFlyTo(lat, lng, { zoom = 15, heading = 0, tilt = 60 } = {}) {
         if (!this.map) return;
         this._cancelFlight();
         this._flying = true;
@@ -238,7 +246,7 @@ export class MapController {
         const cur = this.map.getCenter();
         const curLat = cur.lat(), curLng = cur.lng();
         const curZoom = this.map.getZoom() || 15;
-        const curTilt = this.map.getTilt() ?? 45;
+        const curTilt = this.map.getTilt() ?? 60;
         const curHead = this.map.getHeading() || 0;
         const dist = this._distM(curLat, curLng, lat, lng);
         const pd = this._phaseDur();
@@ -257,12 +265,18 @@ export class MapController {
             const t1 = this._animatePhase(from, p1end, 0);
             const t2 = this._animatePhase(p1end, mid, pd);
             const t3 = this._animatePhase(mid, to, pd * 2);
-            const done = setTimeout(() => { this._flying = false; }, pd * 3 + 50);
+            const done = setTimeout(() => {
+                this._flying = false;
+                this._resetToNorthShortest();   // ← snap to north after flight
+            }, pd * 3 + 50);
             this._flyTimers = [...t1, ...t2, ...t3, done];
         } else {
             // ── Local: single smooth glide — no zoom-out ──
             const t1 = this._animatePhase(from, to, 0);
-            const done = setTimeout(() => { this._flying = false; }, pd + 50);
+            const done = setTimeout(() => {
+                this._flying = false;
+                this._resetToNorthShortest();   // ← snap to north after flight
+            }, pd + 50);
             this._flyTimers = [...t1, done];
         }
     }
@@ -310,24 +324,24 @@ export class MapController {
         // Hard limits: never wider than "see both sides of an ocean", never closer than building-level
         zoom = Math.max(9, Math.min(16, zoom));
 
-        this.cinematicFlyTo(cLat, cLng, { zoom, tilt: 45, heading: 0 });
+        this.cinematicFlyTo(cLat, cLng, { zoom, tilt: 60, heading: 0 });
     }
 
     // ─── Public API ───────────────────────────────────────────────────────────
 
-    setCenter(lat, lng, zoom = 15) {
+    setCenter(lat, lng, zoom = 17) {
         this.prewarmTiles(lat, lng);
-        setTimeout(() => this.cinematicFlyTo(lat, lng, { zoom, heading: 0, tilt: 45 }), 300);
+        setTimeout(() => this.cinematicFlyTo(lat, lng, { zoom, heading: 0, tilt: 60 }), 300);
     }
 
     zoomToRadius(lat, lng, radiusMeters) {
         const { w, h } = this._visibleDims();
         const earthCirc = 40075016.686 * Math.cos(lat * Math.PI / 180);
         const zoom = Math.log2(earthCirc * Math.min(w, h) / (radiusMeters * 2.2 * 256));
-        this.cinematicFlyTo(lat, lng, { zoom: Math.max(9, Math.min(16, zoom)), heading: 0, tilt: 45 });
+        this.cinematicFlyTo(lat, lng, { zoom: Math.max(9, Math.min(16, zoom)), heading: 0, tilt: 60 });
     }
 
-    flyTo(lat, lng, heading = 0, tilt = 45, zoom = 15) {
+    flyTo(lat, lng, heading = 0, tilt = 60, zoom = 17) {
         this.cinematicFlyTo(lat, lng, { zoom, heading, tilt });
     }
 }

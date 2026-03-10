@@ -47,6 +47,7 @@ class JobRadiusApp {
         this.noteTextInput = document.getElementById('note-text-input');
         this.noteForm = document.getElementById('note-form');
         this.btnHideJob = document.getElementById('btn-hide-job');
+        this.btnLockJob = document.getElementById('btn-lock-job');
 
         // Map Tracking Memory
         this.currentSelectedJob = null;
@@ -281,6 +282,16 @@ class JobRadiusApp {
             });
         }
 
+        // JDS Minimize Handle
+        const jdsHandle = document.querySelector('#job-detail-sheet .sheet-handle');
+        if (jdsHandle && this.jobDetailSheet) {
+            jdsHandle.addEventListener('click', () => {
+                // Allows user to collapse the full detail view without unselecting the job
+                this.jobDetailSheet.classList.remove('sheet-fullscreen');
+                this.jobDetailSheet.classList.add('sheet-minimized');
+            });
+        }
+
         // Radius Management — inline address picker for each zone
         this.btnAddInclusive.addEventListener('click', () => this._showZoneAddressForm('inclusive'));
         this.btnAddExclusive.addEventListener('click', () => this._showZoneAddressForm('exclusive'));
@@ -367,6 +378,23 @@ class JobRadiusApp {
                 this.hideJob(this.currentSelectedJob);
             }
         });
+
+        // Lock Job Button
+        if (this.btnLockJob) {
+            this.btnLockJob.addEventListener('click', () => {
+                if (this.currentSelectedJob) {
+                    const job = this.currentSelectedJob;
+                    const isLocked = this.lockedJobs.has(job.indeedJobId);
+                    if (isLocked) {
+                        this.unlockJob(job);
+                        this.btnLockJob.innerText = '📌 Pin';
+                    } else {
+                        this.lockJob(job);
+                        this.btnLockJob.innerText = '🔓 Unpin';
+                    }
+                }
+            });
+        }
 
         // Job Mini Panel Close
         this.btnCloseDetail.addEventListener('click', () => {
@@ -533,6 +561,11 @@ class JobRadiusApp {
         this.jobDetailSheet.classList.remove('sheet-minimized');
         this.jobDetailSheet.classList.add('sheet-fullscreen');
         this.noteForm.classList.add('hidden'); // Reset note form
+
+        if (this.btnLockJob) {
+            const isLocked = this.lockedJobs.has(job.indeedJobId);
+            this.btnLockJob.innerText = isLocked ? '🔓 Unpin' : '📌 Pin';
+        }
 
         // Cinematic fly to job location — tilt 60, north heading, auto-reset via shortest angle
         if (this.mapController) {

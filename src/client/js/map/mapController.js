@@ -89,10 +89,10 @@ export class MapController {
         // delta = visibleCentreX - mapCentreX = LEFT - (LEFT+RIGHT)/2 = (LEFT-RIGHT)/2
 
         // If mobile / tablet, top drawers can obscure the top of the radius when tilted.
-        // We pull the camera "South" by adding a positive Y offset.
+        // We push the camera "North" by using a negative Y offset, which pushes the circle SOUTH.
         let yOffset = 30; // Default desktop navbar offset
         if (window.innerWidth < 1200) {
-            yOffset = window.innerHeight * 0.15; // Shift center down by 15% of screen height
+            yOffset = -window.innerHeight * 0.18; // Pull map content down by 18% of screen height
         }
 
         return {

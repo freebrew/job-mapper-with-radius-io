@@ -286,13 +286,32 @@ class JobRadiusApp {
         const btnFullscreen = document.getElementById('btn-fullscreen');
         if (btnFullscreen) {
             btnFullscreen.addEventListener('click', () => {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch((err) => {
-                        console.log(`Error attempting to enable fullscreen: ${err.message}`);
-                    });
+                const docElm = document.documentElement;
+                const fsElm = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+
+                if (!fsElm) {
+                    const req = docElm.requestFullscreen || docElm.webkitRequestFullscreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
+                    if (req) {
+                        try {
+                            const promise = req.call(docElm);
+                            if (promise && promise.catch) {
+                                promise.catch(err => {
+                                    console.log('Fullscreen error:', err);
+                                    if (err.name !== 'TypeError') {
+                                        alert('Could not enter fullscreen. Your browser might be blocking it.');
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.log('Fullscreen request failed', e);
+                        }
+                    } else {
+                        alert('Fullscreen API is not directly supported in this browser. On iOS, you must use "Add to Home Screen" to enable full screen mode.');
+                    }
                 } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
+                    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+                    if (exit) {
+                        exit.call(document);
                     }
                 }
             });

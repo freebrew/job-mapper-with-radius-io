@@ -108,6 +108,16 @@ header {
   border-bottom: 1px solid var(--border-glass);
 }
 
+.header-top-row {
+  display: contents;
+  /* Allows logo and user-controls to participate in header's flexbox */
+}
+
+.user-controls {
+  display: flex;
+  align-items: center;
+}
+
 .logo {
   font-size: 1.5rem;
   font-weight: 700;
@@ -887,7 +897,7 @@ button {
     display: none !important;
   }
 
-  /* Header becomes a floating search bar */
+  /* Header becomes a floating search block */
   header {
     position: absolute;
     top: 10px;
@@ -897,11 +907,32 @@ button {
     height: auto;
     padding: 12px 15px;
     z-index: var(--z-ui);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
   }
 
   .logo {
-    display: none;
-    /* Hide logo to save space for search */
+    display: block;
+    font-size: 1.25rem;
+  }
+
+  .user-controls {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* Make user control buttons smaller on mobile */
+  .user-controls button {
+    padding: 6px 12px;
+    font-size: 0.85rem;
   }
 
   .search-controls {
@@ -925,11 +956,6 @@ button {
   #btn-search {
     width: 100%;
     padding: 10px 12px;
-  }
-
-  .user-controls {
-    display: none;
-    /* Move to a menu later */
   }
 
   /* Main container constraints */

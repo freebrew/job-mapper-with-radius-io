@@ -937,41 +937,44 @@ button {
   /* Mobile Top Tabs */
   #mobile-top-tabs {
     position: absolute;
-    top: 5px;
-    left: 10px;
-    right: 10px;
+    top: 0;
+    left: 0;
+    right: 0;
     display: flex;
-    gap: 8px;
+    gap: 1px;
+    background: rgba(77, 168, 218, 0.3);
+    /* Subtle separator line between tabs */
     z-index: calc(var(--z-ui) + 10);
   }
 
   .top-tab {
     flex: 1;
-    padding: 8px 0;
-    background: rgba(12, 20, 33, 0.85);
+    padding: 12px 0;
+    background: rgba(12, 20, 33, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(77, 168, 218, 0.3);
-    border-radius: var(--radius-lg);
+    border: none;
+    border-radius: 0;
     color: var(--text-secondary);
     font-size: 0.85rem;
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
   .top-tab.active {
-    background: rgba(77, 168, 218, 0.15);
+    background: rgba(20, 33, 50, 0.95);
     color: var(--accent-cyan);
-    border-color: rgba(77, 168, 218, 0.6);
+    border-bottom: 2px solid var(--accent-cyan);
   }
 
   /* Top Slide-Down Drawers */
   .top-drawer {
     position: absolute;
-    top: 45px;
-    left: 10px;
-    right: 10px;
-    border-radius: var(--radius-lg);
+    top: 42px;
+    /* Height of the tabs */
+    left: 0;
+    right: 0;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    border-top: none;
     height: auto;
     z-index: var(--z-ui);
     transform: translateY(-150%);
@@ -985,6 +988,7 @@ button {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
   }
 
   /* Header becomes a top drawer */

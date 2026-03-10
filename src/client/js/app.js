@@ -1182,7 +1182,7 @@ class JobRadiusApp {
                 {
                     isLocked: false,
                     onExpand: (o) => {
-                        if (window.innerWidth < 768) {
+                        if (window.innerWidth < 1200) {
                             this.showJobDetail(o.job);
                             return;
                         }
@@ -1315,7 +1315,7 @@ class JobRadiusApp {
                 {
                     isLocked: true,
                     onExpand: (o) => {
-                        if (window.innerWidth < 768) {
+                        if (window.innerWidth < 1200) {
                             this.showJobDetail(o.job);
                             return;
                         }

@@ -91,8 +91,8 @@ function _buildClass() {
             this.expanded = true;
             this._noteVisible = false;
 
-            if (window.innerWidth < 768) {
-                // Mobile layout - callback handles expanding the bottom sheet
+            if (window.innerWidth < 1200) {
+                // Mobile/Tablet layout - callback handles expanding the bottom sheet
                 this.div.classList.add('job-overlay--active');
                 if (this.callbacks.onExpand) this.callbacks.onExpand(this);
                 return;
@@ -201,7 +201,7 @@ function _buildClass() {
             // Annualize hourly rates (40 hours/week * 52 weeks = 2080 hours)
             let min = j.payMin;
             let max = j.payMax;
-            if (j.payHourly) {
+            if (j.payHourly || (max && max < 1000)) {
                 if (min) min *= 2080;
                 if (max) max *= 2080;
             }

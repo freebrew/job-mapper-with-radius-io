@@ -43,6 +43,8 @@ class JobRadiusApp {
         this.jobDetailContent = document.getElementById('job-detail-content');
         this.btnRouteHere = document.getElementById('btn-route-here');
         this.btnAddNote = document.getElementById('btn-add-note');
+        this.btnSaveNote = document.getElementById('btn-save-note');
+        this.noteTextInput = document.getElementById('note-text-input');
         this.noteForm = document.getElementById('note-form');
         this.btnHideJob = document.getElementById('btn-hide-job');
 
@@ -266,6 +268,8 @@ class JobRadiusApp {
                 this.jobDetailSheet.classList.add('hidden');
                 this.jobDetailSheet.classList.remove('sheet-fullscreen');
                 this.jobDetailSheet.classList.remove('sheet-minimized');
+                this.disableFocusMode();
+                this.clearRoute();
             }
         });
 
@@ -366,18 +370,51 @@ class JobRadiusApp {
 
         // Job Mini Panel Close
         this.btnCloseDetail.addEventListener('click', () => {
-            if (window.innerWidth < 768) {
-                this.jobMiniPanel.classList.remove('sheet-open');
-            } else {
-                this.jobMiniPanel.classList.add('hidden');
+            if (this.jobDetailSheet) {
+                this.jobDetailSheet.classList.add('hidden');
+                this.jobDetailSheet.classList.remove('sheet-fullscreen');
+                this.jobDetailSheet.classList.remove('sheet-minimized');
             }
             this.clearRoute();
+            this.disableFocusMode();
         });
 
         // Add Note Toggle
         this.btnAddNote.addEventListener('click', () => {
             this.noteForm.classList.toggle('hidden');
         });
+
+        // Save Note Submit
+        if (this.btnSaveNote) {
+            this.btnSaveNote.addEventListener('click', async () => {
+                if (!this.currentSelectedJob) return;
+                const noteText = this.noteTextInput ? this.noteTextInput.value.trim() : '';
+                if (!noteText) {
+                    this._showToast('Note cannot be empty.');
+                    return;
+                }
+                const btnOriginalText = this.btnSaveNote.innerText;
+                this.btnSaveNote.innerText = 'Saving...';
+                try {
+                    const token = localStorage.getItem('jobradius_token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    await fetch('/api/notes', {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({ jobId: this.currentSelectedJob.id || this.currentSelectedJob.indeedJobId, title: this.currentSelectedJob.title, content: noteText })
+                    });
+                    this.noteForm.classList.add('hidden');
+                    if (this.noteTextInput) this.noteTextInput.value = '';
+                    this._showToast('Note saved successfully');
+                } catch (e) {
+                    console.error('[Note] Save failed:', e.message);
+                    this._showToast('Failed to save note');
+                } finally {
+                    this.btnSaveNote.innerText = btnOriginalText;
+                }
+            });
+        }
 
         // Admin Panel Logic
         if (this.btnAdminPanel) {
@@ -467,6 +504,7 @@ class JobRadiusApp {
     showJobDetail(job) {
         this.currentSelectedJob = job;
         this.clearRoute(); // Clear any previous route
+        this.enableFocusMode(job); // Hide other map pins
 
         // Build a safe apply URL: prefer direct job URL, fallback to Indeed search
         const applyUrl = (job.url && !job.url.includes('google.com/search?q='))
@@ -596,6 +634,36 @@ class JobRadiusApp {
         this.jobDetailSheet.classList.remove('sheet-minimized');
         this.currentSelectedJob = null;
         this.clearRoute();
+        this.disableFocusMode();
+    }
+
+    // ── Map Pin Focus Mode ────────────────────────────────────────
+
+    enableFocusMode(selectedJob) {
+        if (!this.jobMarkers) return;
+        this.jobMarkers.forEach(overlay => {
+            if (overlay.job.indeedJobId !== selectedJob.indeedJobId) {
+                if (overlay.div) {
+                    overlay.div.style.opacity = '0';
+                    overlay.div.style.pointerEvents = 'none';
+                }
+            } else {
+                if (overlay.div) {
+                    overlay.div.style.opacity = '1';
+                    overlay.div.style.pointerEvents = 'auto';
+                }
+            }
+        });
+    }
+
+    disableFocusMode() {
+        if (!this.jobMarkers) return;
+        this.jobMarkers.forEach(overlay => {
+            if (overlay.div) {
+                overlay.div.style.opacity = '1';
+                overlay.div.style.pointerEvents = 'auto';
+            }
+        });
     }
 
     /**

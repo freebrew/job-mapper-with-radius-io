@@ -31,7 +31,7 @@
 
 :root {
   --radius-lg: 16px;
-  --radius-md: 8px;
+  --radius-md: 0px;
   --z-map: 1;
   --z-ui: 10;
   --z-modal: 100;
@@ -945,6 +945,7 @@ button {
     background: rgba(77, 168, 218, 0.3);
     /* Subtle separator line between tabs */
     z-index: calc(var(--z-ui) + 10);
+    pointer-events: auto;
   }
 
   .top-tab {

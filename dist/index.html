@@ -49,8 +49,8 @@
       }
     })();
   </script>
-  <script type="module" crossorigin src="/assets/index-BYKkhkBx.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-4Slp0neF.css">
+  <script type="module" crossorigin src="/assets/index-DYSMr_Gf.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DHdMih3s.css">
 </head>
 
 <body>
@@ -60,8 +60,15 @@
 
     <!-- UI Overlay -->
     <div id="ui-container">
-      <!-- Top Toolbar -->
-      <header class="glass-panel">
+
+      <!-- Mobile Top Tabs -->
+      <div id="mobile-top-tabs" class="mobile-only">
+        <button id="tab-search" class="top-tab active">Search</button>
+        <button id="tab-radius" class="top-tab">Radius Zones</button>
+      </div>
+
+      <!-- Top Toolbar (Desktop: Fixed Header | Mobile: Slide-down Drawer) -->
+      <header class="glass-panel top-drawer">
         <div class="logo">
           <span class="neon-text">Job</span>Radius
         </div>
@@ -80,21 +87,12 @@
         </div>
       </header>
 
-      <!-- Mobile Floating Action Buttons -->
-      <div id="mobile-fabs" class="mobile-only">
-        <button id="btn-mobile-zones" class="fab btn-primary" title="Radius Zones">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <circle cx="12" cy="12" r="4"></circle>
-          </svg>
-        </button>
-      </div>
+
 
       <!-- Main Workspace -->
       <main>
-        <!-- Left: Radius Controls (Desktop Floating / Mobile Bottom Sheet) -->
-        <div id="radius-panel" class="floating-panel radius-controls glass-panel bottom-sheet">
-          <div class="sheet-handle mobile-only"></div>
+        <!-- Left: Radius Controls (Desktop: Floating Left | Mobile: Top Drawer) -->
+        <div id="radius-panel" class="floating-panel radius-controls glass-panel top-drawer">
           <h3>Radius Zones</h3>
           <div id="radius-list"></div>
           <div class="radius-actions" style="display:flex; gap:8px; margin-bottom: 12px;">

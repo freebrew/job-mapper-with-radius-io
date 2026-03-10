@@ -930,16 +930,62 @@ button {
     display: none !important;
   }
 
-  /* Header becomes 2-row floating card */
-  header {
+  /* Mobile Top Tabs */
+  #mobile-top-tabs {
     position: absolute;
-    top: 10px;
+    top: 5px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: calc(var(--z-ui) + 10);
+  }
+
+  .top-tab {
+    flex: 1;
+    padding: 8px 0;
+    background: rgba(12, 20, 33, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(77, 168, 218, 0.3);
+    border-radius: var(--radius-lg);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .top-tab.active {
+    background: rgba(77, 168, 218, 0.15);
+    color: var(--accent-cyan);
+    border-color: rgba(77, 168, 218, 0.6);
+  }
+
+  /* Top Slide-Down Drawers */
+  .top-drawer {
+    position: absolute;
+    top: 45px;
     left: 10px;
     right: 10px;
     border-radius: var(--radius-lg);
     height: auto;
-    padding: 12px 15px;
     z-index: var(--z-ui);
+    transform: translateY(-150%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.35s ease;
+    opacity: 0;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+
+  .top-drawer.panel-open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Header becomes a top drawer */
+  header {
+    padding: 12px 15px;
     flex-wrap: wrap;
     gap: 8px;
   }
@@ -993,34 +1039,9 @@ button {
     /* Let clicks pass to map */
   }
 
-  /* Floating Action Buttons */
-  #mobile-fabs {
-    position: absolute;
-    bottom: 24px;
-    left: 16px;
-    z-index: var(--z-ui);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    pointer-events: auto;
-  }
 
-  .fab {
-    width: 50px;
-    height: 50px;
-    border-radius: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    transition: transform 0.2s;
-  }
 
-  .fab:active {
-    transform: scale(0.95);
-  }
-
-  /* Bottom Sheets (replaces floating-panel & side-panel) */
+  /* Bottom Sheets (replaces side-panel) */
   .bottom-sheet {
     position: absolute;
     bottom: 0;
@@ -1053,8 +1074,12 @@ button {
 
   /* Specific mobile panel overrides */
   #radius-panel {
-    z-index: calc(var(--z-ui) + 1);
+    width: auto;
+    border-radius: var(--radius-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   }
+
 
   #job-panel {
     z-index: calc(var(--z-ui) + 2);

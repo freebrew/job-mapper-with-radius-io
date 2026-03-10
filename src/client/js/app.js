@@ -20,10 +20,15 @@ class JobRadiusApp {
         this.btnAddInclusive = document.getElementById('btn-add-inclusive');
         this.btnAddExclusive = document.getElementById('btn-add-exclusive');
         this.radiusList = document.getElementById('radius-list');
-        this.radiusPanel = document.getElementById('radius-panel'); // Mobile Bottom Sheet
+        this.radiusPanel = document.getElementById('radius-panel'); // Mobile Top Drawer
+
+        // Mobile Top Tabs
+        this.mobileTopTabs = document.getElementById('mobile-top-tabs');
+        this.tabSearch = document.getElementById('tab-search');
+        this.tabRadius = document.getElementById('tab-radius');
+        this.header = document.querySelector('header.top-drawer');
 
         // Mobile Elements
-        this.btnMobileZones = document.getElementById('btn-mobile-zones');
         this.btnLogin = document.getElementById('btn-login');
         this.btnSubscribe = document.getElementById('btn-subscribe');
         this.btnCheckout = document.getElementById('btn-checkout');
@@ -58,6 +63,12 @@ class JobRadiusApp {
 
         // Auto-start the app immediately after construction
         this.startApp();
+
+        // Default Mobile State (Open Search Panel)
+        if (window.innerWidth < 768 && this.header && this.tabSearch) {
+            this.header.classList.add('panel-open');
+            this.tabSearch.classList.add('active');
+        }
     } // End constructor
 
     async startApp() {
@@ -211,11 +222,32 @@ class JobRadiusApp {
         this.jobKeyword.addEventListener('keydown', triggerOnEnter);
         this.searchInput.addEventListener('keydown', triggerOnEnter);
 
-        // Mobile Interaction: Toggle Radius Bottom-Sheet natively
-        if (this.btnMobileZones && this.radiusPanel) {
-            this.btnMobileZones.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.radiusPanel.classList.toggle('sheet-open');
+        // Mobile Top Tabs Accordion Logic
+        if (this.tabSearch && this.tabRadius && this.header && this.radiusPanel) {
+            this.tabSearch.addEventListener('click', () => {
+                const isOpen = this.header.classList.contains('panel-open');
+                if (isOpen) {
+                    this.header.classList.remove('panel-open');
+                    this.tabSearch.classList.remove('active');
+                } else {
+                    this.header.classList.add('panel-open');
+                    this.tabSearch.classList.add('active');
+                    this.radiusPanel.classList.remove('panel-open');
+                    this.tabRadius.classList.remove('active');
+                }
+            });
+
+            this.tabRadius.addEventListener('click', () => {
+                const isOpen = this.radiusPanel.classList.contains('panel-open');
+                if (isOpen) {
+                    this.radiusPanel.classList.remove('panel-open');
+                    this.tabRadius.classList.remove('active');
+                } else {
+                    this.radiusPanel.classList.add('panel-open');
+                    this.tabRadius.classList.add('active');
+                    this.header.classList.remove('panel-open');
+                    this.tabSearch.classList.remove('active');
+                }
             });
         }
 
@@ -609,6 +641,12 @@ class JobRadiusApp {
 
             // Fly to the new zone
             this.mapController.cinematicFlyTo(selectedPlace.lat, selectedPlace.lng, { zoom: 12, heading: 0, tilt: 60 });
+
+            // Mobile UX: Automatically close the radius drawer when a zone is added
+            if (window.innerWidth < 768 && this.radiusPanel) {
+                this.radiusPanel.classList.remove('panel-open');
+                if (this.tabRadius) this.tabRadius.classList.remove('active');
+            }
         });
 
         // Cancel button
@@ -738,6 +776,12 @@ class JobRadiusApp {
         // Add first inclusive zone if none exist
         if (!this.radiusManager.getZonesData().length) {
             this.radiusManager.addZone('inclusive', 10000, this.currentCenter);
+        }
+
+        // Mobile UX: Automatically close the search drawer when a search begins
+        if (window.innerWidth < 768 && this.header) {
+            this.header.classList.remove('panel-open');
+            if (this.tabSearch) this.tabSearch.classList.remove('active');
         }
 
         const query = this.jobKeyword.value || 'Developer';

@@ -20,7 +20,7 @@ const createDayPassCheckoutSession = async (userId) => {
                             name: 'JobRadius 24-Hour Day Pass',
                             description: 'Full access to multi-radius job search and transit routing for 24 hours.',
                         },
-                        unit_amount: 499, // $4.99
+                        unit_amount: 999, // $9.99
                     },
                     quantity: 1,
                 },

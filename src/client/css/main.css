@@ -454,6 +454,35 @@ button {
   padding: 0 10px;
 }
 
+.btn-google-oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: #fff;
+  color: #3c4043;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: 'Google Sans', Arial, sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  margin-bottom: 20px;
+}
+
+.btn-google-oauth:hover {
+  background: #f8f9fa;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-google-oauth:active {
+  background: #f1f3f4;
+}
+
 /* =========================================
    JOB MAP OVERLAY PANELS
    ========================================= */

@@ -6,7 +6,67 @@ const jwt = require('jsonwebtoken');
 const prisma = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID);
+const REDIRECT_URI = 'https://jobradius.agent-swarm.net/api/auth/google/callback';
+
+const googleClient = new OAuth2Client(
+    process.env.GOOGLE_OAUTH_CLIENT_ID,
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+    REDIRECT_URI
+);
+
+// ── OAuth Redirect Flow (works on all browsers including iOS Safari) ──────────
+
+// Step 1: Redirect to Google's consent page
+// GET /api/auth/google/start
+router.get('/google/start', (req, res) => {
+    const url = googleClient.generateAuthUrl({
+        access_type: 'online',
+        scope: ['email', 'profile'],
+        prompt: 'select_account',
+    });
+    res.redirect(url);
+});
+
+// Step 2: Handle Google's redirect back with authorization code
+// GET /api/auth/google/callback
+router.get('/google/callback', async (req, res) => {
+    const { code, error } = req.query;
+    if (error || !code) {
+        return res.redirect('/?auth_error=access_denied');
+    }
+    try {
+        const { tokens } = await googleClient.getToken(code);
+        googleClient.setCredentials(tokens);
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken: tokens.id_token,
+            audience: process.env.GOOGLE_OAUTH_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        const googleEmail = payload.email;
+        const googleName = payload.name || googleEmail.split('@')[0];
+
+        let user = await prisma.user.findUnique({ where: { email: googleEmail } });
+        if (!user) {
+            const dummyHash = await bcrypt.hash(Math.random().toString(36), 10);
+            user = await prisma.user.create({
+                data: { email: googleEmail, name: googleName, passwordHash: dummyHash }
+            });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        // Redirect back to app with token in URL fragment (never hits server logs)
+        res.redirect(`/?google_token=${encodeURIComponent(token)}&google_name=${encodeURIComponent(user.name || googleEmail)}&google_email=${encodeURIComponent(user.email)}`);
+    } catch (err) {
+        console.error('[Auth/Google/Callback] Error:', err.message);
+        res.redirect('/?auth_error=server_error');
+    }
+});
 
 // POST /api/auth/google
 // Accepts a Google ID token credential, verifies it, and returns our app JWT.

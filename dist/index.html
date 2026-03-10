@@ -6,7 +6,7 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
   <link rel="apple-touch-icon" href="/icon-512.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="referrer" content="no-referrer-when-downgrade">
   <title>JobRadius - Multi-Radius Job Search</title>
 
@@ -66,8 +66,8 @@
 
   <!-- Google Identity Services (Sign-In) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script type="module" crossorigin src="/assets/index-DnRE3WJh.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CBrHlBVz.css">
+  <script type="module" crossorigin src="/assets/index-DWfmIwQJ.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-butcxhIJ.css">
 </head>
 
 <body>
@@ -98,10 +98,21 @@
         </div>
       </header>
 
+      <!-- Mobile Floating Action Buttons -->
+      <div id="mobile-fabs" class="mobile-only">
+        <button id="btn-mobile-zones" class="fab btn-primary" title="Radius Zones">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="4"></circle>
+          </svg>
+        </button>
+      </div>
+
       <!-- Main Workspace -->
       <main>
-        <!-- Left: Radius Controls (Floating) -->
-        <div class="floating-panel radius-controls glass-panel">
+        <!-- Left: Radius Controls (Desktop Floating / Mobile Bottom Sheet) -->
+        <div id="radius-panel" class="floating-panel radius-controls glass-panel bottom-sheet">
+          <div class="sheet-handle mobile-only"></div>
           <h3>Radius Zones</h3>
           <div id="radius-list"></div>
           <div class="radius-actions" style="display:flex; gap:8px; margin-bottom: 12px;">
@@ -142,8 +153,9 @@
       </main>
     </div>
 
-    <!-- Detailed Job Info Overlay (PHASED OUT — map overlays handle this) -->
-    <div id="job-mini-panel" class="glass-panel hidden" style="display:none;">
+    <!-- Detailed Job Info Overlay (Desktop Popup / Mobile Bottom Sheet) -->
+    <div id="job-mini-panel" class="glass-panel bottom-sheet hidden">
+      <div class="sheet-handle mobile-only"></div>
       <button id="btn-close-detail" class="close-btn">&times;</button>
       <div id="job-detail-content"></div>
       <div class="action-buttons mt-4">

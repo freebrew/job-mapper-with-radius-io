@@ -275,10 +275,6 @@ function _buildClass() {
             return `
                 <div class="jo-collapsed">
                     <div class="jo-row-pay">${pay}</div>
-                    <div class="jo-row-company">
-                        <span class="jo-company-name">${company}${lockIcon}</span>
-                        ${rating}
-                    </div>
                     <div class="jo-row-title">${title}</div>
                 </div>
                 <div class="jo-arrow"></div>

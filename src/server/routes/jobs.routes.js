@@ -221,7 +221,7 @@ router.post('/search', requireAuth, async (req, res, next) => {
             }
         });
 
-        await sendEvent({ type: 'status', message: 'Starting Indeed scrape...' });
+        await sendEvent({ type: 'status', message: 'Scanning job listings...' });
 
         // 2b. Fetch jobs with progressive callback
         console.log(`[Jobs] Scraping Indeed for "${query}" in "${location}"...`);

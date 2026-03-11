@@ -3,14 +3,10 @@
                         <div class="jo-row-pay">${e}${t}</div>
                     </div>
                     <div class="jo-arrow"></div>
-                `;const i=this._formatRating(),n=this._truncate(this.job.company,20),o=this._truncate(this.job.title,24);return`
+                `;this._formatRating(),this._truncate(this.job.company,20);const i=this._truncate(this.job.title,24);return`
                 <div class="jo-collapsed">
                     <div class="jo-row-pay">${e}</div>
-                    <div class="jo-row-company">
-                        <span class="jo-company-name">${n}${t}</span>
-                        ${i}
-                    </div>
-                    <div class="jo-row-title">${o}</div>
+                    <div class="jo-row-title">${i}</div>
                 </div>
                 <div class="jo-arrow"></div>
             `}_buildExpanded(){const e=this.job.company||"Unknown",t=this.job.title||"Untitled",i=this.job.location||"Remote",n=this._formatRating(),o=this._ageText(),a=this._formatPayFull(),r=this.isLocked?"📌 Locked":"📌 Lock",l=this.isLocked?"jo-btn--locked":"",d=this.job.indeedUrl&&!this.job.indeedUrl.includes("google.com")?this.job.indeedUrl:`https://www.google.com/search?q=${encodeURIComponent(t+" "+e+" "+i+" job")}&ibp=htl;jobs`,h=this.job.description||"";let m="";if(h){const u=h.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim().split(" "),c=100;if(u.length>c){let g=0,p=0,f=!1;for(let y=0;y<h.length&&g<c;y++)h[y]==="<"&&(f=!0),!f&&h[y],!f&&h[y]===" "&&(g++,p=y),h[y]===">"&&(f=!1);m=`<div class="jo-desc">${h.slice(0,p).trim()}… <a href="${d}" target="_blank" rel="noopener noreferrer" class="jo-more-link">More →</a></div>`}else m=`<div class="jo-desc">${h}</div>`}return`

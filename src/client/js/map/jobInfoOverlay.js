@@ -299,7 +299,7 @@ function _buildClass() {
 
             const applyUrl = (this.job.indeedUrl && !this.job.indeedUrl.includes('google.com'))
                 ? this.job.indeedUrl
-                : `https://www.indeed.com/jobs?q=${encodeURIComponent(title + ' ' + company)}&l=${encodeURIComponent(location)}`;
+                : `https://www.google.com/search?q=${encodeURIComponent(title + ' ' + company + ' ' + location + ' job')}&ibp=htl;jobs`;
 
             // Truncate description to 300 words, append ...More link
             const rawDesc = this.job.description || '';
@@ -339,7 +339,7 @@ function _buildClass() {
                     </div>
                     <div class="jo-salary-full">💰 ${payFull}</div>
                     ${descHtml}
-                    <a href="${applyUrl}" target="_blank" rel="noopener noreferrer" class="jo-apply">Apply on Indeed ↗</a>
+                    <a href="${applyUrl}" target="_blank" rel="noopener noreferrer" class="jo-apply">View Job ↗</a>
                     <div class="jo-actions">
                         <button class="jo-btn jo-btn--route" data-action="route">🚗 Route</button>
                         <button class="jo-btn jo-btn--note"  data-action="note">📝 Note</button>

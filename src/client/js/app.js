@@ -655,7 +655,7 @@ class JobRadiusApp {
         // Build a safe apply URL: prefer direct job URL, fallback to Indeed search
         const applyUrl = (job.url && !job.url.includes('google.com/search?q='))
             ? job.url
-            : `https://www.indeed.com/jobs?q=${encodeURIComponent(job.title + ' ' + (job.company || ''))}&l=${encodeURIComponent(job.location || 'Remote')}&fromage=30`;
+            : `https://www.google.com/search?q=${encodeURIComponent(job.title + ' ' + (job.company || '') + ' ' + (job.location || 'Remote') + ' job')}&ibp=htl;jobs`;
 
         const displayCompany = this.isPremium ? job.company : 'Premium Required';
 
@@ -667,7 +667,7 @@ class JobRadiusApp {
                 <span>⭐ ${job.rating || 'New'}</span>
             </div>
             <p style="color: var(--text-primary); font-size: 0.95rem; line-height: 1.5; margin-bottom: 16px;">
-                Click "Apply for Job" below to view the full listing and description on Indeed.
+                Click "Apply for Job" below to view the full listing on the job board.
                 <br><br>Location: ${job.location || 'Remote'}
             </p>
             ${job.snippet ? `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border-left:3px solid var(--accent-cyan); margin-bottom:16px; font-size:0.9rem; line-height:1.4; color:var(--text-secondary);">"${job.snippet}"</div>` : ''}

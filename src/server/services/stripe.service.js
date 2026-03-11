@@ -26,8 +26,8 @@ const createDayPassCheckoutSession = async (userId) => {
                 },
             ],
             mode: 'payment',
-            success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel`,
+            success_url: `${process.env.FRONTEND_URL || 'https://jobradius.agent-swarm.net'}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.FRONTEND_URL || 'https://jobradius.agent-swarm.net'}/payment/cancel`,
             client_reference_id: userId,
             customer_email: user.email,
             metadata: {

@@ -243,9 +243,15 @@ function _buildClass() {
             return str.length > len ? str.substring(0, len) + '…' : str;
         }
 
-        // Clip to 'len' chars at nearest word boundary, append …
+        // Clip to 'len' chars at nearest word boundary, then special chars, append …
         _truncateWords(str, len) {
             if (!str || str.length <= len) return str || '';
+            // First, find if a special character comes before the limit — clip there cleanly
+            const specialMatch = str.match(/^(.{10,}?)[,|\-\/|\\|:|\(|\[]/)
+            if (specialMatch && specialMatch[1].length <= len) {
+                return specialMatch[1].trimEnd() + '…';
+            }
+            // Otherwise clip at word boundary
             const cut = str.slice(0, len);
             const lastSpace = cut.lastIndexOf(' ');
             return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut) + '…';

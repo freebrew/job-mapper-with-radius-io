@@ -560,8 +560,8 @@ button {
   border: 1px solid rgba(77, 168, 218, 0.5);
   border-radius: 10px;
   padding: 7px 16px 6px;
-  min-width: 180px;
-  max-width: 260px;
+  min-width: 220px;
+  max-width: 340px;
   text-align: center;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(77, 168, 218, 0.15);
 }

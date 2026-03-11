@@ -243,6 +243,14 @@ function _buildClass() {
             return str.length > len ? str.substring(0, len) + '…' : str;
         }
 
+        // Clip to 'len' chars at nearest word boundary, append …
+        _truncateWords(str, len) {
+            if (!str || str.length <= len) return str || '';
+            const cut = str.slice(0, len);
+            const lastSpace = cut.lastIndexOf(' ');
+            return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut) + '…';
+        }
+
         _ageText() {
             const d = this.job.postedDate || this.job.createdAt;
             if (!d) return '';
@@ -270,7 +278,7 @@ function _buildClass() {
 
             const rating = this._formatRating();
             const company = this._truncate(this.job.company, 20);
-            const title = this._truncate(this.job.title, 24);
+            const title = this._truncateWords(this.job.title, 30);
 
             return `
                 <div class="jo-collapsed">

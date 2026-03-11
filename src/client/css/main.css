@@ -614,13 +614,14 @@ button {
 
 /* Position/title row */
 .jo-row-title {
-  font-size: 0.7rem;
+  font-size: 1.4rem;
   color: #cbd5e1;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 1px;
+  margin-top: 3px;
+  max-width: 240px;
 }
 
 /* Star rating */

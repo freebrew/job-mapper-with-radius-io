@@ -82,7 +82,70 @@ const handleWebhookEvent = async (event) => {
     return true;
 };
 
+/**
+ * Directly verify a Stripe Checkout Session and activate the day pass if paid.
+ * Called by the frontend immediately on return from Stripe checkout.
+ * This is more reliable than webhooks in sandbox/development environments.
+ * @param {string} sessionId - The Stripe session ID from the return URL
+ * @param {string} userId - The authenticated user's ID (from JWT, prevents spoofing)
+ */
+const verifyAndActivateSession = async (sessionId, userId) => {
+    try {
+        // Fetch the session directly from Stripe API
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+        // Security: ensure this session belongs to the authenticated user
+        if (session.client_reference_id !== userId) {
+            throw new Error('Session does not belong to this user');
+        }
+
+        // Only activate if payment is actually complete
+        if (session.payment_status !== 'paid') {
+            console.warn(`[Stripe] Session ${sessionId} not paid yet (status: ${session.payment_status})`);
+            // Return current user state without modifying anything
+            const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, name: true, subscriptionStatus: true, dayPassExpiresAt: true } });
+            return user;
+        }
+
+        // Already activated by webhook? Avoid double-counting.
+        const existingPayment = await prisma.payment.findUnique({ where: { stripePaymentId: session.id } });
+
+        if (!existingPayment) {
+            // Webhook hasn't fired yet — activate now.
+            const twentyFourHoursFromNow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            await prisma.user.update({
+                where: { id: userId },
+                data: { subscriptionStatus: 'day_pass', dayPassExpiresAt: twentyFourHoursFromNow }
+            });
+            await prisma.payment.create({
+                data: {
+                    userId,
+                    stripePaymentId: session.id,
+                    amount: session.amount_total,
+                    currency: session.currency,
+                    status: 'completed',
+                    type: 'day_pass'
+                }
+            });
+            console.log(`✅ [Stripe] Day Pass activated via verify-session for User: ${userId}`);
+        } else {
+            console.log(`[Stripe] Session ${sessionId} already activated (webhook fired earlier).`);
+        }
+
+        // Return fresh user data so frontend can update localStorage
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, email: true, name: true, subscriptionStatus: true, dayPassExpiresAt: true }
+        });
+        return user;
+    } catch (err) {
+        console.error('Stripe Service Error (verifyAndActivateSession):', err);
+        throw err;
+    }
+};
+
 module.exports = {
     createDayPassCheckoutSession,
-    handleWebhookEvent
+    handleWebhookEvent,
+    verifyAndActivateSession
 };

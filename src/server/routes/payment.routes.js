@@ -14,6 +14,22 @@ router.post('/create-checkout-session', requireAuth, async (req, res, next) => {
     }
 });
 
+// GET /api/stripe/verify-session?session_id=cs_test_...
+// Called by the frontend immediately after returning from Stripe checkout.
+// Directly confirms payment status with Stripe, updates the DB, and returns fresh user data.
+// This is MORE RELIABLE than webhooks in sandbox/dev environments.
+router.get('/verify-session', requireAuth, async (req, res, next) => {
+    try {
+        const { session_id } = req.query;
+        if (!session_id) return res.status(400).json({ error: 'Missing session_id' });
+
+        const user = await stripeService.verifyAndActivateSession(session_id, req.user.id);
+        res.json({ success: true, user });
+    } catch (err) {
+        next(err);
+    }
+});
+
 // POST /api/stripe/webhook
 // This route will handle stripe webhooks. In production, this needs express.raw({type: 'application/json'})
 // to properly verify the Stripe signature. For this MVP we accept the parsed JSON and log appropriately.

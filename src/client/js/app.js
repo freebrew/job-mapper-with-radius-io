@@ -103,6 +103,38 @@ class JobRadiusApp {
             // Restore session from localStorage (persist login across refreshes)
             this.restoreSession();
 
+            // ── Post-Payment Sync: Detect Stripe return URL ──────────────────
+            // When Stripe redirects back after checkout, the URL contains ?session_id=cs_...
+            // We use this to immediately verify the payment with Stripe and activate the day pass,
+            // bypassing the webhook (which may not fire instantly in sandbox/dev).
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session_id');
+            if (sessionId) {
+                const token = localStorage.getItem('jobradius_token');
+                if (token) {
+                    try {
+                        console.log('[Payment] Stripe return detected. Verifying session:', sessionId);
+                        const verifyRes = await fetch(`/api/stripe/verify-session?session_id=${encodeURIComponent(sessionId)}`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const verifyData = await verifyRes.json();
+                        if (verifyRes.ok && verifyData.user) {
+                            // Update localStorage with fresh user data (now includes dayPassExpiresAt)
+                            const existingUser = JSON.parse(localStorage.getItem('jobradius_user') || '{}');
+                            localStorage.setItem('jobradius_user', JSON.stringify({ ...existingUser, ...verifyData.user }));
+                            // Restart the premium timer with the new expiry
+                            this.checkPremiumStatus();
+                            console.log('[Payment] Day pass activated. Expiry:', verifyData.user.dayPassExpiresAt);
+                            this._showToast('✅ 24hr Pass activated! Your timer has started.');
+                        }
+                    } catch (e) {
+                        console.error('[Payment] Failed to verify Stripe session:', e);
+                    }
+                }
+                // Clean the ?session_id from the URL bar so refresh doesn't re-verify
+                window.history.replaceState({}, document.title, '/');
+            }
+
             // If we have a starting location from Geolocation, reverse-geocode it,
             // pre-fill the search location box, and cache the result.
             if (this.startLocation) {

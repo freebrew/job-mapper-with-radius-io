@@ -43,10 +43,11 @@ export class MapController {
     // ─── init ────────────────────────────────────────────────────────────────
 
     async init() {
+        const savedTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
         this.map = new google.maps.Map(document.getElementById(this.elementId), {
             center: this.defaultCenter,
             zoom: 15,
-            mapId: '1a69e9680804148ef13dfe31',
+            mapId: savedTheme,
             renderingType: google.maps.RenderingType.VECTOR,   // ← REQUIRED for tilt to work
             colorScheme: 'DARK',
             disableDefaultUI: true,
@@ -333,6 +334,86 @@ export class MapController {
         zoom = Math.max(9, Math.min(16, zoom));
 
         this.cinematicFlyTo(cLat, cLng, { zoom, tilt: 60, heading: 0 });
+
+        // After the cinematic fly settles, ensure the circle is fully clear of the panel
+        if (incl.length > 0 && window.innerWidth >= 768) {
+            const maxR = Math.max(...incl.map(z => z.radiusMeters));
+            const flyDur = this._phaseDur() * (0 > 50000 ? 3 : 1) + 200;
+            setTimeout(() => this.panToExposeCircle(cLat, maxR), flyDur + 400);
+        }
+    }
+
+    /**
+     * Pan the map so the ENTIRE radius circle is visible to the right of the left panel.
+     *
+     * Math:
+     *  metersPerPixel = (Earth circumference at lat) / (256 × 2^zoom)
+     *  radiusPx       = radiusMeters / metersPerPixel
+     *
+     *  The circle center is at map.getDiv().offsetWidth / 2  (horizontal center of the
+     *  full map canvas — Google Maps centers its projection on the full element).
+     *
+     *  leftEdgePx = (viewportWidth / 2) - radiusPx
+     *  We want:   leftEdgePx ≥ panelWidth + MARGIN
+     *
+     *  If not, pan the map WEST (negative panBy x) by the deficit so the
+     *  content shifts east and the circle's left edge clears the panel.
+     *
+     *  panBy(dx, dy): positive dx shifts the viewport east (content moves west).
+     *                 negative dx shifts the viewport west (content moves east → right on screen).
+     */
+    /**
+     * After directionsRenderer.setDirections(), Google Maps auto-fits the map
+     * to show the full route. This pans LEFT so the route is shifted right,
+     * fully clearing the permanent left sidebar panel.
+     *
+     * @param {google.maps.DirectionsResult} result — the directions result
+     * @param {number} marginPx — extra clearance pixels beyond the panel edge
+     */
+    panToExposeRoute(result, marginPx = 32) {
+        if (!this.map || window.innerWidth < 768) return;
+
+        const panel = document.getElementById('unified-user-panel');
+        const panelWidth = panel ? panel.offsetWidth : (this.LEFT_PANEL_PX || 320);
+
+        // Offset: shift the map center LEFT by half the panel width so the
+        // visible area is centered in the space to the RIGHT of the panel.
+        const offset = Math.round(panelWidth / 2) + marginPx;
+        this.map.panBy(-offset, 0);
+        console.log(`[panToExposeRoute] Panel: ${panelWidth}px → panBy(-${offset}, 0)`);
+    }
+
+    panToExposeCircle(lat, radiusMeters, marginPx = 20) {
+        if (!this.map) return;
+        if (window.innerWidth < 768) return; // mobile uses bottom sheet, no left panel
+
+        const panel = document.getElementById('unified-user-panel');
+        const panelWidth = panel ? panel.offsetWidth : this.LEFT_PANEL_PX;
+
+        const zoom = this.map.getZoom();
+        const earthCircumference = 40075016.686 * Math.cos(lat * Math.PI / 180);
+        const metersPerPixel = earthCircumference / (256 * Math.pow(2, zoom));
+        const radiusPx = radiusMeters / metersPerPixel;
+
+        const mapDiv = this.map.getDiv();
+        const viewportWidth = mapDiv ? mapDiv.offsetWidth : window.innerWidth;
+
+        // Current screen X of the circle's leftmost edge
+        // (map center is at viewportWidth/2 by default before any pan)
+        const leftEdgePx = (viewportWidth / 2) - radiusPx;
+
+        // Required left edge position: just past the panel + margin
+        const requiredLeftEdge = panelWidth + marginPx;
+
+        const deficit = requiredLeftEdge - leftEdgePx;
+
+        if (deficit > 0) {
+            // Pan west by deficit px → content moves east → circle clears the panel
+            this.map.panBy(-deficit, 0);
+            console.log(`[panToExposeCircle] Panel: ${panelWidth}px, Circle radius: ${Math.round(radiusPx)}px, Deficit: ${Math.round(deficit)}px → panBy(${-Math.round(deficit)}, 0)`);
+        } else {
+            console.log(`[panToExposeCircle] Circle already fully exposed (margin: ${Math.round(-deficit)}px)`);
+        }
     }
 
     // ─── Public API ───────────────────────────────────────────────────────────

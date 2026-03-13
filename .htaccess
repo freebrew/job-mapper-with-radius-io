@@ -1,8 +1,15 @@
-# JobRadius - Apache config
-# PHP-based reverse proxy: /api/* → api/proxy.php → Node.js on port 3001
-# Exception: /api/auth/google has its own dedicated PHP proxy
-
 Options -Indexes
+
+# Force no-cache on HTML files to prevent stale Vite JS bundle references
+<IfModule mod_headers.c>
+    <FilesMatch "\.html$">
+        FileETag None
+        Header unset ETag
+        Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
+    </FilesMatch>
+</IfModule>
 
 # Enable mod_rewrite
 RewriteEngine On

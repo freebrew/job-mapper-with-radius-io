@@ -16,17 +16,17 @@ class JobRadiusApp {
         // DOM Elements
         this.searchInput = document.getElementById('map-search-box');
         this.jobKeyword = document.getElementById('job-keyword');
-        this.btnSearch = document.getElementById('btn-search');
+        this.btnSearch = document.getElementById('pill-search'); // Search pill triggers performJobSearch
         this.btnAddInclusive = document.getElementById('btn-add-inclusive');
         this.btnAddExclusive = document.getElementById('btn-add-exclusive');
         this.radiusList = document.getElementById('radius-list');
-        this.radiusPanel = document.getElementById('radius-panel'); // Mobile Top Drawer
+        this.radiusList = document.getElementById('radius-list');
 
-        // Mobile Top Tabs
-        this.mobileTopTabs = document.getElementById('mobile-top-tabs');
-        this.tabSearch = document.getElementById('tab-search');
-        this.tabRadius = document.getElementById('tab-radius');
-        this.header = document.querySelector('header.top-drawer');
+        // Unified UI Elements
+        this.unifiedPanel = document.getElementById('unified-user-panel');
+        this.actionPills = document.querySelectorAll('.action-pill');
+        this.unifiedViews = document.querySelectorAll('.unified-view');
+        this.passCountdown = document.getElementById('pass-countdown');
 
         // Mobile Elements
         this.btnLogin = document.getElementById('btn-login');
@@ -35,11 +35,10 @@ class JobRadiusApp {
         this.authModal = document.getElementById('auth-modal');
         this.paymentModal = document.getElementById('payment-modal');
         this.modalOverlay = document.getElementById('modal-overlay');
-        this.jobDetailSheet = document.getElementById('job-detail-sheet');
-        this.jdsMiniTitle = document.getElementById('jds-mini-title');
-        this.jdsMiniPay = document.getElementById('jds-mini-pay');
-        this.btnJdsExpand = document.getElementById('btn-jds-expand');
-        this.btnCloseDetail = document.getElementById('btn-close-detail');
+        
+        // Job Details View
+        this.jobDetailView = document.getElementById('job-detail-view');
+        this.btnBackToResults = document.getElementById('btn-back-to-results');
         this.jobDetailContent = document.getElementById('job-detail-content');
         this.btnRouteHere = document.getElementById('btn-route-here');
         this.btnAddNote = document.getElementById('btn-add-note');
@@ -63,17 +62,15 @@ class JobRadiusApp {
         this._restoreLockedJobs();
 
         // Admin Elements
-        this.btnAdminPanel = document.getElementById('btn-admin-panel');
-        this.adminPanel = document.getElementById('admin-panel');
-        this.btnCloseAdmin = document.getElementById('btn-close-admin');
+        this.btnAdminPanel = document.getElementById('admin-pill');
+        this.adminPanel = document.getElementById('admin-view');
 
         // Auto-start the app immediately after construction
         this.startApp();
 
-        // Default Mobile State (Open Search Panel)
-        if (window.innerWidth < 768 && this.header && this.tabSearch) {
-            this.header.classList.add('panel-open');
-            this.tabSearch.classList.add('active');
+        // Default Mobile State
+        if (window.innerWidth < 768 && this.unifiedPanel) {
+            this.unifiedPanel.classList.add('panel-half');
         }
     } // End constructor
 
@@ -96,6 +93,7 @@ class JobRadiusApp {
             });
 
             this.setupListeners();
+            this.setupUnifiedNavigation();
             this.setupSearchBox();
             this._populateJobAutocomplete();
             this.setupModals();
@@ -114,7 +112,7 @@ class JobRadiusApp {
                 if (token) {
                     try {
                         console.log('[Payment] Stripe return detected. Verifying session:', sessionId);
-                        const verifyRes = await fetch(`/api/stripe/verify-session?session_id=${encodeURIComponent(sessionId)}`, {
+                        const verifyRes = await fetch(`/api/payment/verify-session?session_id=${encodeURIComponent(sessionId)}`, {
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
                         const verifyData = await verifyRes.json();
@@ -218,41 +216,136 @@ class JobRadiusApp {
     }
 
     /**
-     * Restores login state from localStorage without a new network request.
-     * Called on every startup so the user doesn't have to re-login after refresh.
+     * Restores login state from localStorage without blocking startup.
+     * On every page load:
+     *  1. Read token + user from localStorage
+     *  2. Check if JWT is expired (no network call)
+     *  3. If valid — restore UI immediately
+     *  4. Silently re-fetch /api/auth/me in the background to sync fresh data
      */
     restoreSession() {
         const token = localStorage.getItem('jobradius_token');
         const userStr = localStorage.getItem('jobradius_user');
-        if (!token || !userStr) return;
 
+        // Nothing stored — fresh visitor
+        if (!token) return;
+
+        // ── 1. Check JWT expiry locally (no network) ──
         try {
-            const user = JSON.parse(userStr);
-            let displayName = user.name || user.email.split('@')[0];
-
-            // Consolidate name for mobile screens (Initials only)
-            if (window.innerWidth < 768 && user.name) {
-                const parts = user.name.split(' ').filter(p => p.trim() !== '');
-                if (parts.length >= 2) {
-                    displayName = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-                } else if (parts.length === 1) {
-                    displayName = parts[0].substring(0, 2).toUpperCase();
+            const parts = token.split('.');
+            if (parts.length === 3) {
+                const payload = JSON.parse(atob(parts[1]));
+                if (payload.exp && (payload.exp * 1000) < Date.now()) {
+                    // Token is definitely expired — safe to clear
+                    console.warn('[Session] JWT expired, clearing session.');
+                    localStorage.removeItem('jobradius_token');
+                    localStorage.removeItem('jobradius_user');
+                    return;
                 }
             }
+        } catch(e) {
+            // Malformed JWT — also safe to clear
+            console.warn('[Session] Malformed JWT, clearing session.');
+            localStorage.removeItem('jobradius_token');
+            localStorage.removeItem('jobradius_user');
+            return;
+        }
 
-            this.btnLogin.innerText = displayName;
+        // ── 2. Restore UI immediately from localStorage (no flash) ──
+        let user = null;
+        if (userStr) {
+            try { user = JSON.parse(userStr); } catch(e) {
+                // Corrupted user JSON — don't log out, just rebuild from /me below
+                console.warn('[Session] Could not parse stored user data, will re-fetch.');
+            }
+        }
+
+        if (user) {
+            // Build display name defensively
+            let displayName = 'Account';
+            try {
+                if (user.name) {
+                    displayName = user.name;
+                } else if (user.email) {
+                    displayName = user.email.split('@')[0];
+                }
+            } catch(e) { displayName = 'Account'; }
+
+            // Update the user-name-display strip (new top element)
+            const nameEl = document.getElementById('user-name-display');
+            if (nameEl) nameEl.textContent = displayName;
+
+            // Also hide the Login button, show subscribe button if needed
+            if (this.btnLogin) this.btnLogin.classList.add('hidden');
 
             if (user.email === 'bruno.brottes@gmail.com' && this.btnAdminPanel) {
                 this.btnAdminPanel.classList.remove('hidden');
             }
-            console.log('[Session] Restored session for:', user.email);
-        } catch (e) {
-            // Corrupted user data — clear it
-            localStorage.removeItem('jobradius_token');
-            localStorage.removeItem('jobradius_user');
+            console.log('[Session] Restored UI for:', user.email || '(unknown)');
         }
 
+        // Always run premium check with whatever data we have
         this.checkPremiumStatus();
+
+        // ── 3. Background sync + restore cached search results ──
+        // Restore previous job results from sessionStorage (survive refresh)
+        try {
+            const cachedResults = sessionStorage.getItem('jobradius_last_results');
+            if (cachedResults) {
+                const jobs = JSON.parse(cachedResults);
+                if (Array.isArray(jobs) && jobs.length > 0) {
+                    this.lastFetchedJobs = jobs;
+                    // Re-plot all pins on the map
+                    const filtered = jobs.filter(j => j.lat != null && j.lng != null);
+                    filtered.forEach(job => {
+                        const overlay = createJobInfoOverlay(
+                            { lat: job.lat, lng: job.lng }, job,
+                            {
+                                isLocked: this.lockedJobs.has(job.indeedJobId),
+                                onExpand: (o) => { this.currentSelectedJob = o.job; this.showJobDetail(o.job); },
+                                onRoute: (j) => { this.currentSelectedJob = j; this.showInAppRoute(); },
+                                onHide: (j) => this.hideJob(j)
+                            }
+                        );
+                        overlay.setMap(this.mapController.map);
+                        this.jobMarkers.push(overlay);
+                    });
+                    this.renderJobList(jobs);
+                    console.log(`[Cache] Restored ${jobs.length} cached job results from session.`);
+                }
+            }
+        } catch(e) { console.warn('[Cache] Could not restore cached results:', e.message); }
+
+        // Background sync: re-fetch fresh user data from server
+        fetch('/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).then(async (res) => {
+            if (res.ok) {
+                const data = await res.json();
+                if (data.user) {
+                    localStorage.setItem('jobradius_user', JSON.stringify(data.user));
+                    // Re-run premium check with fresh server data
+                    this.checkPremiumStatus();
+                    console.log('[Session] Synced fresh user data from server.');
+                }
+            } else if (res.status === 401) {
+                // The server rejected this token — clear session AND cached results
+                console.warn('[Session] Server rejected token (401), clearing session.');
+                localStorage.removeItem('jobradius_token');
+                localStorage.removeItem('jobradius_user');
+                sessionStorage.removeItem('jobradius_last_results');
+                // Restore login button visibility
+                const nameEl = document.getElementById('user-name-display');
+                if (nameEl) nameEl.textContent = '';
+                if (this.btnLogin) {
+                    this.btnLogin.classList.remove('hidden');
+                }
+                this.checkPremiumStatus();
+            }
+            // Any other error (503, network failure etc.) — do NOT clear localStorage
+        }).catch(e => {
+            console.warn('[Session] Background sync failed (network?), keeping session:', e.message);
+        });
     }
 
     checkPremiumStatus() {
@@ -266,7 +359,11 @@ class JobRadiusApp {
         // If they are an active monthly subscriber, they bypass the timer
         if (user.subscriptionStatus === 'active') {
             this.isPremium = true;
-            this.btnSubscribe.innerText = "Premium Active";
+            this.btnSubscribe.classList.add('hidden');
+            if (this.passCountdown) {
+                this.passCountdown.classList.remove('hidden');
+                this.passCountdown.innerText = "Premium Active";
+            }
             return;
         }
 
@@ -277,6 +374,9 @@ class JobRadiusApp {
             // Clear any existing timer
             if (this.premiumTimerToken) clearInterval(this.premiumTimerToken);
 
+            this.btnSubscribe.classList.add('hidden');
+            if (this.passCountdown) this.passCountdown.classList.remove('hidden');
+
             this.premiumTimerToken = setInterval(() => {
                 const now = new Date();
                 const diffTime = expiresDate - now;
@@ -285,19 +385,23 @@ class JobRadiusApp {
                     // Expired
                     clearInterval(this.premiumTimerToken);
                     this.isPremium = false;
+                    if (this.passCountdown) this.passCountdown.classList.add('hidden');
+                    this.btnSubscribe.classList.remove('hidden');
                     this.btnSubscribe.innerText = "Get 24hr Pass";
                 } else {
                     this.isPremium = true;
-                    // Format diff into HHh MMm SSs
-                    const hours = Math.floor(diffTime / (1000 * 60 * 60));
-                    const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((diffTime % (1000 * 60)) / 1000);
-                    this.btnSubscribe.innerText = `${hours}h ${minutes}m ${seconds}s Left`;
+                    // Format diff into HH:MM:SS
+                    const hours = Math.floor(diffTime / (1000 * 60 * 60)).toString().padStart(2, '0');
+                    const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                    const seconds = Math.floor((diffTime % (1000 * 60)) / 1000).toString().padStart(2, '0');
+                    if (this.passCountdown) this.passCountdown.innerText = `${hours}:${minutes}:${seconds}`;
                 }
             }, 1000); // tick every second
 
         } else {
             this.isPremium = false;
+            if (this.passCountdown) this.passCountdown.classList.add('hidden');
+            this.btnSubscribe.classList.remove('hidden');
             this.btnSubscribe.innerText = "Get 24hr Pass";
         }
     }
@@ -343,59 +447,13 @@ class JobRadiusApp {
         this.jobKeyword.addEventListener('keydown', triggerOnEnter);
         this.searchInput.addEventListener('keydown', triggerOnEnter);
 
-        // Mobile Top Tabs Accordion Logic
-        if (this.tabSearch && this.tabRadius && this.header && this.radiusPanel) {
-            this.tabSearch.addEventListener('click', () => {
-                const isOpen = this.header.classList.contains('panel-open');
-                if (isOpen) {
-                    this.header.classList.remove('panel-open');
-                    this.tabSearch.classList.remove('active');
-                } else {
-                    this.header.classList.add('panel-open');
-                    this.tabSearch.classList.add('active');
-                    this.radiusPanel.classList.remove('panel-open');
-                    this.tabRadius.classList.remove('active');
-                }
-            });
-
-            this.tabRadius.addEventListener('click', () => {
-                const isOpen = this.radiusPanel.classList.contains('panel-open');
-                if (isOpen) {
-                    this.radiusPanel.classList.remove('panel-open');
-                    this.tabRadius.classList.remove('active');
-                } else {
-                    this.radiusPanel.classList.add('panel-open');
-                    this.tabRadius.classList.add('active');
-                    this.header.classList.remove('panel-open');
-                    this.tabSearch.classList.remove('active');
-                }
-            });
-        }
-
-        // Close Panels if map is clicked
+        // Close panels if map is clicked (mobile specifically dims bottom sheet)
         document.getElementById('map').addEventListener('click', () => {
-            if (window.innerWidth < 768) {
-                if (this.header) this.header.classList.remove('panel-open');
-                if (this.radiusPanel) this.radiusPanel.classList.remove('panel-open');
-                if (this.tabSearch) this.tabSearch.classList.remove('active');
-                if (this.tabRadius) this.tabRadius.classList.remove('active');
-            }
-            if (this.jobDetailSheet) {
-                this.jobDetailSheet.classList.add('hidden');
-                this.jobDetailSheet.classList.remove('sheet-fullscreen');
-                this.jobDetailSheet.classList.remove('sheet-minimized');
-                this.disableFocusMode();
-                this.clearRoute();
+            if (window.innerWidth < 768 && this.unifiedPanel) {
+                this.unifiedPanel.classList.remove('panel-half');
+                this.unifiedPanel.classList.remove('panel-full');
             }
         });
-
-        // JDS Expand button
-        if (this.btnJdsExpand && this.jobDetailSheet) {
-            this.btnJdsExpand.addEventListener('click', () => {
-                this.jobDetailSheet.classList.remove('sheet-minimized');
-                this.jobDetailSheet.classList.add('sheet-fullscreen');
-            });
-        }
 
         // F11 Fullscreen Mobile Toggle
         const btnFullscreen = document.getElementById('btn-fullscreen');
@@ -432,16 +490,6 @@ class JobRadiusApp {
             });
         }
 
-        // JDS Minimize Handle
-        const jdsHandle = document.querySelector('#job-detail-sheet .sheet-handle');
-        if (jdsHandle && this.jobDetailSheet) {
-            jdsHandle.addEventListener('click', () => {
-                // Allows user to collapse the full detail view without unselecting the job
-                this.jobDetailSheet.classList.remove('sheet-fullscreen');
-                this.jobDetailSheet.classList.add('sheet-minimized');
-            });
-        }
-
         // Radius Management — inline address picker for each zone
         this.btnAddInclusive.addEventListener('click', () => this._showZoneAddressForm('inclusive'));
         this.btnAddExclusive.addEventListener('click', () => this._showZoneAddressForm('exclusive'));
@@ -467,6 +515,156 @@ class JobRadiusApp {
                 } else {
                     if (this.transitLayer) this.transitLayer.setMap(null);
                 }
+            });
+        }
+    }
+
+    setupUnifiedNavigation() {
+        if(!this.actionPills || !this.unifiedViews) return;
+        
+        this.actionPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                // Remove active from all pills
+                this.actionPills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                
+                // Hide all views
+                this.unifiedViews.forEach(v => {
+                    v.classList.add('hidden');
+                    v.classList.remove('active');
+                });
+                
+                // Show target view
+                const targetId = pill.getAttribute('data-target');
+                const targetView = document.getElementById(targetId);
+                if(targetView) {
+                    targetView.classList.remove('hidden');
+                    targetView.classList.add('active');
+                }
+                
+                // On mobile, clicking a pill expands the panel to half or full
+                if(window.innerWidth < 768 && this.unifiedPanel) {
+                    this.unifiedPanel.classList.add('panel-half');
+                }
+            });
+        });
+        
+        // Bottom Sheet Swipe Mechanics (Mobile)
+        const sheetHandle = document.querySelector('.sheet-handle');
+        if (sheetHandle && this.unifiedPanel) {
+            let startY = 0;
+            let currentY = 0;
+            let initialTransform = 0;
+            let isDragging = false;
+
+            const getTransformY = () => {
+                const style = window.getComputedStyle(this.unifiedPanel);
+                const matrix = new DOMMatrixReadOnly(style.transform);
+                return matrix.m42;
+            };
+
+            // Touch Start: Init drag
+            sheetHandle.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                startY = e.touches[0].clientY;
+                currentY = startY; // default safely
+                initialTransform = getTransformY();
+                this.unifiedPanel.style.transition = 'none'; // Disable transition for live track
+            }, { passive: true });
+
+            // Touch Move: Track finger
+            sheetHandle.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                // Prevent drag processing if the panel is fully hidden (avoid OS gesture clash)
+                if (this.unifiedPanel.classList.contains('panel-hidden')) {
+                    return;
+                }
+
+                currentY = e.touches[0].clientY;
+                const deltaY = currentY - startY;
+                let newY = initialTransform + deltaY;
+                
+                // Bound it so it doesn't go above 0 (top of screen)
+                if (newY < 0) newY = 0;
+                
+                this.unifiedPanel.style.transform = `translateY(${newY}px)`;
+            }, { passive: true });
+
+            // Touch End: Snap to nearest state
+            sheetHandle.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                this.unifiedPanel.style.transition = 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)';
+                this.unifiedPanel.style.transform = ''; // Clear inline style to let CSS take over
+
+                const deltaY = currentY - startY;
+
+                // If the panel was hidden, ANY interaction on the handle is treated as a tap to restore.
+                if (this.unifiedPanel.classList.contains('panel-hidden')) {
+                    this.unifiedPanel.classList.remove('panel-hidden');
+                    this.unifiedPanel.classList.remove('panel-half');
+                    this.unifiedPanel.classList.remove('panel-full');
+                    return;
+                }
+
+                // Threshold logic to snap
+                if (Math.abs(deltaY) < 20) {
+                    // It was just a tap -> cycle states instead
+                    if (!this.unifiedPanel.classList.contains('panel-half') && !this.unifiedPanel.classList.contains('panel-full')) {
+                        this.unifiedPanel.classList.add('panel-half');
+                    } else if (this.unifiedPanel.classList.contains('panel-half')) {
+                        this.unifiedPanel.classList.remove('panel-half');
+                        this.unifiedPanel.classList.add('panel-full');
+                    } else {
+                        // From Full -> Default
+                        this.unifiedPanel.classList.remove('panel-full');
+                    }
+                    return;
+                }
+
+                if (deltaY > 50) {
+                    // Swiped DOWN
+                    if (this.unifiedPanel.classList.contains('panel-full')) {
+                        this.unifiedPanel.classList.remove('panel-full');
+                        this.unifiedPanel.classList.add('panel-half');
+                    } else if (this.unifiedPanel.classList.contains('panel-half')) {
+                        this.unifiedPanel.classList.remove('panel-half');
+                        // Default state
+                    } else {
+                        // Swipe down from default -> completely hide
+                        this.unifiedPanel.classList.add('panel-hidden');
+                    }
+                } else if (deltaY < -50) {
+                    // Swiped UP
+                    if (!this.unifiedPanel.classList.contains('panel-half') && !this.unifiedPanel.classList.contains('panel-full')) {
+                        this.unifiedPanel.classList.add('panel-half');
+                    } else if (this.unifiedPanel.classList.contains('panel-half')) {
+                        this.unifiedPanel.classList.remove('panel-half');
+                        this.unifiedPanel.classList.add('panel-full');
+                    }
+                }
+            }, { passive: true });
+        }
+        
+        // Theme Selection (Requires reload to apply Map ID to Google Maps instance)
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        if (themeBtns.length > 0) {
+            // Highlight current theme on load
+            const currentTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
+            themeBtns.forEach(btn => {
+                if(btn.getAttribute('data-map-id') === currentTheme) {
+                    themeBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                }
+                
+                btn.addEventListener('click', (e) => {
+                    const newTheme = e.target.getAttribute('data-map-id');
+                    localStorage.setItem('jobradius_map_theme', newTheme);
+                    themeBtns.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    this._showToast('Theme saved! Reloading map...');
+                    setTimeout(() => window.location.reload(), 1000);
+                });
             });
         }
     }
@@ -513,21 +711,25 @@ class JobRadiusApp {
         // Payment
         this.btnCheckout.addEventListener('click', () => this.handlePayment());
 
-        // Route Here — in-app Google Directions
-        this.btnRouteHere.addEventListener('click', () => {
-            if (this.currentSelectedJob && this.currentCenter) {
-                this.showInAppRoute();
-            } else {
-                alert('Please select a center location and a job first.');
-            }
-        });
+        // Route Here — only if the element still exists (may be removed in newer HTML)
+        if (this.btnRouteHere) {
+            this.btnRouteHere.addEventListener('click', () => {
+                if (this.currentSelectedJob && this.currentCenter) {
+                    this.showInAppRoute();
+                } else {
+                    alert('Please select a center location and a job first.');
+                }
+            });
+        }
 
-        // Hide Job Button
-        this.btnHideJob.addEventListener('click', () => {
-            if (this.currentSelectedJob) {
-                this.hideJob(this.currentSelectedJob);
-            }
-        });
+        // Hide Job Button (old static button — null-safe)
+        if (this.btnHideJob) {
+            this.btnHideJob.addEventListener('click', () => {
+                if (this.currentSelectedJob) {
+                    this.hideJob(this.currentSelectedJob);
+                }
+            });
+        }
 
         // Lock Job Button
         if (this.btnLockJob) {
@@ -546,21 +748,49 @@ class JobRadiusApp {
             });
         }
 
-        // Job Mini Panel Close
-        this.btnCloseDetail.addEventListener('click', () => {
-            if (this.jobDetailSheet) {
-                this.jobDetailSheet.classList.add('hidden');
-                this.jobDetailSheet.classList.remove('sheet-fullscreen');
-                this.jobDetailSheet.classList.remove('sheet-minimized');
-            }
-            this.clearRoute();
-            this.disableFocusMode();
-        });
+        if (this.btnBackToResults) {
+            this.btnBackToResults.addEventListener('click', () => {
+                // 1. Restore panel header (unhide search + action pills)
+                if (this.unifiedPanel) {
+                    this.unifiedPanel.classList.remove('panel-in-detail-mode');
+                }
 
-        // Add Note Toggle
-        this.btnAddNote.addEventListener('click', () => {
-            this.noteForm.classList.toggle('hidden');
-        });
+                // 2. Switch views WITHOUT calling searchPill.click().
+                //    Clicking the pill also fires performJobSearch because btnSearch
+                //    IS the search pill — use direct DOM manipulation instead.
+                document.getElementById('job-detail-view')?.classList.add('hidden');
+                document.querySelectorAll('.unified-view').forEach(v => v.classList.remove('hidden'));
+
+                // Mark the search pill as active (visual highlight only)
+                document.querySelectorAll('.action-pill').forEach(p => p.classList.remove('active'));
+                const searchPill = document.querySelector('.action-pill[data-target="job-search-view"]');
+                searchPill?.classList.add('active');
+
+                // 3. Re-render the cached job list without a new API call
+                if (this.lastFetchedJobs && this.lastFetchedJobs.length > 0) {
+                    this.renderJobList(this.lastFetchedJobs);
+                }
+
+                // 4. Clean up route + focus state
+                this.clearRoute();
+                this.disableFocusMode();
+                this.currentSelectedJob = null;
+
+                // 5. Mobile: hide panel back to map view
+                if (window.innerWidth < 768 && this.unifiedPanel) {
+                    this.unifiedPanel.classList.remove('panel-half');
+                    this.unifiedPanel.classList.remove('panel-full');
+                    this.unifiedPanel.classList.add('panel-hidden');
+                }
+            });
+        }
+
+        // Add Note Toggle (old static button — null-safe)
+        if (this.btnAddNote) {
+            this.btnAddNote.addEventListener('click', () => {
+                if (this.noteForm) this.noteForm.classList.toggle('hidden');
+            });
+        }
 
         // Save Note Submit
         if (this.btnSaveNote) {
@@ -598,11 +828,6 @@ class JobRadiusApp {
         if (this.btnAdminPanel) {
             this.btnAdminPanel.addEventListener('click', () => this.loadAdminMetrics());
         }
-        if (this.btnCloseAdmin) {
-            this.btnCloseAdmin.addEventListener('click', () => {
-                this.adminPanel.classList.add('admin-hidden');
-            });
-        }
 
         // Multi-theme select logic removed per user preference. 
         // We now use a single unified vector map aesthetic.
@@ -628,7 +853,15 @@ class JobRadiusApp {
                 localStorage.setItem('jobradius_user', JSON.stringify(data.user));
                 this.modalOverlay.classList.add('hidden');
                 this.authModal.classList.add('hidden');
-                this.btnLogin.innerText = data.user.name || email.split('@')[0];
+
+                // Update the user-status-strip: show name, hide login button
+                const nameToShow = data.user.name || data.user.email?.split('@')[0] || 'Account';
+                const nameEl = document.getElementById('user-name-display');
+                if (nameEl) nameEl.textContent = nameToShow;
+                if (this.btnLogin) this.btnLogin.classList.add('hidden');
+
+                // Check premium status (in case they already have a pass)
+                this.checkPremiumStatus();
 
                 // Show Admin gear icon for specific user
                 if (data.user.email === 'bruno.brottes@gmail.com' && this.btnAdminPanel) {
@@ -658,7 +891,7 @@ class JobRadiusApp {
         this.btnCheckout.innerText = 'Processing...';
         try {
             // Note: Sending empty context, server will parse userId from JWT via requireAuth
-            const res = await fetch('/api/stripe/create-checkout-session', {
+            const res = await fetch('/api/payment/create-checkout-session', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -682,45 +915,228 @@ class JobRadiusApp {
     showJobDetail(job) {
         this.currentSelectedJob = job;
         this.clearRoute(); // Clear any previous route
-        this.enableFocusMode(job); // Hide other map pins
 
-        // Build a safe apply URL: prefer direct job URL, fallback to Indeed search
-        const applyUrl = (job.url && !job.url.includes('google.com/search?q='))
-            ? job.url
-            : `https://www.google.com/search?q=${encodeURIComponent(job.title + ' ' + (job.company || '') + ' ' + (job.location || 'Remote') + ' job')}&ibp=htl;jobs`;
+        // Build apply URL — use the real job URL (Indeed posting), fall back to Indeed search
+        const applyUrl = job.jobUrl
+            ? job.jobUrl
+            : `https://www.indeed.com/jobs?q=${encodeURIComponent(job.title)}&l=${encodeURIComponent(job.location || '')}`;
 
-        const displayCompany = this.isPremium ? job.company : 'Premium Required';
+        const displayCompany = this.isPremium ? (job.company || 'Unknown Employer') : '🔒 Premium Required';
+        const isLocked = this.lockedJobs.has(job.indeedJobId);
 
-        this.jobDetailContent.innerHTML = `
-            <h2 style="color: var(--accent-cyan); margin-bottom: 4px;">${job.title}</h2>
-            <h4 style="color: var(--text-secondary); margin-bottom: 12px; font-weight: 500;">${this.isPremium ? '🏢' : '🔒'} ${displayCompany}</h4>
-            <div style="display:flex; justify-content:space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-glass); padding-bottom: 12px;">
-                <span style="color:#10b981; font-weight:bold;">${job.payMin ? `💰 $${job.payMin.toLocaleString()}` : 'Pay N/A'}</span>
-                <span>⭐ ${job.rating || 'New'}</span>
-            </div>
-            <p style="color: var(--text-primary); font-size: 0.95rem; line-height: 1.5; margin-bottom: 16px;">
-                Click "Apply for Job" below to view the full listing on the job board.
-                <br><br>Location: ${job.location || 'Remote'}
-            </p>
-            ${job.snippet ? `<div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border-left:3px solid var(--accent-cyan); margin-bottom:16px; font-size:0.9rem; line-height:1.4; color:var(--text-secondary);">"${job.snippet}"</div>` : ''}
-            <a href="${applyUrl}" target="_blank" rel="noopener noreferrer" class="btn-primary" style="display:block; text-align:center; text-decoration:none;">Apply for Job</a>
-            <div id="route-steps" style="margin-top:12px;"></div>
-        `;
-
-        if (this.jdsMiniTitle) this.jdsMiniTitle.textContent = job.title;
-        if (this.jdsMiniPay) this.jdsMiniPay.textContent = job.payMin ? `$${(job.payMin / 1000).toFixed(0)}k` : 'N/A';
-
-        this.jobDetailSheet.classList.remove('hidden');
-        this.jobDetailSheet.classList.remove('sheet-minimized');
-        this.jobDetailSheet.classList.add('sheet-fullscreen');
-        this.noteForm.classList.add('hidden'); // Reset note form
-
-        if (this.btnLockJob) {
-            const isLocked = this.lockedJobs.has(job.indeedJobId);
-            this.btnLockJob.innerText = isLocked ? '🔓 Unpin' : '📌 Pin';
+        // Format salary
+        let salaryHtml = '';
+        if (job.payMin || job.payMax) {
+            let min = job.payMin, max = job.payMax;
+            if (job.payHourly || (max && max < 1000)) {
+                if (min) min = min * 2080;
+                if (max) max = max * 2080;
+            }
+            const fmtN = n => n ? '$' + Math.round(n).toLocaleString() : '';
+            const range = (min && max && min !== max)
+                ? `${fmtN(min)} – ${fmtN(max)}`
+                : fmtN(max || min);
+            salaryHtml = `<div style="color:#10b981; font-weight:700; font-size:1.1rem; margin-bottom:6px;">💰 ${range}${job.payHourly ? '/yr (annualized)' : '/yr'}</div>`;
         }
 
-        // Cinematic fly to job location — tilt 60, north heading, auto-reset via shortest angle
+        // Rating
+        const ratingHtml = job.rating
+            ? `<span style="color:#f59e0b; font-size:0.9rem;">⭐ ${parseFloat(job.rating).toFixed(1)}</span>`
+            : '';
+
+        // Age
+        let ageHtml = '';
+        const dateField = job.postedDate || job.createdAt;
+        if (dateField) {
+            const days = Math.floor((Date.now() - new Date(dateField).getTime()) / 86400000);
+            const label = days === 0 ? 'Today' : days === 1 ? '1d ago' : `${days}d ago`;
+            ageHtml = `<span style="color:#64748b; font-size:0.8rem; float:right;">${label}</span>`;
+        }
+
+        // Description — prefer HTML, fall back to text, then snippet
+        let bodyHtml = '';
+        if (job.description) {
+            const clean = job.description
+                .replace(/<script[\s\S]*?<\/script>/gi, '')
+                .replace(/\son\w+="[^"]*"/gi, '')
+                .replace(/\son\w+='[^']*'/gi, '');
+            bodyHtml = `<div class="jd-description">${clean}</div>`;
+        } else if (job.snippet) {
+            bodyHtml = `<div class="jd-description" style="color:var(--text-secondary); font-style:italic;">"${job.snippet}"</div>`;
+        } else {
+            bodyHtml = `<div class="jd-description" style="color:var(--text-secondary);">No description available. Click "Apply for Job" to view the full listing.</div>`;
+        }
+
+        // Render into job-detail-content
+        this.jobDetailContent.innerHTML = `
+            <div style="padding:0 4px;">
+                ${ageHtml}
+                <h2 style="color:var(--accent-cyan); margin:0 0 6px; font-size:1.2rem; line-height:1.3;">${job.title}</h2>
+                <div style="color:var(--text-secondary); font-size:0.95rem; margin-bottom:8px;">🏢 ${displayCompany}</div>
+                ${salaryHtml}
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border-glass);">
+                    ${ratingHtml}
+                    <span style="color:var(--text-secondary); font-size:0.85rem;">📍 ${job.location || 'Remote'}</span>
+                </div>
+
+                ${bodyHtml}
+
+                <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border-glass);">
+                    <a href="${applyUrl}" target="_blank" rel="noopener noreferrer"
+                       style="display:block; text-align:center; text-decoration:none; padding:12px; background:var(--accent-cyan); color:#000; font-weight:700; border-radius:8px; margin-bottom:12px; font-size:0.95rem;">
+                        🔗 Apply for Job
+                    </a>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button id="jd-btn-route" style="padding:10px 8px; background:rgba(6,182,212,0.15); border:1px solid var(--accent-cyan); color:var(--accent-cyan); border-radius:8px; cursor:pointer; font-size:0.9rem;">🚗 Route</button>
+                        <button id="jd-btn-pin" style="padding:10px 8px; background:rgba(245,158,11,0.15); border:1px solid #f59e0b; color:#f59e0b; border-radius:8px; cursor:pointer; font-size:0.9rem;">${isLocked ? '🔓 Unpin' : '📌 Pin'}</button>
+                        <button id="jd-btn-note" style="padding:10px 8px; background:rgba(255,255,255,0.05); border:1px solid var(--border-glass); color:var(--text-primary); border-radius:8px; cursor:pointer; font-size:0.9rem;">📝 Note</button>
+                        <button id="jd-btn-hide" style="padding:10px 8px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.4); color:#ef4444; border-radius:8px; cursor:pointer; font-size:0.9rem;">🙈 Hide</button>
+                    </div>
+                    <div id="jd-note-form" class="hidden" style="margin-top:10px;">
+                        <textarea id="jd-note-text" rows="3" placeholder="Add your notes about this job..."
+                            style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.05); border:1px solid var(--border-glass); color:var(--text-primary); border-radius:8px; padding:10px; font-size:0.9rem; resize:vertical;"></textarea>
+                        <button id="jd-btn-save-note" style="margin-top:6px; padding:8px 16px; background:var(--accent-cyan); color:#000; font-weight:700; border:none; border-radius:6px; cursor:pointer; width:100%;">💾 Save Note</button>
+                    </div>
+                    <div id="route-steps"></div>
+                </div>
+            </div>
+        `;
+
+        // ── Wire action buttons ──────────────────────────────────────────────
+
+        // Route: calls the existing showInAppRoute() which uses this.currentSelectedJob
+        document.getElementById('jd-btn-route')?.addEventListener('click', () => {
+            this.showInAppRoute();
+        });
+
+        // Pin/Unpin: toggle, update map marker gold border, and re-render button
+        document.getElementById('jd-btn-pin')?.addEventListener('click', () => {
+            const wasLocked = this.lockedJobs.has(job.indeedJobId);
+            if (wasLocked) { this.unlockJob(job); } else { this.lockJob(job); }
+            const nowLocked = !wasLocked;
+
+            // Toggle only the CSS class on the marker div — do NOT call setLocked()
+            // because setLocked() rebuilds the overlay HTML which re-shows the inline popup.
+            const matchingOverlay = this.jobMarkers.find(m => m.job?.indeedJobId === job.indeedJobId)
+                                 || this.lockedMarkers.find(m => m.job?.indeedJobId === job.indeedJobId);
+            if (matchingOverlay?.div) {
+                matchingOverlay.div.classList.toggle('job-overlay--locked', nowLocked);
+            }
+
+            this.showJobDetail(job); // re-render sidebar button label only
+        });
+
+        // Note: toggle form. On first open, fetch any saved note to pre-fill textarea.
+        document.getElementById('jd-btn-note')?.addEventListener('click', async () => {
+            const f = document.getElementById('jd-note-form');
+            if (!f) return;
+            f.classList.toggle('hidden');
+            if (!f.classList.contains('hidden') && !f.dataset.loaded) {
+                f.dataset.loaded = '1';
+                const token = localStorage.getItem('jobradius_token');
+                const textarea = document.getElementById('jd-note-text');
+                const saveBtn = document.getElementById('jd-btn-save-note');
+                if (token && textarea) {
+                    const prev = textarea.placeholder;
+                    textarea.placeholder = 'Loading saved note…';
+                    if (saveBtn) saveBtn.disabled = true;
+                    try {
+                        const res = await fetch(`/api/notes/by-job/${encodeURIComponent(job.indeedJobId || job.id)}`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.data?.noteText) textarea.value = data.data.noteText;
+                        }
+                    } catch(e) { console.warn('[Note] Load failed:', e.message); }
+                    finally {
+                        textarea.placeholder = prev || 'Write your note here…';
+                        if (saveBtn) saveBtn.disabled = false;
+                    }
+                }
+            }
+            if (!f.classList.contains('hidden')) {
+                const textarea = document.getElementById('jd-note-text');
+                setTimeout(() => f.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+                textarea?.focus();
+            }
+        });
+
+        // (NOT via pill.click() which would trigger a new search)
+        document.getElementById('jd-btn-hide')?.addEventListener('click', () => {
+            this.hideJob(job);
+            this.disableFocusMode();
+            // Use the Back button's own handler: it removes panel-in-detail-mode and goes to search view
+            if (this.btnBackToResults) {
+                this.btnBackToResults.click();
+            }
+        });
+
+        // Save Note: POST to /api/notes — send indeedJobId as the server looks it up
+        document.getElementById('jd-btn-save-note')?.addEventListener('click', async function() {
+            const noteText = document.getElementById('jd-note-text')?.value?.trim();
+            if (!noteText) return;
+            const token = localStorage.getItem('jobradius_token');
+            if (!token) {
+                alert('Please log in to save notes.');
+                return;
+            }
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+            try {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                };
+                const res = await fetch('/api/notes', {
+                    method: 'POST', headers,
+                    body: JSON.stringify({
+                        indeedJobId: job.indeedJobId || job.id,
+                        noteText: noteText
+                    })
+                });
+                if (res.ok) {
+                    document.getElementById('jd-note-form')?.classList.add('hidden');
+                    document.getElementById('jd-note-text').value = '';
+                    btn.textContent = '💾 Save Note';
+                    btn.disabled = false;
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    console.error('[Note] Save error:', res.status, errData);
+                    btn.textContent = '❌ ' + (errData.error || 'Error ' + res.status);
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                console.error('[Note] Network error:', e);
+                btn.textContent = '❌ Network error';
+                btn.disabled = false;
+            }
+        });
+
+        // Switch the unified panel to the Job Detail View
+        // Hide the search header and action pills while reviewing a job
+        if (this.unifiedPanel) this.unifiedPanel.classList.add('panel-in-detail-mode');
+        document.querySelectorAll('.unified-view').forEach(v => v.classList.add('hidden'));
+        document.querySelectorAll('.action-pill').forEach(btn => btn.classList.remove('active'));
+        const detailView = document.getElementById('job-detail-view');
+        if (detailView) detailView.classList.remove('hidden');
+
+        // Mobile: slide panel to full height
+        if (window.innerWidth < 768 && this.unifiedPanel) {
+            this.unifiedPanel.classList.remove('panel-hidden');
+            this.unifiedPanel.classList.remove('panel-half');
+            this.unifiedPanel.classList.add('panel-full');
+        }
+
+        // Desktop: make panel visible
+        if (window.innerWidth >= 768 && this.unifiedPanel) {
+            this.unifiedPanel.classList.remove('panel-hidden');
+        }
+
+        this.noteForm?.classList.add('hidden'); // Reset old note form
+
+        // Cinematic fly to job location
         if (this.mapController) {
             this.mapController.cinematicFlyTo(job.lat, job.lng, { zoom: 17, heading: 0, tilt: 60 });
         }
@@ -733,14 +1149,24 @@ class JobRadiusApp {
         const modeSelect = document.getElementById('route-mode');
         const travelMode = modeSelect ? modeSelect.value : 'DRIVING';
 
-        this.btnRouteHere.innerText = '⏳ Routing...';
+        // Hide other pins so route stands out
+        this.enableFocusMode(job);
+
+        // Update Route button text if the old static button still exists
+        const routeBtn = document.getElementById('jd-btn-route') || this.btnRouteHere;
+        if (routeBtn) routeBtn.textContent = '⏳ Routing...';
+
+        const unitSystem = navigator.language === 'en-US' 
+            ? google.maps.UnitSystem.IMPERIAL 
+            : google.maps.UnitSystem.METRIC;
 
         this.directionsService.route({
             origin: { lat: center.lat, lng: center.lng },
             destination: { lat: job.lat, lng: job.lng },
-            travelMode: google.maps.TravelMode[travelMode]
+            travelMode: google.maps.TravelMode[travelMode],
+            unitSystem: unitSystem
         }, (result, status) => {
-            this.btnRouteHere.innerText = '🚗 Route';
+            if (routeBtn) routeBtn.textContent = '🚗 Route';
 
             if (status === 'OK') {
                 this.directionsRenderer.setDirections(result);
@@ -748,10 +1174,15 @@ class JobRadiusApp {
                 // Orient map to north after route renders (shortest-angle turn)
                 this.mapController.resetToNorth(400);
 
-                // Mobile UX: Minimize the job panel so the user can see the route
-                if (window.innerWidth < 768 && this.jobDetailSheet) {
-                    this.jobDetailSheet.classList.remove('sheet-fullscreen');
-                    this.jobDetailSheet.classList.add('sheet-minimized');
+                // Desktop/Tablet: pan map so full route clears the permanent left sidebar
+                if (window.innerWidth >= 768) {
+                    setTimeout(() => this.mapController.panToExposeRoute(result), 700);
+                }
+
+                // Mobile UX: Keep panel half-open so route summary is visible
+                if (window.innerWidth < 768 && this.unifiedPanel) {
+                    this.unifiedPanel.classList.remove('panel-full');
+                    this.unifiedPanel.classList.add('panel-half');
                 }
 
                 // Show step-by-step directions inside the panel
@@ -814,13 +1245,10 @@ class JobRadiusApp {
         const countEl = document.getElementById('job-count');
         if (countEl) countEl.innerText = document.querySelectorAll('#job-list-container .job-card').length;
 
-        // Close detail panel
-        this.jobDetailSheet.classList.add('hidden');
-        this.jobDetailSheet.classList.remove('sheet-fullscreen');
-        this.jobDetailSheet.classList.remove('sheet-minimized');
-        this.currentSelectedJob = null;
-        this.clearRoute();
-        this.disableFocusMode();
+        // Return to search results if hide was clicked from inside the detail view
+        if (this.currentSelectedJob && (this.currentSelectedJob.id === jobId || this.currentSelectedJob.indeedJobId === jobId)) {
+            if (this.btnBackToResults) this.btnBackToResults.click();
+        }
     }
 
     // ── Map Pin Focus Mode ────────────────────────────────────────
@@ -927,12 +1355,6 @@ class JobRadiusApp {
 
             // Fly to the new zone
             this.mapController.cinematicFlyTo(selectedPlace.lat, selectedPlace.lng, { zoom: 12, heading: 0, tilt: 60 });
-
-            // Mobile UX: Automatically close the radius drawer when a zone is added
-            if (window.innerWidth < 768 && this.radiusPanel) {
-                this.radiusPanel.classList.remove('panel-open');
-                if (this.tabRadius) this.tabRadius.classList.remove('active');
-            }
         });
 
         // Cancel button
@@ -1084,10 +1506,13 @@ class JobRadiusApp {
             this.radiusManager.addZone('inclusive', 5000, this.currentCenter);
         }
 
-        // Mobile UX: Automatically close the search drawer when a search begins
-        if (window.innerWidth < 1200 && this.header) {
-            this.header.classList.remove('panel-open');
-            if (this.tabSearch) this.tabSearch.classList.remove('active');
+        // Mobile UX: Hide the bottom sheet completely when a search begins
+        if (window.innerWidth < 768 && this.unifiedPanel) {
+            this.unifiedPanel.classList.add('panel-hidden');
+            this.unifiedPanel.classList.remove('panel-full');
+            this.unifiedPanel.classList.remove('panel-half');
+            const searchPill = document.querySelector('.action-pill[data-target="job-search-view"]');
+            if(searchPill) searchPill.click();
         }
 
         const query = this.jobKeyword.value || 'Developer';
@@ -1135,18 +1560,25 @@ class JobRadiusApp {
 
             if (response.status === 401) {
                 clearTimeout(timeoutId);
-                const existingToken = localStorage.getItem('jobradius_token');
-                if (!existingToken) {
-                    this.modalOverlay.classList.remove('hidden');
-                    this.authModal.classList.remove('hidden');
-                } else {
+                // Only clear token if it's actually expired — don't wipe a valid session
+                // on a transient 401 (e.g. server restart, rate limit, etc.)
+                let isExpired = false;
+                try {
+                    const token = localStorage.getItem('jobradius_token');
+                    if (token) {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        isExpired = payload.exp && (payload.exp * 1000) < Date.now();
+                    }
+                } catch(e) { isExpired = true; } // Unparseable token is as good as expired
+
+                if (isExpired) {
                     localStorage.removeItem('jobradius_token');
                     localStorage.removeItem('jobradius_user');
                     this.btnLogin.innerText = 'Login';
-                    this.modalOverlay.classList.remove('hidden');
-                    this.authModal.classList.remove('hidden');
                 }
-                const container = document.getElementById('job-list-container'); // Assuming container is defined here
+                this.modalOverlay.classList.remove('hidden');
+                this.authModal.classList.remove('hidden');
+                const container = document.getElementById('job-list-container');
                 container.innerHTML = '<div class="empty-state">Session expired. Please sign in again.</div>';
                 return;
             }
@@ -1235,6 +1667,11 @@ class JobRadiusApp {
             // Process final results check
             if (accumulatedJobs.length > 0) {
                 this.lastFetchedJobs = accumulatedJobs;
+
+                // Persist search results in sessionStorage so refresh restores pins
+                try {
+                    sessionStorage.setItem('jobradius_last_results', JSON.stringify(accumulatedJobs));
+                } catch(e) { console.warn('[Cache] Could not cache results:', e.message); }
 
                 // Final full filter for the sidebar list
                 const finalFiltered = accumulatedJobs.filter(j => {
@@ -1371,8 +1808,8 @@ class JobRadiusApp {
                 return;
             }
 
-            // Mobile specific filtering: Omit jobs without a listed salary
-            if (window.innerWidth < 768 && !j.payMin && !j.payMax) {
+            // Filter: omit jobs without any salary/pay data (all screen sizes)
+            if (!j.payMin && !j.payMax) {
                 mobileOmittedCount++;
                 return;
             }
@@ -1386,14 +1823,7 @@ class JobRadiusApp {
                 {
                     isLocked: false,
                     onExpand: (o) => {
-                        if (window.innerWidth < 1200) {
-                            this.showJobDetail(o.job);
-                            return;
-                        }
-                        if (this._expandedOverlay && this._expandedOverlay !== o) {
-                            this._expandedOverlay.collapse();
-                        }
-                        this._expandedOverlay = o;
+                        this.showJobDetail(o.job);
                     },
                     onLock: (job, locked) => {
                         locked ? this.lockJob(job) : this.unlockJob(job);
@@ -1424,9 +1854,9 @@ class JobRadiusApp {
         // Always re-plot locked jobs after a fresh search clear
         if (!append) this._replotLockedJobs();
 
-        // Show toast if mobile filtered out jobs
+        // Show toast if jobs were filtered for missing salary
         if (mobileOmittedCount > 0) {
-            this._showToast(`Omitted ${mobileOmittedCount} jobs without salary data to save screen space.`);
+            this._showToast(`Filtered out ${mobileOmittedCount} job${mobileOmittedCount !== 1 ? 's' : ''} with no listed salary.`);
         }
     }
 
@@ -1527,14 +1957,7 @@ class JobRadiusApp {
                 {
                     isLocked: true,
                     onExpand: (o) => {
-                        if (window.innerWidth < 1200) {
-                            this.showJobDetail(o.job);
-                            return;
-                        }
-                        if (this._expandedOverlay && this._expandedOverlay !== o) {
-                            this._expandedOverlay.collapse();
-                        }
-                        this._expandedOverlay = o;
+                        this.showJobDetail(o.job);
                     },
                     onLock: (j, locked) => {
                         // Toggling off: unlock it
@@ -1566,7 +1989,6 @@ class JobRadiusApp {
     // ── Admin Panel Metrics ──────────────────────────────────────
     async loadAdminMetrics() {
         if (!this.adminPanel) return;
-        this.adminPanel.classList.remove('admin-hidden');
 
         const token = localStorage.getItem('jobradius_token');
         const contentDiv = document.getElementById('admin-metrics-content');

@@ -6,26 +6,55 @@ const { requireAuth } = require('../middleware/auth');
 /**
  * POST /api/notes
  * Save or update a note for a job.
- * Body: { jobResultId, noteText, isHidden, followUpDate }
- * 
- * The client should pass the jobResultId from the search results.
- * Upserts by (userId, jobResultId).
+ * Body: { indeedJobId, noteText }   ← client sends indeedJobId (the scraped key)
+ *       OR { jobResultId, noteText } ← direct DB UUID (legacy / future)
+ *
+ * Looks up the JobResult row by indeedJobId to get the real UUID FK,
+ * then upserts the note by (userId, jobResultId).
  */
 router.post('/', requireAuth, async (req, res, next) => {
     try {
         const userId = req.user.id;
-        const { jobResultId, noteText, isHidden, followUpDate } = req.body;
+        const { indeedJobId, jobResultId: directId, noteText, isHidden, followUpDate } = req.body;
+
+        // Resolve — a job may appear in multiple search profiles (different JobResult rows).
+        // Find ALL matching jobResult IDs so we can search for an existing note across any of them.
+        let jobResultId = directId || null;
+
+        if (!jobResultId && indeedJobId) {
+            // 1. Find any existing note for this job (across all search profiles)
+            const existingNote = await prisma.userJobNote.findFirst({
+                where: {
+                    userId,
+                    jobResult: { indeedJobId }
+                },
+                select: { jobResultId: true }
+            });
+
+            if (existingNote) {
+                // Reuse the same jobResultId so the upsert updates the existing note
+                jobResultId = existingNote.jobResultId;
+            } else {
+                // No existing note — find any JobResult to create against
+                const jr = await prisma.jobResult.findFirst({
+                    where: { indeedJobId },
+                    orderBy: { scrapedAt: 'desc' },
+                    select: { id: true }
+                });
+                if (!jr) {
+                    return res.status(404).json({ error: `No saved job found for indeedJobId: ${indeedJobId}` });
+                }
+                jobResultId = jr.id;
+            }
+        }
 
         if (!jobResultId) {
-            return res.status(400).json({ error: 'jobResultId is required.' });
+            return res.status(400).json({ error: 'indeedJobId or jobResultId is required.' });
         }
 
         const note = await prisma.userJobNote.upsert({
             where: {
-                userId_jobResultId: {
-                    userId,
-                    jobResultId
-                }
+                userId_jobResultId: { userId, jobResultId }
             },
             update: {
                 noteText: noteText !== undefined ? noteText : undefined,
@@ -46,11 +75,31 @@ router.post('/', requireAuth, async (req, res, next) => {
         next(err);
     }
 });
-
 /**
- * GET /api/notes
- * Get all job notes for the logged-in user.
+ * GET /api/notes/by-job/:indeedJobId
+ * Fetch a saved note for a specific job (by its scraped key).
+ * Searches across ALL jobResult rows for this indeedJobId (job may appear in multiple searches).
+ * Returns { success: true, data: note } or { success: true, data: null } if no note exists.
  */
+router.get('/by-job/:indeedJobId', requireAuth, async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const { indeedJobId } = req.params;
+
+        // Search across all JobResult copies for this indeedJobId
+        const note = await prisma.userJobNote.findFirst({
+            where: {
+                userId,
+                jobResult: { indeedJobId }
+            }
+        });
+
+        res.json({ success: true, data: note || null });
+    } catch (err) {
+        next(err);
+    }
+});
+
 router.get('/', requireAuth, async (req, res, next) => {
     try {
         const userId = req.user.id;

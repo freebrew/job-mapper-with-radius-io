@@ -91,19 +91,10 @@ function _buildClass() {
             this.expanded = true;
             this._noteVisible = false;
 
-            if (window.innerWidth < 1200) {
-                // Mobile/Tablet layout - callback handles expanding the bottom sheet
-                this.div.classList.add('job-overlay--active');
-                if (this.callbacks.onExpand) this.callbacks.onExpand(this);
-                return;
-            }
-
-            this.div.classList.add('job-overlay--expanded');
-            this.div.innerHTML = this._buildExpanded();
-            this._wireActions();
-            this.draw();
-            // Re-insert AFTER innerHTML is set and click has completed — safe here
-            // because we are no longer inside a pointer-event sequence.
+            // On ALL screen sizes: just mark this overlay as active (visual highlight only)
+            // and fire the onExpand callback — the sidebar / bottom-sheet handles the details.
+            // We never build the full inline expanded HTML here; the pin stays compact on the map.
+            this.div.classList.add('job-overlay--active');
             this._raiseToTop();
             if (this.callbacks.onExpand) this.callbacks.onExpand(this);
         }
@@ -272,11 +263,13 @@ function _buildClass() {
             const pay = this._formatPayHero();
             const lockIcon = this.isLocked ? ' 📌' : '';
 
-            // Mobile minimal pin (Salary Only)
+            // Mobile minimal pin (Salary + Title)
             if (window.innerWidth < 768) {
+                const title = this._truncateWords(this.job.title, 120);
                 return `
                     <div class="jo-collapsed mobile-minimal">
                         <div class="jo-row-pay">${pay}${lockIcon}</div>
+                        <div class="jo-row-title">${title}</div>
                     </div>
                     <div class="jo-arrow"></div>
                 `;
@@ -307,9 +300,8 @@ function _buildClass() {
             const lockLabel = this.isLocked ? '📌 Locked' : '📌 Lock';
             const lockClass = this.isLocked ? 'jo-btn--locked' : '';
 
-            const applyUrl = (this.job.indeedUrl && !this.job.indeedUrl.includes('google.com'))
-                ? this.job.indeedUrl
-                : `https://www.google.com/search?q=${encodeURIComponent(title + ' ' + company + ' ' + location + ' job')}&ibp=htl;jobs`;
+            // Always route to Google Jobs search instead of Indeed directly
+            const applyUrl = `https://www.google.com/search?q=${encodeURIComponent(title + ' ' + company + ' ' + location + ' job')}&ibp=htl;jobs`;
 
             // Truncate description to 300 words, append ...More link
             const rawDesc = this.job.description || '';

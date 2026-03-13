@@ -8,6 +8,9 @@
   <link rel="apple-touch-icon" href="/icon-512.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="referrer" content="no-referrer-when-downgrade">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>JobRadius - Multi-Radius Job Search</title>
 
   <!-- Google Fonts -->
@@ -19,7 +22,7 @@
 
   <!-- Google Maps JS API (V3 / WebGL) - async with callback -->
   <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmp1baOjfcRmzDa30XDncsvOJaSdkHrwk&libraries=places,geometry&v=beta&map_ids=1a69e9680804148ef13dfe31&loading=async&callback=initMapCallback">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmp1baOjfcRmzDa30XDncsvOJaSdkHrwk&libraries=places,geometry&v=beta&map_ids=1a69e9680804148ef13dfe31,f1b7a6372eb0faca,3bfe6da3ed1abef&loading=async&callback=initMapCallback">
     </script>
 
   <!-- Define explicit global callbacks for GSI to prevent race condition crashes -->
@@ -30,16 +33,24 @@
       document.dispatchEvent(new Event('google-maps-loaded'));
     };
 
-    // Handle Google OAuth redirect return (google_token param in URL)
+    // Handle Google OAuth redirect return
+    // Server redirects to /?google_token=...&google_user={...JSON...}
     (function () {
       const params = new URLSearchParams(window.location.search);
       const gToken = params.get('google_token');
-      const gName = params.get('google_name');
-      const gEmail = params.get('google_email');
+      const gUserJson = params.get('google_user');
       const authError = params.get('auth_error');
-      if (gToken && gEmail) {
-        localStorage.setItem('jobradius_token', gToken);
-        localStorage.setItem('jobradius_user', JSON.stringify({ name: gName, email: gEmail }));
+      if (gToken && gUserJson) {
+        try {
+          // Parse the full user object sent by the server
+          const gUser = JSON.parse(decodeURIComponent(gUserJson));
+          localStorage.setItem('jobradius_token', gToken);
+          localStorage.setItem('jobradius_user', JSON.stringify(gUser));
+        } catch(e) {
+          // If user JSON is malformed just store the token - restoreSession will re-fetch /me
+          localStorage.setItem('jobradius_token', gToken);
+          console.warn('[Google Auth] Could not parse google_user JSON:', e);
+        }
         // Clean the URL so token is gone from address bar
         window.history.replaceState({}, '', '/');
       }
@@ -49,8 +60,8 @@
       }
     })();
   </script>
-  <script type="module" crossorigin src="/assets/index-DX4O70co.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-Bt-ZSWaa.css">
+  <script type="module" crossorigin src="/assets/index-Dbmygyew.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DS7RVgeF.css">
 </head>
 
 <body>
@@ -61,179 +72,180 @@
     <!-- UI Overlay -->
     <div id="ui-container">
 
-      <!-- Mobile Top Tabs -->
-      <div id="mobile-top-tabs" class="mobile-only">
-        <button id="tab-search" class="top-tab active">Search</button>
-        <button id="tab-radius" class="top-tab">Radius Zones</button>
-        <button id="btn-fullscreen" class="top-tab" style="flex: 0 0 auto; padding: 0 16px; font-weight: bold;"
-          aria-label="Toggle Fullscreen">⛶</button>
-      </div>
-
-      <!-- Top Toolbar (Desktop: Fixed Header | Mobile: Slide-down Drawer) -->
-      <header class="glass-panel top-drawer">
-        <div class="logo">
-          <span class="neon-text">Job</span>Radius
-        </div>
-        <div class="search-controls">
-          <input type="text" id="job-keyword" list="job-titles" placeholder="e.g. React Developer"
-            class="neumorphic-input">
-          <datalist id="job-titles"></datalist>
-          <input type="text" id="map-search-box" placeholder="Location Center (e.g. Austin, TX)"
-            class="neumorphic-input">
-          <button id="btn-search" class="btn-primary">Search</button>
-        </div>
-        <div class="user-controls">
-          <button id="btn-login" class="btn-secondary">Login</button>
-          <button id="btn-subscribe" class="btn-primary">Get 24hr Pass</button>
-        </div>
-      </header>
-
-
-
-      <!-- Main Workspace -->
-      <main>
-        <!-- Left: Radius Controls (Desktop: Floating Left | Mobile: Top Drawer) -->
-        <div id="radius-panel" class="floating-panel radius-controls glass-panel top-drawer">
-          <h3>Radius Zones</h3>
-          <div id="radius-list"></div>
-          <div class="radius-actions" style="display:flex; gap:8px; margin-bottom: 12px;">
-            <button id="btn-add-inclusive" class="btn-zone-add inclusive"
-              style="flex:1; padding:6px 4px; font-size:0.8rem;"><span class="icon">+</span> Include</button>
-            <button id="btn-add-exclusive" class="btn-zone-add exclusive"
-              style="flex:1; padding:6px 4px; font-size:0.8rem;"><span class="icon">-</span> Exclude</button>
-          </div>
-
-          <div class="transit-controls"
-            style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--border-glass); padding-top: 12px;">
-            <h4 style="margin:0; font-size:0.85rem;">Transit</h4>
-            <select id="route-mode" class="neumorphic-select"
-              style="padding: 4px 8px; font-size: 0.8rem; width: 130px;">
-              <option value="TRANSIT">Public Transit</option>
-              <option value="DRIVING">Driving</option>
-              <option value="WALKING">Walking</option>
-              <option value="BICYCLING">Cycling</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Right: Job Listings Panel (PHASED OUT — map overlays are primary UI) -->
-        <aside class="side-panel glass-panel" id="job-panel" style="display:none;">
-          <div class="panel-header">
-            <h2>Matching Jobs <span id="job-count" class="badge">0</span></h2>
-            <div class="sort-controls">
-              Sort: <span class="active">Highest Pay</span>
-            </div>
-          </div>
-          <div class="job-list" id="job-list-container">
-            <!-- Jobs rendered here by JS -->
-            <div class="empty-state">
-              Enter a location and keywords to find jobs in your radius.
-            </div>
-          </div>
-        </aside>
-      </main>
-    </div>
-
-    <!-- Detailed Job Info Overlay (Desktop Popup / Mobile Bottom Sheet) -->
-    <div id="job-detail-sheet" class="glass-panel bottom-sheet hidden">
-      <div id="jds-minimized-strip">
-        <div class="jds-mini-content">
-          <span id="jds-mini-title">Job Title</span>
-          <span id="jds-mini-pay">$80k</span>
-        </div>
-        <button id="btn-jds-expand" class="btn-primary">Expand</button>
-      </div>
-
-      <div id="jds-fullscreen-content">
+      <!-- Unified User Panel (Desktop/Tablet: Floating Side Panel | Mobile: Bottom Sheet) -->
+      <div id="unified-user-panel" class="glass-panel bottom-sheet unified-panel">
         <div class="sheet-handle mobile-only"></div>
-        <button id="btn-close-detail" class="close-btn">&times;</button>
-        <div id="job-detail-content"></div>
-        <div class="action-buttons mt-4" style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button id="btn-route-here" class="btn-primary tooltip" data-tooltip="Show Transit Route">🚗 Route</button>
-          <button id="btn-lock-job" class="btn-secondary">📌 Pin</button>
-          <button id="btn-add-note" class="btn-secondary">📝 Note</button>
-          <button id="btn-hide-job" class="btn-danger tooltip" data-tooltip="Hide forever">👁️‍🗨️ Hide</button>
+        
+        <!-- Search & Header Area -->
+        <header class="unified-header" id="panel-search-header">
+          <!-- User Status Strip: always at top -->
+          <div class="user-status-strip">
+            <div id="user-name-display" class="user-name"></div>
+            <div class="user-status-right">
+              <div id="pass-countdown" class="hidden timer-badge">24:00:00</div>
+              <button id="btn-login" class="btn-secondary btn-login-top">Login</button>
+              <button id="btn-subscribe" class="btn-primary btn-subscribe-top hidden">Get 24hr Pass</button>
+            </div>
+          </div>
+          <!-- Search Inputs (no standalone Search button — use Search pill below) -->
+          <div class="search-controls">
+            <input type="text" id="job-keyword" list="job-titles" placeholder="e.g. React Developer"
+              class="neumorphic-input">
+            <datalist id="job-titles"></datalist>
+            <input type="text" id="map-search-box" placeholder="Location Center"
+              class="neumorphic-input">
+          </div>
+        </header>
+
+        <!-- Quick Action Pills (2x2 grid) -->
+        <div class="quick-actions-scroll" id="panel-quick-actions">
+          <button class="action-pill active" data-target="job-search-view" id="pill-search">
+            <span class="icon">🔍</span> Search
+          </button>
+          <button class="action-pill" data-target="radius-zones-view">
+            <span class="icon">⭕</span> Zones
+          </button>
+          <button class="action-pill" data-target="saved-jobs-view">
+            <span class="icon">📌</span> Saved
+          </button>
+          <button class="action-pill" data-target="theme-settings-view">
+            <span class="icon">🎨</span> Theme
+          </button>
+          <button class="action-pill hidden" id="admin-pill" data-target="admin-view">
+            <span class="icon">📊</span> Admin
+          </button>
         </div>
-        <!-- Note Form -->
-        <div id="note-form" class="hidden mt-4 pt-4 border-t">
-          <textarea id="note-text-input" placeholder="Followup context, contact names..."
-            class="neumorphic-input w-full" rows="3"></textarea>
-          <button id="btn-save-note" class="btn-primary w-full mt-2">Save Note</button>
+
+        <!-- Dynamic Content Area -->
+        <div class="unified-content-area flex-1 scrollable-y">
+          <!-- View 1: Job Search Results (Default) -->
+          <div id="job-search-view" class="unified-view active">
+            <div class="panel-header">
+              <h2 style="font-size: 1.1rem; margin:0;">Matching Jobs <span id="job-count" class="badge">0</span></h2>
+            </div>
+            <div class="job-list" id="job-list-container">
+              <!-- Jobs rendered here by JS -->
+              <div class="empty-state">
+                Enter a location and keywords to find jobs in your radius.
+              </div>
+            </div>
+          </div>
+
+          <!-- View 2: Job Details (Injected when a pin is clicked) -->
+          <div id="job-detail-view" class="unified-view hidden">
+            <div style="position: sticky; top: -16px; background: var(--bg-panel); backdrop-filter: blur(10px); padding: 16px; z-index: 10; margin: -16px -16px 16px -16px; border-bottom: 1px solid var(--border-glass);">
+              <button id="btn-back-to-results" class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;">← Back to Results</button>
+            </div>
+            <!-- All job content (description, salary, buttons) injected here by showJobDetail() -->
+            <div id="job-detail-content"></div>
+          </div>
+
+          <!-- View 3: Radius Zones -->
+          <div id="radius-zones-view" class="unified-view hidden">
+            <h3 style="margin-bottom:8px; font-size: 1rem;">Radius Zones</h3>
+            <div id="radius-list"></div>
+            <div class="radius-actions" style="display:flex; gap:8px; margin-bottom: 12px;">
+              <button id="btn-add-inclusive" class="btn-zone-add inclusive"
+                style="flex:1; padding:6px 4px; font-size:0.8rem;"><span class="icon">+</span> Include</button>
+              <button id="btn-add-exclusive" class="btn-zone-add exclusive"
+                style="flex:1; padding:6px 4px; font-size:0.8rem;"><span class="icon">-</span> Exclude</button>
+            </div>
+  
+            <div class="transit-controls"
+              style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--border-glass); padding-top: 12px;">
+              <h4 style="margin:0; font-size:0.85rem;">Transit</h4>
+              <select id="route-mode" class="neumorphic-select"
+                style="padding: 4px 8px; font-size: 0.8rem; width: 130px;">
+                <option value="DRIVING" selected>Driving</option>
+                <option value="TRANSIT">Public Transit</option>
+                <option value="WALKING">Walking</option>
+                <option value="BICYCLING">Cycling</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- View 4: Saved Jobs -->
+          <div id="saved-jobs-view" class="unified-view hidden">
+            <h3 style="margin-bottom:8px; font-size: 1rem;">Saved/Pinned Jobs</h3>
+            <div id="saved-list">
+              <div class="empty-state">No jobs saved yet.</div>
+            </div>
+          </div>
+
+          <!-- View 5: Theme Settings -->
+          <div id="theme-settings-view" class="unified-view hidden">
+            <h3 style="margin-bottom:8px; font-size: 1rem;">Map Theme</h3>
+            <div class="theme-options" style="display:flex; flex-direction:column; gap:8px;">
+              <button class="btn-secondary theme-btn active" data-map-id="1a69e9680804148ef13dfe31">JobRadius Modern Dark (Default)</button>
+              <button class="btn-secondary theme-btn" data-map-id="f1b7a6372eb0faca">Standard Light</button>
+              <button class="btn-secondary theme-btn" data-map-id="3bfe6da3ed1abef">Midnight</button>
+            </div>
+          </div>
+
+          <!-- View 6: Admin Dashboard -->
+          <div id="admin-view" class="unified-view hidden">
+            <h3 style="margin-bottom:8px; font-size: 1rem;">Platform Metrics</h3>
+            <div id="admin-metrics-content" style="font-size:0.9rem; line-height:1.6; margin-top:12px;">
+              <div style="text-align:center; padding:20px; color:var(--text-secondary);">Loading metrics...</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Map Progress Overlay -->
-    <div id="map-progress-overlay" class="map-progress-overlay" style="display:none;">
-      <div class="map-progress-inner">
-        <div class="map-progress-spinner"></div>
-        <div class="map-progress-title">Scanning Jobs...</div>
-        <div class="map-progress-count" id="map-progress-text">Preparing search...</div>
-      </div>
-    </div>
+  </div>
 
-    <!-- Modals Layer -->
-    <div id="modal-overlay" class="modal-overlay hidden">
-
-      <!-- Auth Modal -->
-      <div id="auth-modal" class="glass-panel modal hidden">
-        <button class="close-btn" data-modal="auth-modal">&times;</button>
-        <h2 style="margin-bottom: 20px; text-align: center;">Sign In / Sign Up</h2>
-
-        <!-- Google Sign-In via OAuth redirect — works on all browsers including iOS -->
-        <a href="/api/auth/google/start" class="btn-google-oauth">
-          <svg viewBox="0 0 24 24" width="20" height="20" style="flex-shrink:0">
-            <path fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-            <path fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-            <path fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
-            <path fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-          </svg>
-          Sign in with Google
-        </a>
-
-        <!-- Standard Email Auth (Fallback) -->
-        <div class="divider"><span>OR EMAIL</span></div>
-
-        <form id="auth-form" novalidate style="margin-top: 16px;">
-          <input type="email" id="auth-email" placeholder="Email Address" class="neumorphic-input w-full"
-            style="margin-bottom: 12px" autocomplete="username" required>
-          <input type="password" id="auth-password" placeholder="Password" class="neumorphic-input w-full"
-            style="margin-bottom: 16px" autocomplete="current-password" required>
-          <button type="submit" class="btn-primary w-full">Continue</button>
-        </form>
-      </div>
-
-      <!-- Payment Modal -->
-      <div id="payment-modal" class="glass-panel modal hidden">
-        <button class="close-btn" data-modal="payment-modal">&times;</button>
-        <h2 style="margin-bottom: 8px; text-align: center; color: var(--accent-cyan);">JobRadius 24hr Pass</h2>
-        <p style="color: var(--text-secondary); text-align: center; margin-bottom: 20px; font-size: 0.95rem;">Unlock
-          premium features, unlimited radius searching, and advanced filters for 24 hours.</p>
-        <h1 style="text-align: center; margin-bottom: 24px; font-size: 2.5rem;">$9.99</h1>
-        <button id="btn-checkout" class="btn-primary w-full">Pay with Stripe</button>
-      </div>
+  <!-- Map Progress Overlay -->
+  <div id="map-progress-overlay" class="map-progress-overlay" style="display: none;">
+    <div class="map-progress-inner">
+      <div class="map-progress-spinner"></div>
+      <h3 class="map-progress-title">Scanning Listings</h3>
+      <p id="map-progress-text" class="map-progress-count">Waiting for results...</p>
     </div>
   </div>
 
-  <!-- Admin Slide-out Panel -->
-  <div id="admin-panel" class="glass-panel admin-hidden">
-    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0; color:var(--accent-cyan); font-size:1.4rem;">Admin Dashboard</h2>
-      <button id="btn-close-admin" class="close-btn" style="position:static; margin-left:auto;">&times;</button>
+  <!-- Modal Overlays -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="glass-panel modal hidden">
+      <button class="close-btn" data-modal="auth-modal">&times;</button>
+      <h2 style="margin-bottom: 20px; text-align: center;">Sign In / Sign Up</h2>
+
+      <!-- Google Sign-In via OAuth redirect — works on all browsers including iOS -->
+      <a href="/api/auth/google/start" class="btn-google-oauth">
+        <svg viewBox="0 0 24 24" width="20" height="20" style="flex-shrink:0">
+          <path fill="#4285F4"
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+          <path fill="#34A853"
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+          <path fill="#FBBC05"
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+          <path fill="#EA4335"
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+        </svg>
+        Sign in with Google
+      </a>
+
+      <!-- Standard Email Auth (Fallback) -->
+      <div class="divider"><span>OR EMAIL</span></div>
+
+      <form id="auth-form" novalidate style="margin-top: 16px;">
+        <input type="email" id="auth-email" placeholder="Email Address" class="neumorphic-input w-full"
+          style="margin-bottom: 12px" autocomplete="username" required>
+        <input type="password" id="auth-password" placeholder="Password" class="neumorphic-input w-full"
+          style="margin-bottom: 16px" autocomplete="current-password" required>
+        <button type="submit" class="btn-primary w-full">Continue</button>
+      </form>
     </div>
 
-    <div class="admin-section mt-4 pt-4" style="border-top:1px solid var(--border-glass);">
-      <h3 style="margin-bottom:8px; font-size:1rem;">Platform Metrics</h3>
-      <div id="admin-metrics-content" style="font-size:0.9rem; line-height:1.6; margin-top:12px;">
-        <div style="text-align:center; padding:20px; color:var(--text-secondary);">Loading metrics...</div>
-      </div>
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="glass-panel modal hidden">
+      <button class="close-btn" data-modal="payment-modal">&times;</button>
+      <h2 style="margin-bottom: 8px; text-align: center; color: var(--accent-cyan);">JobRadius 24hr Pass</h2>
+      <p style="color: var(--text-secondary); text-align: center; margin-bottom: 20px; font-size: 0.95rem;">Unlock
+        premium features, unlimited radius searching, and advanced filters for 24 hours.</p>
+      <h1 style="text-align: center; margin-bottom: 24px; font-size: 2.5rem;">$9.99</h1>
+      <button id="btn-checkout" class="btn-primary w-full">Pay with Stripe</button>
     </div>
-  </div>
-
   </div>
 
   <!-- Browser Compatibility Check — runs before app loads -->

@@ -67,7 +67,7 @@ app.use('/api/', apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/notes', notesRoutes);
-app.use('/api/stripe', paymentRoutes);
+app.use('/api/payment', paymentRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/alerts', alertsRoutes);
 app.use('/api/admin', adminRoutes);

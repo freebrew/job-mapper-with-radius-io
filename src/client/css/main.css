@@ -43,6 +43,11 @@
   padding: 0;
 }
 
+html {
+  /* Fluid typography: 14px on mobile -> 16px on desktop */
+  font-size: clamp(14px, 1.25vw + 10px, 16px);
+}
+
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background-color: var(--bg-dark);
@@ -57,6 +62,10 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+.hidden {
+  display: none !important;
 }
 
 /* =========================================
@@ -99,74 +108,131 @@ body {
 }
 
 /* =========================================
-   HEADER / TOPBAR
+   UNIFIED PANEL (Globals)
    ========================================= */
-header {
-  height: 70px;
+.unified-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--border-glass);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  overflow: hidden;
+  z-index: var(--z-ui);
+}
+
+/* Header Area */
+.unified-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.search-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.search-controls input {
+  width: 100%;
+}
+/* User status strip — always at the very top of the panel */
+.user-status-strip {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 24px;
+  padding: 10px 0 6px;
   border-bottom: 1px solid var(--border-glass);
+  margin-bottom: 8px;
 }
-
-.user-controls {
+.user-status-strip .user-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+.user-status-strip .user-status-right {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+.btn-login-top {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+}
+.btn-subscribe-top {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+}
 
-.logo {
-  font-size: 1.5rem;
+/* When job-detail is active: hide the search header and action pills */
+.unified-panel.panel-in-detail-mode #panel-search-header,
+.unified-panel.panel-in-detail-mode #panel-quick-actions {
+  display: none;
+}
+.timer-badge {
+  background: rgba(245, 166, 35, 0.2);
+  color: var(--accent-gold);
+  padding: 4px 10px;
+  border-radius: 12px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(245, 166, 35, 0.4);
 }
 
-.neon-text {
-  color: var(--accent-cyan);
-  text-shadow: 0 0 10px var(--accent-cyan-glow);
+/* Quick Actions Grid (2×N) — applies on all screen sizes */
+.quick-actions-scroll {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-glass);
 }
-
-.search-controls {
+.action-pill {
   display: flex;
-  gap: 12px;
-  flex: 1;
-  max-width: 600px;
+  align-items: center;
   justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  border-radius: 20px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: all 0.2s;
+  cursor: pointer;
+  width: 100%;
+}
+.action-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.action-pill.active {
+  background: var(--accent-cyan);
+  color: #000;
+  font-weight: 600;
 }
 
-/* =========================================
-   MAIN LAYOUT (Floating Panels)
-   ========================================= */
-main {
+/* Content Area */
+.unified-content-area {
   flex: 1;
-  display: flex;
-  justify-content: space-between;
-  padding: 24px;
-  overflow: hidden;
+  overflow-y: auto;
+  position: relative;
 }
-
-/* Left controls */
-.floating-panel {
-  width: 320px;
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  height: fit-content;
-  max-height: 100%;
+.unified-view {
+  padding: 16px;
+}
+.flex-1 {
+  flex: 1;
+}
+.scrollable-y {
   overflow-y: auto;
 }
 
-/* Right Jobs panel */
-.side-panel {
-  width: 400px;
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
 .panel-header {
-  padding: 20px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--border-glass);
   display: flex;
   justify-content: space-between;
@@ -174,12 +240,21 @@ main {
 }
 
 .job-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding-top: 16px;
+}
+
+/* Theme Toggle styles */
+.theme-options .theme-btn {
+  text-align: left;
+  border-radius: 8px;
+  padding: 12px;
+}
+.theme-options .theme-btn.active {
+  border-color: var(--accent-cyan);
+  background: rgba(77, 168, 218, 0.1);
 }
 
 /* Scrollbar Styling */
@@ -284,108 +359,9 @@ button {
   color: var(--accent-red);
 }
 
-/* =========================================
-   DYNAMIC JOB PANEL (Details Sheet)
-   ========================================= */
-#job-detail-sheet {
-  position: absolute;
-  bottom: 24px;
-  left: 24px;
-  width: 320px;
-  max-height: calc(100vh - 370px);
-  overflow-y: auto;
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  z-index: var(--z-ui);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
+/* [Removed Dynamic Job Panel] */
 
-#jds-minimized-strip {
-  display: none;
-}
-
-#job-detail-sheet .action-buttons {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-#job-detail-sheet .action-buttons button {
-  flex: 1;
-  padding: 8px 4px;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* =========================================
-   Admin Panel (Slide-out)
-========================================= */
-#admin-panel {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 360px;
-  height: 100vh;
-  border-radius: 0;
-  border-left: 1px solid var(--border-glass);
-  padding: 24px;
-  z-index: 1000;
-  background: var(--bg-panel);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow-y: auto;
-}
-
-#admin-panel.admin-hidden {
-  transform: translateX(100%);
-}
-
-.admin-metric-group {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-md);
-  padding: 12px;
-  margin-bottom: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.admin-metric-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  color: var(--text-primary);
-  font-size: 0.9rem;
-}
-
-.close-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(0, 0, 0, 0.4);
-  color: #fff;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  padding: 0;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 100;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.close-btn:hover {
-  background: rgba(0, 0, 0, 0.6);
-}
+/* [Removed Admin Slide-out Panel CSS] */
 
 /* Utilities */
 .w-full {
@@ -622,6 +598,16 @@ button {
   text-overflow: ellipsis;
   margin-top: 3px;
   max-width: 240px;
+}
+
+.mobile-minimal .jo-row-title {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  max-width: 280px;
+  line-height: 1.2;
 }
 
 /* Star rating */
@@ -938,250 +924,85 @@ button {
   font-weight: 600;
 }
 
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.unified-view.active {
+  animation: slideInUp 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
 /* =========================================
    MOBILE RESPONSIVE OVERRIDES (max-width: 767px)
    Converts desktop side-panels to Bottom Sheets
 ========================================= */
 @media (max-width: 767px) {
-
-  /* Hide desktop-only elements */
   .desktop-only {
     display: none !important;
   }
 
-  /* Mobile Top Tabs */
-  #mobile-top-tabs {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    gap: 1px;
-    background: rgba(77, 168, 218, 0.3);
-    /* Subtle separator line between tabs */
-    z-index: calc(var(--z-ui) + 10);
-    pointer-events: auto;
-  }
-
-  .top-tab {
-    flex: 1;
-    padding: 12px 2px;
-    background: rgba(12, 20, 33, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: none;
-    border-radius: 0;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .top-tab.active {
-    background: rgba(20, 33, 50, 0.95);
-    color: var(--accent-cyan);
-    border-bottom: 2px solid var(--accent-cyan);
-  }
-
-  /* Top Slide-Down Drawers */
-  .top-drawer {
-    position: absolute;
-    top: 42px;
-    /* Height of the tabs */
-    left: 0;
-    right: 0;
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-    border-top: none;
-    height: auto;
-    z-index: var(--z-ui);
-    transform: translateY(-150%);
-    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.35s ease;
-    opacity: 0;
-    pointer-events: none;
-    will-change: transform, opacity;
-  }
-
-  .top-drawer.panel-open {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-  }
-
-  /* Header becomes a top drawer */
-  header {
-    padding: 12px 15px;
-    flex-wrap: wrap;
+  .quick-actions-scroll {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
     gap: 8px;
+    padding: 12px 16px;
+    overflow-x: hidden; /* Disable horizontal scroll for grid */
   }
 
-  /* Row 1: logo (left) + user controls (right) */
-  .logo {
-    display: block;
-    font-size: 0.85rem;
-    order: 1;
-    flex: 0 0 auto;
-    margin-right: auto;
-  }
-
-  .user-controls {
-    order: 2;
-    flex: 0 1 auto;
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-
-  .user-controls button {
-    padding: 6px 8px;
-    font-size: 0.8rem;
-    white-space: nowrap;
-  }
-
-  /* Row 2: search controls full width */
-  .search-controls {
-    order: 3;
-    flex: 0 0 100%;
-    width: 100%;
-    flex-direction: column;
-    gap: 8px;
-    margin: 0;
-  }
-
-  .search-controls input {
-    font-size: 16px;
-    /* prevents iOS auto-zoom */
-    padding: 10px 12px;
+  .action-pill {
+    justify-content: center;
+    padding: 10px;
     width: 100%;
   }
 
-  #btn-search {
-    width: 100%;
-    padding: 10px 12px;
-  }
-
-  /* Main container constraints */
-  main {
-    padding: 0;
-    pointer-events: none;
-    /* Let clicks pass to map */
-  }
-
-
-
-  /* Bottom Sheets (replaces side-panel) */
-  .bottom-sheet {
+  .unified-panel {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
+    /* Default collapsed height - tweaked to expose search bar and pills */
+    transform: translateY(calc(100% - 180px));
     border-radius: 24px 24px 0 0;
-    max-height: 50vh;
-    /* Default collapsed height */
-    transform: translateY(110%);
-    /* Hidden by default */
-    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-    pointer-events: auto;
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
     will-change: transform;
-    border-bottom: none;
-    padding-top: 10px;
-    /* Space for handle */
+    height: 90vh; /* Max height when fully opened */
   }
 
-  .sheet-open {
+  .unified-panel.panel-hidden {
+    /* Only the handle is visible */
+    transform: translateY(calc(100% - 30px));
+  }
+
+  .unified-panel.panel-half {
+    transform: translateY(40%);
+  }
+
+  .unified-panel.panel-full {
     transform: translateY(0);
   }
 
   .sheet-handle {
-    width: 40px;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.4);
-    border-radius: 3px;
-    margin: 0 auto 15px;
+    position: relative;
+    width: 100%;
+    padding: 14px 0; /* Large hit area above + below the visible pill */
     cursor: pointer;
-  }
-
-
-  /* Specific mobile panel overrides */
-  #radius-panel {
-    width: auto;
-    border-radius: var(--radius-lg);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  }
-
-  #job-detail-sheet {
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    max-height: calc(100dvh - 45px);
-    /* Ensure it clears the top tab bar */
-    height: calc(100dvh - 45px);
-    border-radius: 0;
-    padding: 24px 16px;
-    z-index: calc(var(--z-ui) + 50);
-    transform: translateY(100%);
-    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), height 0.4s cubic-bezier(0.32, 0.72, 0, 1), border-radius 0.4s ease;
     display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
-
-  #job-detail-sheet.sheet-fullscreen,
-  #job-detail-sheet.sheet-minimized {
-    transform: translateY(0);
-  }
-
-  /* When minimized (Routing mode) */
-  #job-detail-sheet.sheet-minimized {
-    height: auto;
-    max-height: 80px;
-    border-radius: 20px 20px 0 0;
-    padding: 12px 16px;
-    overflow: hidden;
-  }
-
-  #job-detail-sheet.sheet-minimized #jds-fullscreen-content {
-    display: none;
-  }
-
-  #job-detail-sheet.sheet-minimized #jds-minimized-strip {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
-    width: 100%;
+    justify-content: center;
   }
 
-  .jds-mini-content {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding-right: 12px;
+  .sheet-handle::before {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.45);
+    border-radius: 100px;
+    flex-shrink: 0;
   }
 
-  #jds-mini-title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  #jds-mini-pay {
-    font-size: 0.85rem;
-    color: var(--accent-green, #10b981);
-    margin-top: 2px;
-  }
-
-  #btn-jds-expand {
-    padding: 6px 16px;
-    font-size: 0.8rem;
-    border-radius: 20px;
-  }
-
-  /* Modals (Auth / Subscribe) */
   .modal {
     width: 90%;
     max-width: none;
@@ -1191,18 +1012,33 @@ button {
     padding: 24px 20px;
     border-radius: var(--radius-lg);
   }
+}
 
-  /* Admin Panel Fullscreen Mobile Override */
-  #admin-panel {
-    width: 100%;
-    height: 100%;
-    right: -100%;
-    /* off-screen to start */
-    border-radius: 0;
+/* =========================================
+   TABLET OVERRIDES
+========================================= */
+@media (768px <= width <= 1199px) {
+  .unified-panel {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    width: 360px;
+    max-height: 80vh;
+    border-radius: var(--radius-lg);
   }
+}
 
-  #admin-panel:not(.admin-hidden) {
-    right: 0;
+/* =========================================
+   DESKTOP SPECIFIC
+========================================= */
+@media (min-width: 1200px) {
+  .unified-panel {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    width: 400px;
+    height: calc(100vh - 48px);
+    border-radius: var(--radius-lg);
   }
 }
 

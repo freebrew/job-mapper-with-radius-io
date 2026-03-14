@@ -1770,23 +1770,25 @@ class JobRadiusApp {
     }
 
     renderJobList(jobs) {
+        // Filter out no-salary jobs (defence-in-depth against sessionStorage/locked sources)
+        const filtered = jobs.filter(j => j.payMin || j.payMax);
         const container = document.getElementById('job-list-container');
-        document.getElementById('job-count').innerText = jobs.length;
+        document.getElementById('job-count').innerText = filtered.length;
 
-        if (jobs.length === 0) {
-            container.innerHTML = '<div class="empty-state">No jobs found in these specific zones.</div>';
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="empty-state">No jobs with listed compensation found in this area.</div>';
             return;
         }
 
         // Sort jobs by highest pay descending
-        jobs.sort((a, b) => {
+        filtered.sort((a, b) => {
             const payA = a.payMax || a.payMin || 0;
             const payB = b.payMax || b.payMin || 0;
             return payB - payA;
         });
 
         container.innerHTML = '';
-        jobs.forEach((j, index) => {
+        filtered.forEach((j, index) => {
             // Calculate listing age
             let ageText = '';
             const dateField = j.postedDate || j.createdAt;
@@ -1859,7 +1861,7 @@ class JobRadiusApp {
         const JobListUI = document.getElementById('job-list-container');
         if (JobListUI && !append) JobListUI.innerHTML = '';
 
-        let mobileOmittedCount = 0;
+        let omittedCount = 0;
 
         jobs.forEach(j => {
             // Skip jobs without valid coordinates
@@ -1868,9 +1870,9 @@ class JobRadiusApp {
                 return;
             }
 
-            // Filter: omit jobs without any salary/pay data (all screen sizes)
+            // Filter: omit jobs without any salary/pay data
             if (!j.payMin && !j.payMax) {
-                mobileOmittedCount++;
+                omittedCount++;
                 return;
             }
 
@@ -1915,8 +1917,8 @@ class JobRadiusApp {
         if (!append) this._replotLockedJobs();
 
         // Show toast if jobs were filtered for missing salary
-        if (mobileOmittedCount > 0) {
-            this._showToast(`Filtered out ${mobileOmittedCount} job${mobileOmittedCount !== 1 ? 's' : ''} with no listed salary.`);
+        if (omittedCount > 0) {
+            this._showToast(`Filtered out ${omittedCount} job${omittedCount !== 1 ? 's' : ''} with no listed compensation.`);
         }
 
         // Run overlap stacking after overlays are drawn (Google Maps draws async)

@@ -131,30 +131,22 @@ function _buildClass() {
             this._stackDx = dx;
             this._stackDy = dy;
             if (this.div && !this.expanded) {
-                // Update transform in-place (chip position + SVG line)
+                // Update transform in-place (chip position)
                 this.div.style.transform =
                     `translate(calc(-50% + ${dx}px), calc(-100% - ${dy}px))`;
-                // Update the SVG connector to match new dx/dy
+                // Update the SVG connector endpoints in-place
                 const svg = this.div.querySelector('.jo-connector');
                 if (svg) {
                     const line = svg.querySelector('line');
                     const circle = svg.querySelector('circle');
-                    // Chip bottom-center in div-local coords (relative to geo anchor):
-                    // When transform is translate(-50%+dx, -100%-dy) the origin (0,0)
-                    // in div space is at the geo point.  The chip renders from
-                    // (0,0) upward. Bottom-center of chip = (0,0) + (chipW/2 - offset..)
-                    // In SVG we track: chipCenterX=0 (we draw from center of SVG canvas)
-                    // x1,y1 = geo point relative to svg pos = (-dx, dy+chipH)
-                    const chipH = this.div.querySelector('.jo-collapsed')?.offsetHeight || 70;
+                    // (0,0) = chip bottom-center; geo anchor = (-dx, dy)
                     if (line) {
-                        line.setAttribute('x1', -dx);
-                        line.setAttribute('y1', dy + chipH);
-                        line.setAttribute('x2', 0);
-                        line.setAttribute('y2', 0);
+                        line.setAttribute('x2', -dx);
+                        line.setAttribute('y2', dy);
                     }
                     if (circle) {
-                        circle.setAttribute('cx', 0);
-                        circle.setAttribute('cy', 0);
+                        circle.setAttribute('cx', -dx);
+                        circle.setAttribute('cy', dy);
                     }
                 }
             }
@@ -346,20 +338,18 @@ function _buildClass() {
             const isLocked = this.isLocked;
             const strokeColor = isLocked ? '#f5a623' : 'rgba(77,168,218,0.75)';
             const dotColor   = isLocked ? '#f5a623' : 'rgba(77,168,218,0.9)';
-            // SVG line: x1,y1 = chip bottom-center (relative to chip top-left after CSS offset)
-            //           x2,y2 = geo anchor in same coordinate frame
-            // Since the chip's transform moves it by (dx, -dy) from the div's translate(-50%,-100%),
-            // in the chip's local space: geo point is at x=(-dx), y=(dy + chipH).
+            // SVG is positioned at left:50%; top:100% inside the chip.
+            // (0,0) in SVG space = chip bottom-center.
+            // Geo anchor point relative to SVG origin = (-dx, dy).
             const svgConnector = `
                 <svg class="jo-connector" xmlns="http://www.w3.org/2000/svg"
                      width="1" height="1" style="overflow:visible; position:absolute;
                      left:50%; top:100%; pointer-events:none; z-index:-1">
-                    <line x1="${-dx}" y1="${dy + chipH}"
-                          x2="0" y2="0"
-                          stroke="${strokeColor}" stroke-width="1.5"
-                          stroke-dasharray="${dx !== 0 ? 'none' : 'none'}"/>
-                    <circle cx="${-dx}" cy="${dy + chipH}" r="3"
-                            fill="${dotColor}" opacity="0.8"/>
+                    <line x1="0" y1="0"
+                          x2="${-dx}" y2="${dy}"
+                          stroke="${strokeColor}" stroke-width="1.5"/>
+                    <circle cx="${-dx}" cy="${dy}" r="3.5"
+                            fill="${dotColor}" opacity="0.9"/>
                 </svg>`;
 
             // Mobile minimal pin

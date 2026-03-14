@@ -35,6 +35,7 @@ function _buildClass() {
             this.expanded = false;
             this._noteVisible = false;
             this.isLocked = callbacks.isLocked || false;
+            this._stackOffset = 0;  // vertical pixel offset for collision stacking
         }
 
         // ── Google OverlayView lifecycle ────────────────────────────
@@ -74,7 +75,8 @@ function _buildClass() {
             const pos = proj.fromLatLngToDivPixel(this.position);
             if (!pos) return;
             this.div.style.left = pos.x + 'px';
-            this.div.style.top = pos.y + 'px';
+            // Subtract _stackOffset so pin floats above its geo point
+            this.div.style.top  = (pos.y - this._stackOffset) + 'px';
         }
 
         onRemove() {
@@ -110,6 +112,21 @@ function _buildClass() {
 
         toggle() {
             this.expanded ? this.collapse() : this.expand();
+        }
+
+        /**
+         * Elevate this pin by `pixels` above its true geo position.
+         * Updates the stem height and redraws the screen position.
+         * Called by app.js resolveOverlaps() after every zoom/pan.
+         */
+        applyStackOffset(pixels) {
+            this._stackOffset = pixels;
+            if (this.div && !this.expanded) {
+                // Update stem height in-place without full re-render
+                const stem = this.div.querySelector('.jo-stem');
+                if (stem) stem.style.height = (8 + pixels) + 'px';
+            }
+            this.draw();
         }
 
         setLocked(locked) {
@@ -288,28 +305,32 @@ function _buildClass() {
             const pay = this._formatPayHero();
             const lockIcon = this.isLocked ? ' 📌' : '';
 
-            // Mobile minimal pin (Salary + Title)
+            // Mobile minimal pin
             if (window.innerWidth < 768) {
                 const title = this._wrapAt40(this.job.title);
+                const stemH = 8 + this._stackOffset;
                 return `
                     <div class="jo-collapsed mobile-minimal">
                         <div class="jo-row-pay">${pay}${lockIcon}</div>
                         <div class="jo-row-title">${title}</div>
                     </div>
-                    <div class="jo-arrow"></div>
+                    <div class="jo-stem" style="height:${stemH}px"></div>
+                    <div class="jo-arrowhead"></div>
                 `;
             }
 
             const rating = this._formatRating();
             const company = this._truncate(this.job.company, 20);
             const title = this._wrapAt40(this.job.title);
+            const stemH = 8 + this._stackOffset;
 
             return `
                 <div class="jo-collapsed">
                     <div class="jo-row-pay">${pay}</div>
                     <div class="jo-row-title">${title}</div>
                 </div>
-                <div class="jo-arrow"></div>
+                <div class="jo-stem" style="height:${stemH}px"></div>
+                <div class="jo-arrowhead"></div>
             `;
         }
 

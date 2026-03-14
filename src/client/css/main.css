@@ -519,16 +519,31 @@ button {
   z-index: 100 !important;
 }
 
-/* ── Downward-pointing arrow ─────────────────────── */
-.jo-arrow {
+/* ── Pin stem + arrowhead (replaces old jo-arrow border-trick) ───────── */
+/* The stem is a thin vertical line whose height is set dynamically       */
+/* via inline style when pins are stacked to different elevations.         */
+.jo-stem {
+  width: 2px;
+  min-height: 8px;
+  background: linear-gradient(to bottom, rgba(77, 168, 218, 0.7), rgba(77, 168, 218, 0.3));
+  margin: 0 auto;
+  /* height is set inline by applyStackOffset() */
+}
+.jo-arrowhead {
   width: 0;
   height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 10px solid rgba(8, 18, 38, 0.96);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid rgba(77, 168, 218, 0.7);
   margin: 0 auto;
 }
-
+/* Locked pin — gold stem/arrowhead */
+.job-overlay--locked .jo-stem {
+  background: linear-gradient(to bottom, #f5a623, rgba(245, 166, 35, 0.3));
+}
+.job-overlay--locked .jo-arrowhead {
+  border-top-color: #f5a623;
+}
 /* ── Collapsed chip ──────────────────────────────── */
 /* ── Collapsed chip — salary-first ──────────────────── */
 .jo-collapsed {
@@ -543,15 +558,13 @@ button {
 }
 
 /* Locked pin — gold border glow */
+/* ── Locked pin — gold border on collapsed chip ──────── */
 .job-overlay--locked .jo-collapsed,
 .job-overlay--locked .jo-expanded {
   border-color: #f5a623;
   box-shadow: 0 0 10px rgba(245, 166, 35, 0.35);
 }
 
-.job-overlay--locked .jo-arrow {
-  border-top-color: #f5a623;
-}
 
 /* Pay hero — the biggest element on the pin */
 .jo-pay-hero {

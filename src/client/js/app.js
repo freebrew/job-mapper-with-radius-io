@@ -98,6 +98,13 @@ class JobRadiusApp {
             this._populateJobAutocomplete();
             this.setupModals();
 
+            // Recalculate pin stacking on every map zoom / pan (idle fires when settled)
+            let _overlapTimer = null;
+            map.addListener('idle', () => {
+                clearTimeout(_overlapTimer);
+                _overlapTimer = setTimeout(() => this.resolveOverlaps(), 150);
+            });
+
             // Restore session from localStorage (persist login across refreshes)
             this.restoreSession();
 
@@ -1910,6 +1917,101 @@ class JobRadiusApp {
         // Show toast if jobs were filtered for missing salary
         if (mobileOmittedCount > 0) {
             this._showToast(`Filtered out ${mobileOmittedCount} job${mobileOmittedCount !== 1 ? 's' : ''} with no listed salary.`);
+        }
+
+        // Run overlap stacking after overlays are drawn (Google Maps draws async)
+        setTimeout(() => this.resolveOverlaps(), 600);
+    }
+
+    /**
+     * resolveOverlaps()
+     *
+     * Detects overlapping map pins in pixel space and fans them vertically
+     * so every pin in a cluster is visible, each connected by a thin stem
+     * line pointing down to its true geo location on the map.
+     *
+     * Algorithm (runs in O(n²) which is fine for ≤200 pins):
+     *  1. Get pixel position of every visible (non-expanded) overlay.
+     *  2. Build clusters: a pin joins a cluster if it is within
+     *     PIN_W × PIN_H pixels of ANY existing cluster member.
+     *  3. Sort cluster members by salary desc (highest near map surface).
+     *  4. Assign stack offsets: slot 0 → 0px, slot 1 → 1 step, …
+     *  5. Assign all solo pins offset = 0 (reset any stale elevation).
+     *
+     * Called after plotJobMarkers() and on map 'idle' (zoom/pan).
+     */
+    resolveOverlaps() {
+        const allOverlays = [...(this.jobMarkers || []), ...(this.lockedMarkers || [])];
+        if (allOverlays.length === 0) return;
+
+        // Only overlays with a div and a working projection
+        const items = allOverlays.map(o => {
+            if (!o?.div || !o.expanded) {
+                try {
+                    const proj = o.getProjection?.();
+                    if (!proj) return null;
+                    const px = proj.fromLatLngToDivPixel(o.position);
+                    if (!px) return null;
+                    return { overlay: o, x: px.x, y: px.y };
+                } catch { return null; }
+            }
+            return null; // skip expanded overlays
+        }).filter(Boolean);
+
+        if (items.length === 0) return;
+
+        // Pin approximate collision box (px)
+        const PIN_W = 240;  // chip width + some breathing room
+        const PIN_H = 90;   // chip height + stem base
+        // Per-slot stack height (chip + gap between chips)
+        const STACK_STEP = 95;
+
+        const used = new Array(items.length).fill(false);
+
+        for (let i = 0; i < items.length; i++) {
+            if (used[i]) continue;
+
+            // Build cluster transitively
+            const cluster = [i];
+            used[i] = true;
+            let changed = true;
+            while (changed) {
+                changed = false;
+                for (let j = 0; j < items.length; j++) {
+                    if (used[j]) continue;
+                    // Check if j overlaps any current cluster member
+                    const overlaps = cluster.some(ci => {
+                        const dx = Math.abs(items[j].x - items[ci].x);
+                        const dy = Math.abs(items[j].y - items[ci].y);
+                        return dx < PIN_W && dy < PIN_H;
+                    });
+                    if (overlaps) {
+                        cluster.push(j);
+                        used[j] = true;
+                        changed = true;
+                    }
+                }
+            }
+
+            if (cluster.length === 1) {
+                // Solo pin — reset any previous elevation
+                items[cluster[0]].overlay.applyStackOffset(0);
+                continue;
+            }
+
+            // Sort: highest salary first → nearest to map (smallest offset)
+            cluster.sort((a, b) => {
+                const jobA = items[a].overlay.job;
+                const jobB = items[b].overlay.job;
+                const salA = (jobA?.payMax || jobA?.payMin || 0);
+                const salB = (jobB?.payMax || jobB?.payMin || 0);
+                return salB - salA;
+            });
+
+            // Assign vertical elevation slots (bottom → top = salary high → low)
+            cluster.forEach((itemIdx, slot) => {
+                items[itemIdx].overlay.applyStackOffset(slot * STACK_STEP);
+            });
         }
     }
 

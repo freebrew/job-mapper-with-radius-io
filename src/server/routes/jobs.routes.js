@@ -276,7 +276,7 @@ router.post('/search', requireAuth, async (req, res, next) => {
                         // Jobs are still saved to DB (for analytics) but we never
                         // stream them to the client. They won't appear on the map or list.
                         if (!mapped.payMin && !mapped.payMax) {
-                            continue; // inside for-of loop over jobs
+                            return; // return null from this .map() iteration — filtered below
                         }
 
                         // Build the client-facing job object BEFORE DB save,

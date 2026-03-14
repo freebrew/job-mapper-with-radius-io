@@ -556,8 +556,8 @@ button {
 /* Pay hero — the biggest element on the pin */
 .jo-pay-hero {
   color: #10b981;
-  font-weight: 800;
-  font-size: 1.4rem;
+  font-weight: 700;
+  font-size: 1.05rem;
   letter-spacing: -0.5px;
   line-height: 1.2;
   white-space: nowrap;
@@ -588,14 +588,14 @@ button {
   max-width: 130px;
 }
 
-/* Position/title row */
+/* Position/title row — wraps at word boundaries, full title visible */
 .jo-row-title {
-  font-size: 1.4rem;
+  font-size: 0.78rem;
   color: #cbd5e1;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 400;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
   margin-top: 3px;
   max-width: 240px;
 }

@@ -248,6 +248,31 @@ function _buildClass() {
             return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut) + '…';
         }
 
+        /**
+         * Wrap a job title at whole-word boundaries every 40 characters.
+         * Returns the FULL title (no ellipsis) — just inserts line breaks.
+         * Each line is at most 40 chars; breaks happen at spaces.
+         */
+        _wrapAt40(str) {
+            if (!str) return '';
+            const LIMIT = 40;
+            const words = str.split(' ');
+            const lines = [];
+            let current = '';
+            for (const word of words) {
+                if (current.length === 0) {
+                    current = word;
+                } else if (current.length + 1 + word.length <= LIMIT) {
+                    current += ' ' + word;
+                } else {
+                    lines.push(current);
+                    current = word;
+                }
+            }
+            if (current) lines.push(current);
+            return lines.join('<br>');
+        }
+
         _ageText() {
             const d = this.job.postedDate || this.job.createdAt;
             if (!d) return '';
@@ -265,7 +290,7 @@ function _buildClass() {
 
             // Mobile minimal pin (Salary + Title)
             if (window.innerWidth < 768) {
-                const title = this._truncateWords(this.job.title, 120);
+                const title = this._wrapAt40(this.job.title);
                 return `
                     <div class="jo-collapsed mobile-minimal">
                         <div class="jo-row-pay">${pay}${lockIcon}</div>
@@ -277,7 +302,7 @@ function _buildClass() {
 
             const rating = this._formatRating();
             const company = this._truncate(this.job.company, 20);
-            const title = this._truncateWords(this.job.title, 30);
+            const title = this._wrapAt40(this.job.title);
 
             return `
                 <div class="jo-collapsed">

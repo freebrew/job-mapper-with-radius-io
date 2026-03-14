@@ -348,6 +348,34 @@ class JobRadiusApp {
         });
     }
 
+    // ── Search usage tracking (max 10 per 24-hr pass window) ────────────
+    _getSearchUsage() {
+        try {
+            const raw = localStorage.getItem('jobradius_search_usage');
+            if (!raw) return { count: 0, windowStart: 0 };
+            const data = JSON.parse(raw);
+            // Resets automatically when window is more than 24h old
+            if (Date.now() - data.windowStart > 24 * 60 * 60 * 1000) {
+                return { count: 0, windowStart: Date.now() };
+            }
+            return data;
+        } catch { return { count: 0, windowStart: 0 }; }
+    }
+
+    _incrementSearchUsage() {
+        const usage = this._getSearchUsage();
+        const updated = {
+            count: usage.count + 1,
+            windowStart: usage.windowStart || Date.now()
+        };
+        localStorage.setItem('jobradius_search_usage', JSON.stringify(updated));
+        return updated.count;
+    }
+
+    _resetSearchUsage() {
+        localStorage.removeItem('jobradius_search_usage');
+    }
+
     checkPremiumStatus() {
         const userStr = localStorage.getItem('jobradius_user');
         if (!userStr) {
@@ -362,7 +390,8 @@ class JobRadiusApp {
             this.btnSubscribe.classList.add('hidden');
             if (this.passCountdown) {
                 this.passCountdown.classList.remove('hidden');
-                this.passCountdown.innerText = "Premium Active";
+                const usage = this._getSearchUsage();
+                this.passCountdown.innerText = `Premium Active  •  ${usage.count}/10`;
             }
             return;
         }
@@ -385,6 +414,7 @@ class JobRadiusApp {
                     // Expired
                     clearInterval(this.premiumTimerToken);
                     this.isPremium = false;
+                    this._resetSearchUsage();
                     if (this.passCountdown) this.passCountdown.classList.add('hidden');
                     this.btnSubscribe.classList.remove('hidden');
                     this.btnSubscribe.innerText = "Get 24hr Pass";
@@ -394,7 +424,8 @@ class JobRadiusApp {
                     const hours = Math.floor(diffTime / (1000 * 60 * 60)).toString().padStart(2, '0');
                     const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
                     const seconds = Math.floor((diffTime % (1000 * 60)) / 1000).toString().padStart(2, '0');
-                    if (this.passCountdown) this.passCountdown.innerText = `${hours}:${minutes}:${seconds}`;
+                    const usage = this._getSearchUsage();
+                    if (this.passCountdown) this.passCountdown.innerText = `${hours}:${minutes}:${seconds}  •  ${usage.count}/10`;
                 }
             }, 1000); // tick every second
 
@@ -690,7 +721,20 @@ class JobRadiusApp {
             }
             showModal(this.authModal);
         });
-        this.btnSubscribe.addEventListener('click', () => showModal(this.paymentModal));
+        // Payment Button: require login first, then show payment modal
+        this.btnSubscribe.addEventListener('click', () => {
+            const token = localStorage.getItem('jobradius_token');
+            if (!token) {
+                // Not logged in — show auth modal first
+                // After login, user can click "Get 24hr Pass" again
+                showModal(this.authModal);
+                // Add a subtle note to the auth modal
+                const authNote = document.getElementById('auth-modal-note');
+                if (authNote) authNote.textContent = 'Please log in to purchase a 24hr Pass.';
+                return;
+            }
+            showModal(this.paymentModal);
+        });
 
         // Close Buttons
         document.querySelectorAll('.close-btn[data-modal]').forEach(btn => {
@@ -1471,8 +1515,14 @@ class JobRadiusApp {
                 return;
             }
         }
+        // ── SEARCH LIMIT GATE: Max 10 searches per 24-hr pass window ──
+        const MAX_SEARCHES = 10;
+        const usage = this._getSearchUsage();
+        if (usage.count >= MAX_SEARCHES) {
+            alert(`You have used all ${MAX_SEARCHES} searches included with your 24hr Pass. Your results remain visible — select any job to view details, route, or add notes.`);
+            return;
+        }
 
-        // If user typed a location but didn't select autocomplete, geocode it
         if (!this.currentCenter) {
             if (this.searchInput.value.length > 2) {
                 // Use Google Geocoder to resolve the typed text to real coordinates
@@ -1544,6 +1594,9 @@ class JobRadiusApp {
             // 5-min timeout — Apify scraping can take a while
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
+
+            // Count this search against the 24-hr pass limit
+            this._incrementSearchUsage();
 
             const response = await fetch('/api/jobs/search', {
                 method: 'POST',

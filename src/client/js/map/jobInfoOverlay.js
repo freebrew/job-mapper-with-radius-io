@@ -74,9 +74,9 @@ function _buildClass() {
             if (!proj) return;
             const pos = proj.fromLatLngToDivPixel(this.position);
             if (!pos) return;
+            // Always anchor at geo point — chip position is controlled by CSS transform
             this.div.style.left = pos.x + 'px';
-            // Subtract _stackOffset so pin floats above its geo point
-            this.div.style.top  = (pos.y - this._stackOffset) + 'px';
+            this.div.style.top  = pos.y + 'px';
         }
 
         onRemove() {
@@ -115,16 +115,48 @@ function _buildClass() {
         }
 
         /**
-         * Elevate this pin by `pixels` above its true geo position.
-         * Updates the stem height and redraws the screen position.
-         * Called by app.js resolveOverlaps() after every zoom/pan.
+         * Fan this pin to a (dx, dy) offset from its geo anchor.
+         *
+         * The overlay div stays at left=geoX, top=geoY.
+         * The base CSS transform `translate(-50%, -100%)` puts chip
+         * bottom-center at the geo point.  We override it to shift the
+         * chip dx pixels horizontally and dy pixels upward while KEEPING
+         * the div anchored at the geo point — this lets the inline SVG
+         * draw an angled line back from chip-bottom to (0, 0) = geo point.
+         *
+         * @param {number} dx  horizontal shift (positive = right)
+         * @param {number} dy  extra upward lift (positive = up)
          */
-        applyStackOffset(pixels) {
-            this._stackOffset = pixels;
+        applyStackOffset(dx, dy) {
+            this._stackDx = dx;
+            this._stackDy = dy;
             if (this.div && !this.expanded) {
-                // Update stem height in-place without full re-render
-                const stem = this.div.querySelector('.jo-stem');
-                if (stem) stem.style.height = (8 + pixels) + 'px';
+                // Update transform in-place (chip position + SVG line)
+                this.div.style.transform =
+                    `translate(calc(-50% + ${dx}px), calc(-100% - ${dy}px))`;
+                // Update the SVG connector to match new dx/dy
+                const svg = this.div.querySelector('.jo-connector');
+                if (svg) {
+                    const line = svg.querySelector('line');
+                    const circle = svg.querySelector('circle');
+                    // Chip bottom-center in div-local coords (relative to geo anchor):
+                    // When transform is translate(-50%+dx, -100%-dy) the origin (0,0)
+                    // in div space is at the geo point.  The chip renders from
+                    // (0,0) upward. Bottom-center of chip = (0,0) + (chipW/2 - offset..)
+                    // In SVG we track: chipCenterX=0 (we draw from center of SVG canvas)
+                    // x1,y1 = geo point relative to svg pos = (-dx, dy+chipH)
+                    const chipH = this.div.querySelector('.jo-collapsed')?.offsetHeight || 70;
+                    if (line) {
+                        line.setAttribute('x1', -dx);
+                        line.setAttribute('y1', dy + chipH);
+                        line.setAttribute('x2', 0);
+                        line.setAttribute('y2', 0);
+                    }
+                    if (circle) {
+                        circle.setAttribute('cx', 0);
+                        circle.setAttribute('cy', 0);
+                    }
+                }
             }
             this.draw();
         }
@@ -304,33 +336,52 @@ function _buildClass() {
         _buildCollapsed() {
             const pay = this._formatPayHero();
             const lockIcon = this.isLocked ? ' 📌' : '';
+            const dx = this._stackDx || 0;
+            const dy = this._stackDy || 0;
+            const chipH = 70; // approximate chip height for initial SVG — updated live by applyStackOffset
+            // Connector SVG: line from chip bottom-center to geo anchor (0,0 in div space)
+            // The div is positioned at geoX, geoY with transform(-50%, -100%) + offset.
+            // In div-local space, chip bottom-center = (0, 0) (before transform), geo = (-dx, dy+chipH).
+            // We draw with overflow:visible so the SVG size doesn't matter.
+            const isLocked = this.isLocked;
+            const strokeColor = isLocked ? '#f5a623' : 'rgba(77,168,218,0.75)';
+            const dotColor   = isLocked ? '#f5a623' : 'rgba(77,168,218,0.9)';
+            // SVG line: x1,y1 = chip bottom-center (relative to chip top-left after CSS offset)
+            //           x2,y2 = geo anchor in same coordinate frame
+            // Since the chip's transform moves it by (dx, -dy) from the div's translate(-50%,-100%),
+            // in the chip's local space: geo point is at x=(-dx), y=(dy + chipH).
+            const svgConnector = `
+                <svg class="jo-connector" xmlns="http://www.w3.org/2000/svg"
+                     width="1" height="1" style="overflow:visible; position:absolute;
+                     left:50%; top:100%; pointer-events:none; z-index:-1">
+                    <line x1="${-dx}" y1="${dy + chipH}"
+                          x2="0" y2="0"
+                          stroke="${strokeColor}" stroke-width="1.5"
+                          stroke-dasharray="${dx !== 0 ? 'none' : 'none'}"/>
+                    <circle cx="${-dx}" cy="${dy + chipH}" r="3"
+                            fill="${dotColor}" opacity="0.8"/>
+                </svg>`;
 
             // Mobile minimal pin
             if (window.innerWidth < 768) {
                 const title = this._wrapAt40(this.job.title);
-                const stemH = 8 + this._stackOffset;
                 return `
-                    <div class="jo-collapsed mobile-minimal">
+                    <div class="jo-collapsed mobile-minimal" style="position:relative">
                         <div class="jo-row-pay">${pay}${lockIcon}</div>
                         <div class="jo-row-title">${title}</div>
+                        ${svgConnector}
                     </div>
-                    <div class="jo-stem" style="height:${stemH}px"></div>
-                    <div class="jo-arrowhead"></div>
                 `;
             }
 
-            const rating = this._formatRating();
-            const company = this._truncate(this.job.company, 20);
             const title = this._wrapAt40(this.job.title);
-            const stemH = 8 + this._stackOffset;
 
             return `
-                <div class="jo-collapsed">
+                <div class="jo-collapsed" style="position:relative">
                     <div class="jo-row-pay">${pay}</div>
                     <div class="jo-row-title">${title}</div>
+                    ${svgConnector}
                 </div>
-                <div class="jo-stem" style="height:${stemH}px"></div>
-                <div class="jo-arrowhead"></div>
             `;
         }
 

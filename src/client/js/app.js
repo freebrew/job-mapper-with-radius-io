@@ -1944,34 +1944,45 @@ class JobRadiusApp {
         const allOverlays = [...(this.jobMarkers || []), ...(this.lockedMarkers || [])];
         if (allOverlays.length === 0) return;
 
-        // Only overlays with a div and a working projection
+        // Only non-expanded overlays whose Google Maps projection is ready
         const items = allOverlays.map(o => {
-            if (!o?.div || !o.expanded) {
-                try {
-                    const proj = o.getProjection?.();
-                    if (!proj) return null;
-                    const px = proj.fromLatLngToDivPixel(o.position);
-                    if (!px) return null;
-                    return { overlay: o, x: px.x, y: px.y };
-                } catch { return null; }
-            }
-            return null; // skip expanded overlays
+            if (!o?.div || o.expanded) return null;
+            try {
+                const proj = o.getProjection?.();
+                if (!proj) return null;
+                const px = proj.fromLatLngToDivPixel(o.position);
+                if (!px) return null;
+                return { overlay: o, x: px.x, y: px.y };
+            } catch { return null; }
         }).filter(Boolean);
 
         if (items.length === 0) return;
 
-        // Pin approximate collision box (px)
-        const PIN_W = 240;  // chip width + some breathing room
-        const PIN_H = 90;   // chip height + stem base
-        // Per-slot stack height (chip + gap between chips)
-        const STACK_STEP = 95;
+        // ── Fan layout slot table (dx, dy) ────────────────────────────────
+        // Max 5 pins shown per cluster; rest collapse behind slot 0.
+        // Slot 0 = highest salary = closest to map surface (dy=50, centred).
+        // Row 1 (slots 1-2): fan left/right at the same height.
+        // Row 2 (slots 3-4): second row above, offset inward.
+        // All pins stay within ±200px horizontal, ≤130px vertical lift.
+        const FAN_SLOTS = [
+            [   0,  50],   // slot 0: straight up, close to map
+            [-160,  50],   // slot 1: left, same height
+            [ 160,  50],   // slot 2: right, same height
+            [ -80, 130],   // slot 3: upper-left
+            [  80, 130],   // slot 4: upper-right
+        ];
+        const MAX_FAN = FAN_SLOTS.length;
+
+        // Collision box for cluster detection
+        const PIN_W = 200;
+        const PIN_H = 80;
 
         const used = new Array(items.length).fill(false);
 
         for (let i = 0; i < items.length; i++) {
             if (used[i]) continue;
 
-            // Build cluster transitively
+            // Build cluster transitively (join if within PIN_W×PIN_H of any member)
             const cluster = [i];
             used[i] = true;
             let changed = true;
@@ -1979,13 +1990,12 @@ class JobRadiusApp {
                 changed = false;
                 for (let j = 0; j < items.length; j++) {
                     if (used[j]) continue;
-                    // Check if j overlaps any current cluster member
-                    const overlaps = cluster.some(ci => {
-                        const dx = Math.abs(items[j].x - items[ci].x);
-                        const dy = Math.abs(items[j].y - items[ci].y);
-                        return dx < PIN_W && dy < PIN_H;
+                    const withinCluster = cluster.some(ci => {
+                        const ddx = Math.abs(items[j].x - items[ci].x);
+                        const ddy = Math.abs(items[j].y - items[ci].y);
+                        return ddx < PIN_W && ddy < PIN_H;
                     });
-                    if (overlaps) {
+                    if (withinCluster) {
                         cluster.push(j);
                         used[j] = true;
                         changed = true;
@@ -1994,23 +2004,22 @@ class JobRadiusApp {
             }
 
             if (cluster.length === 1) {
-                // Solo pin — reset any previous elevation
-                items[cluster[0]].overlay.applyStackOffset(0);
+                // Solo pin — reset to default (no offset)
+                items[cluster[0]].overlay.applyStackOffset(0, 0);
                 continue;
             }
 
-            // Sort: highest salary first → nearest to map (smallest offset)
+            // Sort by salary desc — highest pay gets slot 0 (nearest map surface)
             cluster.sort((a, b) => {
                 const jobA = items[a].overlay.job;
                 const jobB = items[b].overlay.job;
-                const salA = (jobA?.payMax || jobA?.payMin || 0);
-                const salB = (jobB?.payMax || jobB?.payMin || 0);
-                return salB - salA;
+                return ((jobB?.payMax || jobB?.payMin || 0) - (jobA?.payMax || jobA?.payMin || 0));
             });
 
-            // Assign vertical elevation slots (bottom → top = salary high → low)
+            // Assign fan slots — pins beyond MAX_FAN collapse behind slot 0
             cluster.forEach((itemIdx, slot) => {
-                items[itemIdx].overlay.applyStackOffset(slot * STACK_STEP);
+                const [sdx, sdy] = slot < MAX_FAN ? FAN_SLOTS[slot] : FAN_SLOTS[0];
+                items[itemIdx].overlay.applyStackOffset(sdx, sdy);
             });
         }
     }

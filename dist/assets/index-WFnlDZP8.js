@@ -4,8 +4,9 @@
                      left:50%; top:100%; pointer-events:none; z-index:-1">
                     <line x1="0" y1="0"
                           x2="${-i}" y2="${n}"
-                          stroke="${a}" stroke-width="1.5"/>
-                    <circle cx="${-i}" cy="${n}" r="3.5"
+                          stroke="${a}" stroke-width="6"
+                          stroke-linecap="round"/>
+                    <circle cx="${-i}" cy="${n}" r="4"
                             fill="${r}" opacity="0.9"/>
                 </svg>`;if(window.innerWidth<768){const l=this._wrapAt40(this.job.title);return`
                     <div class="jo-collapsed mobile-minimal" style="position:relative">

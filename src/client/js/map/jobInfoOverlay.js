@@ -347,8 +347,9 @@ function _buildClass() {
                      left:50%; top:100%; pointer-events:none; z-index:-1">
                     <line x1="0" y1="0"
                           x2="${-dx}" y2="${dy}"
-                          stroke="${strokeColor}" stroke-width="1.5"/>
-                    <circle cx="${-dx}" cy="${dy}" r="3.5"
+                          stroke="${strokeColor}" stroke-width="6"
+                          stroke-linecap="round"/>
+                    <circle cx="${-dx}" cy="${dy}" r="4"
                             fill="${dotColor}" opacity="0.9"/>
                 </svg>`;
 

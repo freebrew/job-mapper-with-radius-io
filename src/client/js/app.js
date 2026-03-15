@@ -2149,7 +2149,8 @@ class JobRadiusApp {
                 const res = await fetch(`/api/notes/by-job/${encodeURIComponent(j.indeedJobId)}`, { headers });
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.note?.content) noteMap[j.indeedJobId] = data.note.content;
+                    // API returns { success: true, data: note } — note has .content
+                    if (data.data?.content) noteMap[j.indeedJobId] = data.data.content;
                 }
             } catch { /* ignore — notes are optional */ }
         }));
@@ -2167,7 +2168,7 @@ class JobRadiusApp {
                 ? `<textarea class="saved-note-area" readonly rows="2" title="Saved note">${note}</textarea>`
                 : '';
             return `
-            <div class="saved-job-card" data-job-id="${j.indeedJobId}">
+            <div class="saved-job-card" data-job-id="${j.indeedJobId}" title="Click to view job details" style="cursor:pointer">
                 <div class="saved-job-meta">
                     ${pay ? `<span class="saved-pay">${pay}</span>` : ''}
                     <span class="saved-date">${pinnedDate}</span>
@@ -2182,9 +2183,21 @@ class JobRadiusApp {
             </div>`;
         }).join('');
 
+        // Wire up card click → open job detail view
+        container.querySelectorAll('.saved-job-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                // Don't intercept Unpin button or View Job link clicks
+                if (e.target.closest('.btn-unpin') || e.target.closest('.btn-job-link')) return;
+                const id = card.dataset.jobId;
+                const job = this.lockedJobs.get(id);
+                if (job) this.showJobDetail(job);
+            });
+        });
+
         // Wire up Unpin buttons
         container.querySelectorAll('.btn-unpin').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const id = btn.dataset.jobId;
                 const job = this.lockedJobs.get(id);
                 if (job) this.unlockJob(job);

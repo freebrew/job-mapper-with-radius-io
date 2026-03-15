@@ -279,13 +279,6 @@ router.post('/search', requireAuth, async (req, res, next) => {
                             return; // return null from this .map() iteration — filtered below
                         }
 
-                        // ── Spatial Jitter ────────────────────────────────────────────
-                        // Add a small random offset (±~150 meters) so jobs in the same city
-                        // don't perfectly overlap on the exact same map pixel.
-                        // 1 degree lat/lng is roughly 111km, so 0.003 is ~330m total spread.
-                        lat += (Math.random() - 0.5) * 0.003;
-                        lng += (Math.random() - 0.5) * 0.003;
-
                         // Build the client-facing job object BEFORE DB save,
                         // so a DB failure cannot silently drop the job from the map.
                         const clientJob = {

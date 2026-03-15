@@ -1983,16 +1983,16 @@ class JobRadiusApp {
         ];
         const MAX_FAN = FAN_SLOTS.length;
 
-        // Collision box for cluster detection
-        const PIN_W = 200;
-        const PIN_H = 80;
+        // Cluster detection: only group pins that share nearly identical map anchor coordinates
+        // (within 10px of each other), NOT when their large 200x80 labels overlap.
+        const CLUSTER_RAD = 10;
 
         const used = new Array(items.length).fill(false);
 
         for (let i = 0; i < items.length; i++) {
             if (used[i]) continue;
 
-            // Build cluster transitively (join if within PIN_W×PIN_H of any member)
+            // Build cluster transitively (join if within CLUSTER_RAD of any member)
             const cluster = [i];
             used[i] = true;
             let changed = true;
@@ -2003,7 +2003,7 @@ class JobRadiusApp {
                     const withinCluster = cluster.some(ci => {
                         const ddx = Math.abs(items[j].x - items[ci].x);
                         const ddy = Math.abs(items[j].y - items[ci].y);
-                        return ddx < PIN_W && ddy < PIN_H;
+                        return ddx < CLUSTER_RAD && ddy < CLUSTER_RAD;
                     });
                     if (withinCluster) {
                         cluster.push(j);

@@ -946,6 +946,100 @@ button {
   animation: slideInUp 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
+/* ── Saved Jobs Panel Cards ─────────────────────────────────────── */
+.saved-loading {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 12px 0;
+  text-align: center;
+}
+
+.saved-job-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.saved-job-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.saved-pay {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #4dcc88;
+}
+
+.saved-date {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.saved-job-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.saved-company {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* Compact read-only note textarea — blends into the card */
+.saved-note-area {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  padding: 6px 8px;
+  resize: none;
+  font-family: inherit;
+  margin-top: 4px;
+  cursor: default;
+}
+
+.saved-job-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.btn-unpin {
+  background: rgba(245, 166, 35, 0.12);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+  border-radius: 6px;
+  color: #f5a623;
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-unpin:hover { background: rgba(245, 166, 35, 0.22); }
+
+.btn-job-link {
+  font-size: 0.75rem;
+  color: var(--accent-cyan, #4da8da);
+  text-decoration: none;
+  opacity: 0.85;
+}
+.btn-job-link:hover { opacity: 1; text-decoration: underline; }
+
 /* =========================================
    MOBILE RESPONSIVE OVERRIDES (max-width: 767px)
    Converts desktop side-panels to Bottom Sheets

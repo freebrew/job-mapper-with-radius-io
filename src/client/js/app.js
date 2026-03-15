@@ -108,6 +108,9 @@ class JobRadiusApp {
             // Restore session from localStorage (persist login across refreshes)
             this.restoreSession();
 
+            // Populate Saved Jobs panel immediately from localStorage
+            this.renderSavedJobs();
+
             // ── Post-Payment Sync: Detect Stripe return URL ──────────────────
             // When Stripe redirects back after checkout, the URL contains ?session_id=cs_...
             // We use this to immediately verify the payment with Stripe and activate the day pass,
@@ -579,7 +582,12 @@ class JobRadiusApp {
                     targetView.classList.remove('hidden');
                     targetView.classList.add('active');
                 }
-                
+
+                // Refresh saved jobs panel when that tab is clicked
+                if (targetId === 'saved-jobs-view') {
+                    this.renderSavedJobs();
+                }
+
                 // On mobile, clicking a pill expands the panel to half or full
                 if(window.innerWidth < 768 && this.unifiedPanel) {
                     this.unifiedPanel.classList.add('panel-half');
@@ -2069,11 +2077,16 @@ class JobRadiusApp {
     // ── Job Locking ───────────────────────────────────────────────
 
     lockJob(job) {
-        this.lockedJobs.set(job.indeedJobId, job);
+        // Stamp pinnedAt if not already set (preserve original pin time on re-lock)
+        const existing = this.lockedJobs.get(job.indeedJobId);
+        const pinnedJob = { ...job, pinnedAt: existing?.pinnedAt || Date.now() };
+        this.lockedJobs.set(job.indeedJobId, pinnedJob);
         this._saveLockedJobs();
         console.log(`[Lock] Locked: "${job.title}" (${job.indeedJobId})`);
         // Re-plot locked markers so the newly locked one gets a gold border
         this._replotLockedJobs();
+        // Update the Saved panel
+        this.renderSavedJobs();
     }
 
     unlockJob(job) {
@@ -2081,6 +2094,8 @@ class JobRadiusApp {
         this._saveLockedJobs();
         console.log(`[Lock] Unlocked: "${job.title}"`);
         this._replotLockedJobs();
+        // Update the Saved panel
+        this.renderSavedJobs();
     }
 
     _saveLockedJobs() {
@@ -2096,9 +2111,85 @@ class JobRadiusApp {
             if (!raw) return;
             const data = JSON.parse(raw);
             if (!Array.isArray(data)) return;
-            data.forEach(([id, job]) => this.lockedJobs.set(id, job));
+            data.forEach(([id, job]) => {
+                // Backfill pinnedAt for legacy entries saved before this field existed
+                if (!job.pinnedAt) job.pinnedAt = Date.now();
+                this.lockedJobs.set(id, job);
+            });
             console.log(`[Lock] Restored ${this.lockedJobs.size} pinned jobs from localStorage`);
         } catch (e) { console.warn('[Lock] Could not restore from localStorage:', e.message); }
+    }
+
+    /**
+     * Render the Saved Jobs panel (#saved-list).
+     * Shows pinned jobs sorted newest-first with their notes.
+     */
+    async renderSavedJobs() {
+        const container = document.getElementById('saved-list');
+        if (!container) return;
+
+        const jobs = Array.from(this.lockedJobs.values())
+            .sort((a, b) => (b.pinnedAt || 0) - (a.pinnedAt || 0));
+
+        if (jobs.length === 0) {
+            container.innerHTML = '<div class="empty-state">No pinned jobs yet. Click the 📌 pin on any job to save it here.</div>';
+            return;
+        }
+
+        // Show skeleton while fetching notes
+        container.innerHTML = '<div class="saved-loading">Loading saved jobs…</div>';
+
+        // Fetch notes for all pinned jobs in parallel
+        const token = localStorage.getItem('jobradius_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        const noteMap = {};
+        await Promise.all(jobs.map(async (j) => {
+            try {
+                const res = await fetch(`/api/notes/by-job/${encodeURIComponent(j.indeedJobId)}`, { headers });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.note?.content) noteMap[j.indeedJobId] = data.note.content;
+                }
+            } catch { /* ignore — notes are optional */ }
+        }));
+
+        // Render cards
+        container.innerHTML = jobs.map(j => {
+            const pay = j.payMax
+                ? `$${Math.round(j.payMin || 0).toLocaleString()}–$${Math.round(j.payMax).toLocaleString()}`
+                : j.payMin ? `$${Math.round(j.payMin).toLocaleString()}` : '';
+            const pinnedDate = j.pinnedAt
+                ? new Date(j.pinnedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                : '';
+            const note = noteMap[j.indeedJobId] || '';
+            const noteHtml = note
+                ? `<textarea class="saved-note-area" readonly rows="2" title="Saved note">${note}</textarea>`
+                : '';
+            return `
+            <div class="saved-job-card" data-job-id="${j.indeedJobId}">
+                <div class="saved-job-meta">
+                    ${pay ? `<span class="saved-pay">${pay}</span>` : ''}
+                    <span class="saved-date">${pinnedDate}</span>
+                </div>
+                <div class="saved-job-title">${j.title || 'Untitled'}</div>
+                ${j.company ? `<div class="saved-company">${j.company}</div>` : ''}
+                ${noteHtml}
+                <div class="saved-job-actions">
+                    <button class="btn-unpin" data-job-id="${j.indeedJobId}">📌 Unpin</button>
+                    ${j.indeedUrl ? `<a class="btn-job-link" href="${j.indeedUrl}" target="_blank" rel="noopener">View Job ↗</a>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+
+        // Wire up Unpin buttons
+        container.querySelectorAll('.btn-unpin').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.jobId;
+                const job = this.lockedJobs.get(id);
+                if (job) this.unlockJob(job);
+            });
+        });
     }
 
     _replotLockedJobs() {

@@ -6,6 +6,16 @@ import { MapController } from './map/mapController.js';
 import { createJobInfoOverlay } from './map/jobInfoOverlay.js';
 import { RadiusManager } from './map/radiusManager.js';
 
+// Initialize UI Theme synchronously before the app or maps API even begin loading to prevent FOIT
+(function initUITheme() {
+    try {
+        const currentTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
+        document.body.classList.toggle('theme-light', currentTheme === '784c8b99db731157518b28d2');
+    } catch (e) {
+        console.warn('Could not read theme config', e);
+    }
+})();
+
 class JobRadiusApp {
     constructor(startLocation) {
         this.mapController = new MapController('map');
@@ -66,7 +76,6 @@ class JobRadiusApp {
         this.adminPanel = document.getElementById('admin-view');
 
         // Auto-start the app immediately after construction
-        this._initTheme();
         this.startApp();
 
         // Default Mobile State
@@ -74,12 +83,6 @@ class JobRadiusApp {
             this.unifiedPanel.classList.add('panel-half');
         }
     } // End constructor
-
-    _initTheme() {
-        const currentTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
-        // Apply light mode UI CSS var overrides instantly if the Light map is selected
-        document.body.classList.toggle('theme-light', currentTheme === '784c8b99db731157518b28d2');
-    }
 
     async startApp() {
         console.log("JobRadius App Starting...");

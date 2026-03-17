@@ -16,8 +16,10 @@ window.JobInfoOverlayClass = null;
 // also handles it — that's the whole point of belt-and-suspenders resilience.
 (function applyThemeSafetyNet() {
     try {
-        const savedTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
+        const raw = localStorage.getItem('jobradius_map_theme');
+        const savedTheme = raw || '1a69e9680804148ef13dfe31';
         const isLight = savedTheme === '784c8b99db731157518b28d2';
+        console.log('[THEME-DIAG] IIFE safety net: raw=' + JSON.stringify(raw) + ', resolved=' + savedTheme + ', isLight=' + isLight);
         if (isLight) {
             document.documentElement.classList.add('theme-light');
             if (document.body) document.body.classList.add('theme-light');
@@ -25,7 +27,7 @@ window.JobInfoOverlayClass = null;
             document.documentElement.classList.remove('theme-light');
             if (document.body) document.body.classList.remove('theme-light');
         }
-    } catch (e) { /* localStorage unavailable in private browsing on some browsers */ }
+    } catch (e) { console.warn('[THEME-DIAG] IIFE error:', e); }
 })();
 
 class JobRadiusApp {
@@ -734,11 +736,14 @@ class JobRadiusApp {
                     btn.classList.remove('active');
                 }
                 
-                btn.addEventListener('click', (e) => {
-                    const newTheme = e.target.getAttribute('data-map-id');
+                btn.addEventListener('click', () => {
+                    // Use `btn` (closure) not `e.target` — e.target may be a child element with no data-map-id
+                    const newTheme = btn.getAttribute('data-map-id');
+                    console.log('[THEME-DIAG] Click handler: btn data-map-id=' + JSON.stringify(newTheme));
                     localStorage.setItem('jobradius_map_theme', newTheme);
+                    console.log('[THEME-DIAG] Click handler: localStorage now=' + JSON.stringify(localStorage.getItem('jobradius_map_theme')));
                     themeBtns.forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
+                    btn.classList.add('active');
                     
                     // Instantly apply the UI transition so it doesn't wait for the reload to feel responsive
                     if (newTheme === '784c8b99db731157518b28d2') {

@@ -17,11 +17,15 @@
   <script>
     (function initUITheme() {
       try {
-        const currentTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
+        var raw = localStorage.getItem('jobradius_map_theme');
+        var currentTheme = raw || '1a69e9680804148ef13dfe31';
+        console.log('[THEME-DIAG] inline script: raw=' + JSON.stringify(raw) + ', resolved=' + currentTheme);
         if (currentTheme === '784c8b99db731157518b28d2') {
           document.documentElement.classList.add('theme-light');
+          console.log('[THEME-DIAG] → Applied theme-light to <html>');
         } else {
           document.documentElement.classList.remove('theme-light');
+          console.log('[THEME-DIAG] → Removed theme-light (dark mode)');
         }
       } catch (e) {
         console.warn('Could not read theme config', e);

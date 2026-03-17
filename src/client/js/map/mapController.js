@@ -44,12 +44,14 @@ export class MapController {
 
     async init() {
         const savedTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
+        const isLight = savedTheme === '784c8b99db731157518b28d2';
+        
         this.map = new google.maps.Map(document.getElementById(this.elementId), {
             center: this.defaultCenter,
             zoom: 15,
             mapId: savedTheme,
             renderingType: google.maps.RenderingType.VECTOR,   // ← REQUIRED for tilt to work
-            colorScheme: 'DARK',
+            colorScheme: isLight ? google.maps.ColorScheme.LIGHT : google.maps.ColorScheme.DARK,
             disableDefaultUI: true,
             zoomControl: true,
             tilt: 60,

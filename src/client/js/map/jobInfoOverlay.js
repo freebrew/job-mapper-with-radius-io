@@ -354,13 +354,13 @@ function _buildClass() {
                             fill="${dotColor}" opacity="0.9"/>
                 </svg>`;
 
-            // Quick pin button (Colored Red if unpinned, Green if pinned)
-            const pinBg = this.isLocked ? '#2ecc71' : '#ff4757';
+            // Quick pin button (Colored Dark Slate if unpinned, Green if pinned)
+            const pinBg = this.isLocked ? '#2ecc71' : '#1e293b';
             const pinTitle = this.isLocked ? 'Unpin Job' : 'Pin Job';
             const quickPinBtn = `
                 <div class="jo-quick-pin" data-action="quick-lock" title="${pinTitle}" 
                     style="position:absolute; top:-12px; right:-12px; background:${pinBg}; border:2px solid #1e293b; border-radius:50%; width:30px; height:30px; min-width:30px; min-height:30px; box-sizing:border-box; padding:0; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; box-shadow:0 3px 6px rgba(0,0,0,0.5); transition: transform 0.1s, background 0.2s;">
-                    <svg viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+                    <span class="icon" style="font-size: 14px; line-height: 1;">📌</span>
                 </div>`;
 
             // Mobile minimal pin
@@ -462,63 +462,75 @@ function _buildClass() {
         _wireActions() {
             if (!this.div) return;
 
-            this.div.querySelector('.jo-close')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.collapse();
-            });
-
-            this.div.querySelector('[data-action="route"]')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (this.callbacks.onRoute) this.callbacks.onRoute(this.job);
-            });
-
-            this.div.querySelector('[data-action="lock"]')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const nowLocked = !this.isLocked;
-                this.setLocked(nowLocked);
-                if (this.callbacks.onLock) this.callbacks.onLock(this.job, nowLocked);
-            });
-
-            this.div.querySelector('[data-action="quick-lock"]')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const nowLocked = !this.isLocked;
-                this.setLocked(nowLocked);
-                if (this.callbacks.onLock) this.callbacks.onLock(this.job, nowLocked);
-                
-                // Instantly update visual feedback
-                const btn = e.currentTarget;
-                if (btn) {
-                    btn.style.background = nowLocked ? '#2ecc71' : '#ff4757';
-                    btn.title = nowLocked ? 'Unpin Job' : 'Pin Job';
+            // Use Event Delegation on the parent container to survive innerHTML rewrites natively.
+            this.div.addEventListener('click', (e) => {
+                const closeBtn = e.target.closest('.jo-close');
+                if (closeBtn) {
+                    e.stopPropagation();
+                    return this.collapse();
                 }
-            });
 
-            this.div.querySelector('[data-action="note"]')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const noteForm = this.div.querySelector('.jo-note-form');
-                if (noteForm) {
-                    this._noteVisible = !this._noteVisible;
-                    noteForm.style.display = this._noteVisible ? 'block' : 'none';
-                    if (this._noteVisible) noteForm.querySelector('textarea')?.focus();
+                const routeBtn = e.target.closest('[data-action="route"]');
+                if (routeBtn) {
+                    e.stopPropagation();
+                    if (this.callbacks.onRoute) this.callbacks.onRoute(this.job);
+                    return;
                 }
-            });
 
-            this.div.querySelector('.jo-btn-save-note')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const textarea = this.div.querySelector('.jo-note-input');
-                const noteText = textarea?.value?.trim();
-                if (noteText && this.callbacks.onSaveNote) {
-                    this.callbacks.onSaveNote(this.job, noteText);
-                    textarea.value = '';
+                const lockBtn = e.target.closest('[data-action="lock"]');
+                if (lockBtn) {
+                    e.stopPropagation();
+                    const nowLocked = !this.isLocked;
+                    this.setLocked(nowLocked);
+                    if (this.callbacks.onLock) this.callbacks.onLock(this.job, nowLocked);
+                    return;
+                }
+
+                const quickLockBtn = e.target.closest('[data-action="quick-lock"]');
+                if (quickLockBtn) {
+                    e.stopPropagation();
+                    const nowLocked = !this.isLocked;
+                    this.setLocked(nowLocked);
+                    if (this.callbacks.onLock) this.callbacks.onLock(this.job, nowLocked);
+                    
+                    quickLockBtn.style.background = nowLocked ? '#2ecc71' : '#1e293b';
+                    quickLockBtn.title = nowLocked ? 'Unpin Job' : 'Pin Job';
+                    return;
+                }
+
+                const noteBtn = e.target.closest('[data-action="note"]');
+                if (noteBtn) {
+                    e.stopPropagation();
                     const noteForm = this.div.querySelector('.jo-note-form');
-                    if (noteForm) noteForm.style.display = 'none';
-                    this._noteVisible = false;
+                    if (noteForm) {
+                        this._noteVisible = !this._noteVisible;
+                        noteForm.style.display = this._noteVisible ? 'block' : 'none';
+                        if (this._noteVisible) noteForm.querySelector('textarea')?.focus();
+                    }
+                    return;
                 }
-            });
 
-            this.div.querySelector('[data-action="hide"]')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (this.callbacks.onHide) this.callbacks.onHide(this.job);
+                const saveNoteBtn = e.target.closest('.jo-btn-save-note');
+                if (saveNoteBtn) {
+                    e.stopPropagation();
+                    const textarea = this.div.querySelector('.jo-note-input');
+                    const noteText = textarea?.value?.trim();
+                    if (noteText && this.callbacks.onSaveNote) {
+                        this.callbacks.onSaveNote(this.job, noteText);
+                        textarea.value = '';
+                        const noteForm = this.div.querySelector('.jo-note-form');
+                        if (noteForm) noteForm.style.display = 'none';
+                        this._noteVisible = false;
+                    }
+                    return;
+                }
+
+                const hideBtn = e.target.closest('[data-action="hide"]');
+                if (hideBtn) {
+                    e.stopPropagation();
+                    if (this.callbacks.onHide) this.callbacks.onHide(this.job);
+                    return;
+                }
             });
         }
     }

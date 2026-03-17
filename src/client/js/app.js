@@ -66,6 +66,7 @@ class JobRadiusApp {
         this.adminPanel = document.getElementById('admin-view');
 
         // Auto-start the app immediately after construction
+        this._initTheme();
         this.startApp();
 
         // Default Mobile State
@@ -73,6 +74,12 @@ class JobRadiusApp {
             this.unifiedPanel.classList.add('panel-half');
         }
     } // End constructor
+
+    _initTheme() {
+        const currentTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
+        // Apply light mode UI CSS var overrides instantly if the Light map is selected
+        document.body.classList.toggle('theme-light', currentTheme === '784c8b99db731157518b28d2');
+    }
 
     async startApp() {
         console.log("JobRadius App Starting...");
@@ -703,16 +710,13 @@ class JobRadiusApp {
         // Theme Selection (Requires reload to apply Map ID to Google Maps instance)
         const themeBtns = document.querySelectorAll('.theme-btn');
         if (themeBtns.length > 0) {
-            // Highlight current theme on load
             const currentTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
-            
-            // Apply light mode UI CSS var overrides if the Light map is selected
-            document.body.classList.toggle('theme-light', currentTheme === '784c8b99db731157518b28d2');
             
             themeBtns.forEach(btn => {
                 if(btn.getAttribute('data-map-id') === currentTheme) {
-                    themeBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
                 }
                 
                 btn.addEventListener('click', (e) => {

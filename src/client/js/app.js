@@ -333,7 +333,7 @@ class JobRadiusApp {
                 const jobs = JSON.parse(cachedResults);
                 if (Array.isArray(jobs) && jobs.length > 0) {
                     this.lastFetchedJobs = jobs;
-                    // Re-plot all pins on the map
+                    // Re-plot all pins on the map (initially unfiltered — zones restore below)
                     const filtered = jobs.filter(j => j.lat != null && j.lng != null);
                     filtered.forEach(job => {
                         const overlay = createJobInfoOverlay(
@@ -354,6 +354,19 @@ class JobRadiusApp {
                 }
             }
         } catch(e) { console.warn('[Cache] Could not restore cached results:', e.message); }
+
+        // ── 4. Restore saved zones from localStorage ──
+        // This must run AFTER radiusManager is initialized and AFTER cached jobs are restored.
+        // Restoring zones triggers the onChange callback → _refilterJobs() → re-plots
+        // with proper inclusion/exclusion filtering applied.
+        try {
+            const restoredZones = this._restoreZones();
+            if (restoredZones && this.lastFetchedJobs && this.lastFetchedJobs.length > 0) {
+                // Re-filter using the restored zones (onChange may not fire if no radius change)
+                this._refilterJobs();
+                console.log('[Zones] Restored zones from localStorage and re-filtered jobs.');
+            }
+        } catch(e) { console.warn('[Zones] Could not restore zones on startup:', e.message); }
 
         // Background sync: re-fetch fresh user data from server
         fetch('/api/auth/me', {

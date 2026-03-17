@@ -27,6 +27,54 @@ window.JobInfoOverlayClass = null;
             document.documentElement.classList.remove('theme-light');
             if (document.body) document.body.classList.remove('theme-light');
         }
+
+        // Diagnostic: Log computed CSS variable values once body is available
+        const logComputedTheme = () => {
+            const b = document.body;
+            if (!b) return;
+            const bgDark = getComputedStyle(b).getPropertyValue('--bg-dark').trim();
+            const bgPanel = getComputedStyle(b).getPropertyValue('--bg-panel').trim();
+            const bgColor = getComputedStyle(b).backgroundColor;
+            console.log('[THEME-DIAG] Computed body: --bg-dark=' + bgDark + ', --bg-panel=' + bgPanel + ', bgColor=' + bgColor);
+            console.log('[THEME-DIAG] html.classList=' + document.documentElement.className);
+            console.log('[THEME-DIAG] body.classList=' + b.className);
+        };
+
+        // Wait for body to be available, then log and install observer
+        if (document.body) {
+            logComputedTheme();
+        }
+        // Also log after DOMContentLoaded (catches any late changes)
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure body also has the class
+            if (isLight && document.body) {
+                document.body.classList.add('theme-light');
+            }
+            logComputedTheme();
+        });
+
+        // MutationObserver: catch if ANYTHING removes theme-light from <html>
+        const observer = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+                if (m.type === 'attributes' && m.attributeName === 'class') {
+                    const hasLight = m.target.classList.contains('theme-light');
+                    console.log('[THEME-DIAG] ⚠ CLASS CHANGED on <' + m.target.tagName.toLowerCase() + '>: ' +
+                        m.target.className + ' (theme-light=' + hasLight + ')');
+                    if (!hasLight && isLight) {
+                        console.warn('[THEME-DIAG] 🔴 theme-light was REMOVED! Re-adding it.');
+                        m.target.classList.add('theme-light');
+                    }
+                }
+            }
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        if (document.body) {
+            observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        } else {
+            document.addEventListener('DOMContentLoaded', () => {
+                observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+            });
+        }
     } catch (e) { console.warn('[THEME-DIAG] IIFE error:', e); }
 })();
 

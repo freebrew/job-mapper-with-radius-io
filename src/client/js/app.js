@@ -2309,21 +2309,21 @@ class JobRadiusApp {
         // Show skeleton while fetching notes
         container.innerHTML = '<div class="saved-loading">Loading saved jobs…</div>';
 
-        // Fetch notes for all pinned jobs in parallel
+        // Fetch notes for all pinned jobs in parallel (only if logged in)
         const token = localStorage.getItem('jobradius_token');
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-
         const noteMap = {};
-        await Promise.all(jobs.map(async (j) => {
-            try {
-                const res = await fetch(`/api/notes/by-job/${encodeURIComponent(j.indeedJobId)}`, { headers });
-                if (res.ok) {
-                    const data = await res.json();
-                    // API returns { success: true, data: note } — note has .content
-                    if (data.data?.content) noteMap[j.indeedJobId] = data.data.content;
-                }
-            } catch { /* ignore — notes are optional */ }
-        }));
+        if (token) {
+            const headers = { 'Authorization': `Bearer ${token}` };
+            await Promise.all(jobs.map(async (j) => {
+                try {
+                    const res = await fetch(`/api/notes/by-job/${encodeURIComponent(j.indeedJobId)}`, { headers });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.data?.content) noteMap[j.indeedJobId] = data.data.content;
+                    }
+                } catch { /* ignore — notes are optional */ }
+            }));
+        }
 
         // Render cards
         container.innerHTML = jobs.map(j => {

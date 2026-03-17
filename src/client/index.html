@@ -108,7 +108,7 @@
             <span class="icon">⭕</span> Zones
           </button>
           <button class="action-pill" data-target="saved-jobs-view">
-            <span class="icon">📌</span> Saved
+            <span class="icon">📌</span> Pinned
           </button>
           <button class="action-pill" data-target="theme-settings-view">
             <span class="icon">🎨</span> Theme
@@ -166,18 +166,18 @@
             </div>
           </div>
 
-          <!-- View 4: Saved Jobs -->
+          <!-- View 4: Pinned Jobs -->
           <div id="saved-jobs-view" class="unified-view hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <h3 style="margin:0; font-size: 1rem;">Saved/Pinned Jobs</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-glass);">
+              <h3 style="margin:0; font-size: 1rem;">Pinned Jobs</h3>
               <select id="sort-saved-jobs" class="neumorphic-select" style="padding: 4px 8px; font-size: 0.8rem; width: 140px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-glass); border-radius: 4px;">
-                <option value="dateSaved">Order Saved</option>
+                <option value="dateSaved">Order Pinned</option>
                 <option value="datePosted">Date Posted</option>
                 <option value="pay">Annualized Pay</option>
               </select>
             </div>
             <div id="saved-list">
-              <div class="empty-state">No jobs saved yet.</div>
+              <div class="empty-state">No pinned jobs yet.</div>
             </div>
           </div>
 

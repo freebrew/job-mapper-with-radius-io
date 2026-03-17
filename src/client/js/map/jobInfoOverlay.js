@@ -51,6 +51,7 @@ function _buildClass() {
             this.div.addEventListener('click', (e) => {
                 e.stopPropagation(); // Prevent bubbling up to the map which closes the sheets
                 if (e.target.closest('.jo-actions') ||
+                    e.target.closest('.jo-quick-pin') ||
                     e.target.closest('.jo-note-form') ||
                     e.target.tagName === 'A') return;
                 this.toggle();

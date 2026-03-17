@@ -2187,7 +2187,7 @@ class JobRadiusApp {
             } else if (sortValue === 'datePosted') {
                 dateLabel = 'Posted: Unknown';
             } else if (j.pinnedAt) {
-                dateLabel = `Saved ${new Date(j.pinnedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+                dateLabel = `Pinned ${new Date(j.pinnedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
             }
             
             const note = noteMap[j.indeedJobId] || '';

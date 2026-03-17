@@ -1358,30 +1358,54 @@ class JobRadiusApp {
     // ── Map Pin Focus Mode ────────────────────────────────────────
 
     enableFocusMode(selectedJob) {
-        if (!this.jobMarkers) return;
-        this.jobMarkers.forEach(overlay => {
-            if (overlay.job.indeedJobId !== selectedJob.indeedJobId) {
-                if (overlay.div) {
-                    overlay.div.style.opacity = '0';
-                    overlay.div.style.pointerEvents = 'none';
+        // Hide search-result markers that aren't the selected job
+        if (this.jobMarkers) {
+            this.jobMarkers.forEach(overlay => {
+                if (overlay.job.indeedJobId !== selectedJob.indeedJobId) {
+                    if (overlay.div) {
+                        overlay.div.style.opacity = '0';
+                        overlay.div.style.pointerEvents = 'none';
+                    }
+                } else {
+                    if (overlay.div) {
+                        overlay.div.style.opacity = '1';
+                        overlay.div.style.pointerEvents = 'auto';
+                    }
                 }
-            } else {
+            });
+        }
+        // Also hide pinned-job markers that aren't the selected job
+        if (this.lockedMarkers) {
+            this.lockedMarkers.forEach(overlay => {
+                if (overlay.job && overlay.job.indeedJobId !== selectedJob.indeedJobId) {
+                    if (overlay.div) {
+                        overlay.div.style.opacity = '0';
+                        overlay.div.style.pointerEvents = 'none';
+                    }
+                }
+            });
+        }
+    }
+
+    disableFocusMode() {
+        // Restore all search-result markers
+        if (this.jobMarkers) {
+            this.jobMarkers.forEach(overlay => {
                 if (overlay.div) {
                     overlay.div.style.opacity = '1';
                     overlay.div.style.pointerEvents = 'auto';
                 }
-            }
-        });
-    }
-
-    disableFocusMode() {
-        if (!this.jobMarkers) return;
-        this.jobMarkers.forEach(overlay => {
-            if (overlay.div) {
-                overlay.div.style.opacity = '1';
-                overlay.div.style.pointerEvents = 'auto';
-            }
-        });
+            });
+        }
+        // Restore all pinned-job markers
+        if (this.lockedMarkers) {
+            this.lockedMarkers.forEach(overlay => {
+                if (overlay.div) {
+                    overlay.div.style.opacity = '1';
+                    overlay.div.style.pointerEvents = 'auto';
+                }
+            });
+        }
     }
 
     /**
@@ -2285,7 +2309,8 @@ class JobRadiusApp {
 
                 // Handle Inline Route button
                 if (e.target.closest('.btn-route')) {
-                    this.mapController.routeTo(job.lat, job.lng, job.title);
+                    this.currentSelectedJob = job;
+                    this.showInAppRoute();
                     return;
                 }
 

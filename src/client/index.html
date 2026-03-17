@@ -64,6 +64,17 @@
 </head>
 
 <body>
+  <!-- Prevent Flash of Dark Theme on Reload -->
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('jobradius_map_theme') === '784c8b99db731157518b28d2') {
+          document.body.classList.add('theme-light');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  
   <div id="app">
     <!-- Background Map Layer -->
     <div id="map"></div>

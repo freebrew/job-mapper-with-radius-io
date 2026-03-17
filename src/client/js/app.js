@@ -705,6 +705,10 @@ class JobRadiusApp {
         if (themeBtns.length > 0) {
             // Highlight current theme on load
             const currentTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
+            
+            // Apply light mode UI CSS var overrides if the Light map is selected
+            document.body.classList.toggle('theme-light', currentTheme === '1a69e968080414863fb626ff');
+            
             themeBtns.forEach(btn => {
                 if(btn.getAttribute('data-map-id') === currentTheme) {
                     themeBtns.forEach(b => b.classList.remove('active'));

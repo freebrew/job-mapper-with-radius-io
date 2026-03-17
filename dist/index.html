@@ -22,10 +22,12 @@
         console.log('[THEME-DIAG] inline script: raw=' + JSON.stringify(raw) + ', resolved=' + currentTheme);
         if (currentTheme === '784c8b99db731157518b28d2') {
           document.documentElement.classList.add('theme-light');
-          console.log('[THEME-DIAG] → Applied theme-light to <html>');
+          document.documentElement.style.colorScheme = 'light';
+          console.log('[THEME-DIAG] → Applied theme-light + color-scheme:light');
         } else {
           document.documentElement.classList.remove('theme-light');
-          console.log('[THEME-DIAG] → Removed theme-light (dark mode)');
+          document.documentElement.style.colorScheme = 'dark';
+          console.log('[THEME-DIAG] → Removed theme-light (dark mode, color-scheme:dark)');
         }
       } catch (e) {
         console.warn('Could not read theme config', e);
@@ -80,8 +82,8 @@
       }
     })();
   </script>
-  <script type="module" crossorigin src="/assets/index-Demd_5gv.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CRNg5Qgg.css">
+  <script type="module" crossorigin src="/assets/index-DQYDZzZ_.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-C5Le5Vmn.css">
 </head>
 
 <body>

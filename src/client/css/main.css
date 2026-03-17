@@ -8,6 +8,7 @@
    Land: deep navy #1d2c4d  |  Water: dark teal-navy #0d1b2a  |  Roads: slate #2a3f5f
    Labels: white #e0e7ef   |  POI icons: magenta/purple tones */
 :root {
+  color-scheme: dark;
   /* Deep navy — matches map land color for seamless edge blending */
   --bg-dark: #1a2744;
   /* Frosted glass panel tint — dark navy with transparency */
@@ -33,6 +34,7 @@
 }
 
 body.theme-light, html.theme-light {
+  color-scheme: light;
   --bg-dark: #f1f5f9;
   --bg-panel: rgba(255, 255, 255, 0.85);
   --text-primary: #0f172a;

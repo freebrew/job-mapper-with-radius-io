@@ -202,6 +202,15 @@ body {
   padding: 4px 12px;
   font-size: 0.8rem;
 }
+.btn-logout-top {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--accent-red);
+  border: 1px solid var(--accent-red);
+  border-radius: 8px;
+  cursor: pointer;
+}
 
 /* When job-detail is active: hide the search header and action pills */
 .unified-panel.panel-in-detail-mode #panel-search-header,

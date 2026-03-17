@@ -59,6 +59,7 @@ class JobRadiusApp {
         // Mobile Elements
         this.btnLogin = document.getElementById('btn-login');
         this.btnSubscribe = document.getElementById('btn-subscribe');
+        this.btnLogout = document.getElementById('btn-logout');
         this.btnCheckout = document.getElementById('btn-checkout');
         this.authModal = document.getElementById('auth-modal');
         this.paymentModal = document.getElementById('payment-modal');
@@ -313,8 +314,9 @@ class JobRadiusApp {
             const nameEl = document.getElementById('user-name-display');
             if (nameEl) nameEl.textContent = displayName;
 
-            // Also hide the Login button, show subscribe button if needed
+            // Hide Login, show Logout for authenticated users
             if (this.btnLogin) this.btnLogin.classList.add('hidden');
+            if (this.btnLogout) this.btnLogout.classList.remove('hidden');
 
             if (user.email === 'bruno.brottes@gmail.com' && this.btnAdminPanel) {
                 this.btnAdminPanel.classList.remove('hidden');
@@ -389,9 +391,8 @@ class JobRadiusApp {
                 // Restore login button visibility
                 const nameEl = document.getElementById('user-name-display');
                 if (nameEl) nameEl.textContent = '';
-                if (this.btnLogin) {
-                    this.btnLogin.classList.remove('hidden');
-                }
+                if (this.btnLogin) this.btnLogin.classList.remove('hidden');
+                if (this.btnLogout) this.btnLogout.classList.add('hidden');
                 this.checkPremiumStatus();
             }
             // Any other error (503, network failure etc.) — do NOT clear localStorage
@@ -797,6 +798,26 @@ class JobRadiusApp {
             }
             showModal(this.authModal);
         });
+
+        // Logout Button — clear session and reload
+        if (this.btnLogout) {
+            this.btnLogout.addEventListener('click', () => {
+                // Clear all auth data
+                localStorage.removeItem('jobradius_token');
+                localStorage.removeItem('jobradius_user');
+                sessionStorage.removeItem('jobradius_last_results');
+                // Reset UI
+                const nameEl = document.getElementById('user-name-display');
+                if (nameEl) nameEl.textContent = '';
+                if (this.btnLogin) this.btnLogin.classList.remove('hidden');
+                if (this.btnLogout) this.btnLogout.classList.add('hidden');
+                if (this.btnSubscribe) this.btnSubscribe.classList.add('hidden');
+                if (this.passCountdown) this.passCountdown.classList.add('hidden');
+                if (this.btnAdminPanel) this.btnAdminPanel.classList.add('hidden');
+                // Reload for clean state
+                window.location.reload();
+            });
+        }
         // Payment Button: require login first, then show payment modal
         this.btnSubscribe.addEventListener('click', () => {
             const token = localStorage.getItem('jobradius_token');
@@ -979,6 +1000,7 @@ class JobRadiusApp {
                 const nameEl = document.getElementById('user-name-display');
                 if (nameEl) nameEl.textContent = nameToShow;
                 if (this.btnLogin) this.btnLogin.classList.add('hidden');
+                if (this.btnLogout) this.btnLogout.classList.remove('hidden');
 
                 // Check premium status (in case they already have a pass)
                 this.checkPremiumStatus();

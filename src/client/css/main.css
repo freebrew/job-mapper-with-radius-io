@@ -980,6 +980,66 @@ button {
   animation: slideInUp 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
+/* ── Matching Jobs Panel Cards ─────────────────────────────────────── */
+.job-card {
+  padding: 14px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px solid var(--border-glass-strong);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 12px;
+}
+.job-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-cyan);
+}
+.jc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+.jc-title {
+  color: var(--accent-cyan);
+  margin: 0;
+  flex: 1;
+  font-size: 1rem;
+}
+.jc-age {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  margin-left: 8px;
+}
+.jc-company {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.jc-rating {
+  color: var(--accent-gold);
+  margin-left: 6px;
+}
+.jc-meta {
+  font-size: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.jc-location {
+  color: var(--text-secondary);
+}
+.jc-pay {
+  color: var(--accent-green);
+  font-weight: 600;
+}
+.jc-pay-na {
+  color: var(--text-secondary);
+}
+
 /* ── Saved Jobs Panel Cards ─────────────────────────────────────── */
 .saved-loading {
   color: var(--text-secondary);
@@ -990,10 +1050,11 @@ button {
 
 .saved-job-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-glass);
+  border: 1px solid var(--border-glass-strong);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-radius: 10px;
   padding: 10px 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;

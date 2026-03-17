@@ -1832,16 +1832,15 @@ class JobRadiusApp {
 
             const div = document.createElement('div');
             div.className = "job-card";
-            div.style.cssText = "padding:14px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; transition: background 0.2s;";
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-                    <h4 style="color:#06b6d4; margin:0; flex:1;">${j.title}</h4>
-                    ${ageText ? `<span style="font-size:0.75rem; color:#64748b; white-space:nowrap; margin-left:8px;">${ageText}</span>` : ''}
+                <div class="jc-header">
+                    <h4 class="jc-title">${j.title}</h4>
+                    ${ageText ? `<span class="jc-age">${ageText}</span>` : ''}
                 </div>
-                <div style="font-size:0.85rem; color:#94a3b8; margin-bottom:6px;">${j.company} ${ratingText ? `<span style="color:#f59e0b; margin-left:6px;">${ratingText}</span>` : ''}</div>
-                <div style="font-size:0.8rem; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
-                    <span style="color:#94a3b8;">📍 ${j.location || 'Remote'}</span>
-                    ${payText ? `<span style="color:#10b981; font-weight:600;">💰 ${payText}</span>` : '<span style="color:#64748b;">💰 Pay N/A</span>'}
+                <div class="jc-company">${j.company} ${ratingText ? `<span class="jc-rating">${ratingText}</span>` : ''}</div>
+                <div class="jc-meta">
+                    <span class="jc-location">📍 ${j.location || 'Remote'}</span>
+                    ${payText ? `<span class="jc-pay">💰 ${payText}</span>` : '<span class="jc-pay-na">💰 Pay N/A</span>'}
                 </div>
             `;
 

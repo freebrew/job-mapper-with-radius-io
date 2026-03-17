@@ -29,7 +29,7 @@ export class RadiusManager {
      * @param {number} initialRadiusMeters
      * @param {{ lat: number, lng: number, address: string }} center — each zone gets its own center
      */
-    addZone(type, initialRadiusMeters = 5000, center) {
+    addZone(type, initialRadiusMeters = 20000, center) {
         if (!center || !center.lat || !center.lng) {
             console.warn("Center coordinates required. Provide { lat, lng, address }.");
             return null;

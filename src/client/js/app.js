@@ -471,7 +471,7 @@ class JobRadiusApp {
                 if (z.markerObj) z.markerObj.setMap(null);
             });
             this.radiusManager.zones = [];
-            this.radiusManager.addZone('inclusive', 5000, { lat, lng, address: place.formatted_address });
+            this.radiusManager.addZone('inclusive', 20000, { lat, lng, address: place.formatted_address });
             this.updateRadiusUI();
 
             // Fit map around the new zone accounting for panel offsets
@@ -562,6 +562,12 @@ class JobRadiusApp {
 
     setupUnifiedNavigation() {
         if(!this.actionPills || !this.unifiedViews) return;
+
+        // Saved Jobs Sorting
+        const sortSelect = document.getElementById('sort-saved-jobs');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', () => this.renderSavedJobs());
+        }
         
         this.actionPills.forEach(pill => {
             pill.addEventListener('click', () => {
@@ -1568,7 +1574,7 @@ class JobRadiusApp {
 
         // Add first inclusive zone if none exist
         if (!this.radiusManager.getZonesData().length) {
-            this.radiusManager.addZone('inclusive', 5000, this.currentCenter);
+            this.radiusManager.addZone('inclusive', 20000, this.currentCenter);
         }
 
         // Mobile UX: Hide the bottom sheet completely when a search begins
@@ -2128,8 +2134,22 @@ class JobRadiusApp {
         const container = document.getElementById('saved-list');
         if (!container) return;
 
-        const jobs = Array.from(this.lockedJobs.values())
-            .sort((a, b) => (b.pinnedAt || 0) - (a.pinnedAt || 0));
+        const sortSelect = document.getElementById('sort-saved-jobs');
+        const sortValue = sortSelect ? sortSelect.value : 'dateSaved';
+
+        const jobs = Array.from(this.lockedJobs.values()).sort((a, b) => {
+            if (sortValue === 'datePosted') {
+                const bTime = b.postedDate ? new Date(b.postedDate).getTime() : 0;
+                const aTime = a.postedDate ? new Date(a.postedDate).getTime() : 0;
+                return bTime - aTime;
+            } else if (sortValue === 'pay') {
+                const bPay = b.payMax || b.payMin || 0;
+                const aPay = a.payMax || a.payMin || 0;
+                return bPay - aPay;
+            }
+            // Default: 'dateSaved'
+            return (b.pinnedAt || 0) - (a.pinnedAt || 0);
+        });
 
         if (jobs.length === 0) {
             container.innerHTML = '<div class="empty-state">No pinned jobs yet. Click the 📌 pin on any job to save it here.</div>';
@@ -2178,6 +2198,7 @@ class JobRadiusApp {
                 ${noteHtml}
                 <div class="saved-job-actions">
                     <button class="btn-unpin" data-job-id="${j.indeedJobId}">📌 Unpin</button>
+                    <button class="btn-note" data-job-id="${j.indeedJobId}">📝 Notes</button>
                     ${j.indeedUrl ? `<a class="btn-job-link" href="${j.indeedUrl}" target="_blank" rel="noopener">View Job ↗</a>` : ''}
                 </div>
             </div>`;
@@ -2190,7 +2211,19 @@ class JobRadiusApp {
                 if (e.target.closest('.btn-unpin') || e.target.closest('.btn-job-link')) return;
                 const id = card.dataset.jobId;
                 const job = this.lockedJobs.get(id);
-                if (job) this.showJobDetail(job);
+                if (job) {
+                    this.showJobDetail(job);
+                    if (e.target.closest('.btn-note')) {
+                        // Attempt to focus the notes field after render
+                        setTimeout(() => {
+                            const noteEl = document.getElementById('job-note-editor');
+                            if (noteEl) {
+                                noteEl.scrollIntoView({ behavior: 'smooth' });
+                                noteEl.focus();
+                            }
+                        }, 50);
+                    }
+                }
             });
         });
 

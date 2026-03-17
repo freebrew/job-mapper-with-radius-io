@@ -353,11 +353,17 @@ function _buildClass() {
                             fill="${dotColor}" opacity="0.9"/>
                 </svg>`;
 
+            // Quick pin button (only if not already locked)
+            const quickPinBtn = !this.isLocked 
+                ? `<button class="jo-quick-pin" data-action="quick-lock" title="Pin Job" style="position:absolute; top:-8px; right:-8px; background:#fff; border:1px solid #ccc; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; z-index:10; box-shadow:0 2px 4px rgba(0,0,0,0.2);">📌</button>`
+                : '';
+
             // Mobile minimal pin
             if (window.innerWidth < 768) {
                 const title = this._wrapAt40(this.job.title);
                 return `
                     <div class="jo-collapsed mobile-minimal" style="position:relative">
+                        ${quickPinBtn}
                         <div class="jo-row-pay">${pay}${lockIcon}</div>
                         <div class="jo-row-title">${title}</div>
                         ${svgConnector}
@@ -369,6 +375,7 @@ function _buildClass() {
 
             return `
                 <div class="jo-collapsed" style="position:relative">
+                    ${quickPinBtn}
                     <div class="jo-row-pay">${pay}</div>
                     <div class="jo-row-title">${title}</div>
                     ${svgConnector}
@@ -465,6 +472,17 @@ function _buildClass() {
                 const nowLocked = !this.isLocked;
                 this.setLocked(nowLocked);
                 if (this.callbacks.onLock) this.callbacks.onLock(this.job, nowLocked);
+            });
+
+            this.div.querySelector('[data-action="quick-lock"]')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.isLocked) return; // already locked
+                this.setLocked(true);
+                if (this.callbacks.onLock) this.callbacks.onLock(this.job, true);
+                
+                // Optional: show a small animation or just hide the button since state updated
+                const btn = e.currentTarget;
+                if (btn) btn.style.display = 'none';
             });
 
             this.div.querySelector('[data-action="note"]')?.addEventListener('click', (e) => {

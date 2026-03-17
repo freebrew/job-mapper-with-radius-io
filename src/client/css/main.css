@@ -1060,6 +1060,32 @@ button {
 }
 .btn-note:hover { background: rgba(10, 187, 219, 0.22); }
 
+.btn-route {
+  background: rgba(46, 204, 113, 0.12);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  border-radius: 6px;
+  color: #2ecc71;
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-route:hover { background: rgba(46, 204, 113, 0.22); }
+
+.btn-save-inline-note {
+  background: rgba(77, 168, 218, 0.15);
+  border: 1px solid rgba(77, 168, 218, 0.4);
+  border-radius: 4px;
+  color: #4da8da;
+  cursor: pointer;
+  padding: 4px 12px;
+  transition: all 0.2s;
+}
+.btn-save-inline-note:hover {
+  background: #4da8da;
+  color: #fff;
+}
+
 .btn-job-link {
   font-size: 0.75rem;
   color: var(--accent-cyan, #4da8da);

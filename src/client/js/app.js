@@ -2191,9 +2191,14 @@ class JobRadiusApp {
             }
             
             const note = noteMap[j.indeedJobId] || '';
-            const noteHtml = note
-                ? `<textarea class="saved-note-area" readonly rows="2" title="Saved note">${note}</textarea>`
-                : '';
+            const noteDisplay = note ? 'block' : 'none';
+            const noteHtml = `
+                <div class="saved-note-container" style="display: ${noteDisplay}; margin-top: 8px;">
+                    <textarea class="saved-note-area" placeholder="Add notes here..." rows="2" style="width: 100%; box-sizing: border-box; padding: 4px; border-radius: 4px; border: 1px solid #ccc;">${note}</textarea>
+                    <button class="btn-save-inline-note" style="margin-top: 4px; font-size: 0.75rem;">Save Note</button>
+                    <span class="inline-note-feedback" style="font-size: 0.75rem; color: #4caf50; display: none; margin-left: 6px;">Saved!</span>
+                </div>
+            `;
             return `
             <div class="saved-job-card" data-job-id="${j.indeedJobId}" title="Click to view job details" style="cursor:pointer">
                 <div class="saved-job-meta">
@@ -2205,6 +2210,7 @@ class JobRadiusApp {
                 ${noteHtml}
                 <div class="saved-job-actions">
                     <button class="btn-unpin" data-job-id="${j.indeedJobId}">📌 Unpin</button>
+                    <button class="btn-route" data-job-id="${j.indeedJobId}">🚗 Route</button>
                     <button class="btn-note" data-job-id="${j.indeedJobId}">📝 Notes</button>
                     ${j.indeedUrl ? `<a class="btn-job-link" href="${j.indeedUrl}" target="_blank" rel="noopener">View Job ↗</a>` : ''}
                 </div>
@@ -2213,24 +2219,72 @@ class JobRadiusApp {
 
         // Wire up card click → open job detail view
         container.querySelectorAll('.saved-job-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                // Don't intercept Unpin button or View Job link clicks
+            card.addEventListener('click', async (e) => {
+                // Ignore clicks on links or unpin
                 if (e.target.closest('.btn-unpin') || e.target.closest('.btn-job-link')) return;
+                
                 const id = card.dataset.jobId;
                 const job = this.lockedJobs.get(id);
-                if (job) {
-                    this.showJobDetail(job);
-                    if (e.target.closest('.btn-note')) {
-                        // Attempt to focus the notes field after render
-                        setTimeout(() => {
-                            const noteEl = document.getElementById('job-note-editor');
-                            if (noteEl) {
-                                noteEl.scrollIntoView({ behavior: 'smooth' });
-                                noteEl.focus();
-                            }
-                        }, 50);
-                    }
+                if (!job) return;
+
+                // Handle Inline Route button
+                if (e.target.closest('.btn-route')) {
+                    this.mapController.routeTo(job.lat, job.lng, job.title);
+                    return;
                 }
+
+                const noteContainer = card.querySelector('.saved-note-container');
+                const noteArea = card.querySelector('.saved-note-area');
+
+                // Handle Inline Notes button (Toggle)
+                if (e.target.closest('.btn-note')) {
+                    if (noteContainer.style.display === 'none') {
+                        noteContainer.style.display = 'block';
+                        noteArea.focus();
+                    } else {
+                        noteContainer.style.display = 'none';
+                    }
+                    return;
+                }
+
+                // Handle Save Note button
+                if (e.target.closest('.btn-save-inline-note')) {
+                    const content = noteArea.value;
+                    const feedback = card.querySelector('.inline-note-feedback');
+                    const btn = e.target.closest('.btn-save-inline-note');
+                    const token = localStorage.getItem('jobradius_token');
+                    
+                    btn.disabled = true;
+                    btn.textContent = 'Saving...';
+                    try {
+                        const res = await fetch('/api/notes', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                            },
+                            body: JSON.stringify({ jobId: id, content })
+                        });
+                        if (res.ok) {
+                            btn.textContent = 'Save Note';
+                            btn.disabled = false;
+                            feedback.style.display = 'inline';
+                            setTimeout(() => feedback.style.display = 'none', 2000);
+                        } else {
+                            throw new Error('Failed to save');
+                        }
+                    } catch (err) {
+                        btn.textContent = 'Error!';
+                        setTimeout(() => { btn.textContent = 'Save Note'; btn.disabled = false; }, 2000);
+                    }
+                    return;
+                }
+
+                // If they click inside the note container (e.g. typing), do nothing
+                if (e.target.closest('.saved-note-container')) return;
+
+                // Otherwise, open standard job details
+                this.showJobDetail(job);
             });
         });
 

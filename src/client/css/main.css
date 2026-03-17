@@ -32,7 +32,7 @@
   --shadow-glass: 0 12px 40px 0 rgba(0, 0, 0, 0.55);
 }
 
-body.theme-light {
+body.theme-light, html.theme-light {
   --bg-dark: #f1f5f9;
   --bg-panel: rgba(255, 255, 255, 0.85);
   --text-primary: #0f172a;

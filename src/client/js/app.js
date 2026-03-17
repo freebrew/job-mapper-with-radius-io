@@ -10,7 +10,14 @@ import { RadiusManager } from './map/radiusManager.js';
 (function initUITheme() {
     try {
         const currentTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
-        document.body.classList.toggle('theme-light', currentTheme === '784c8b99db731157518b28d2');
+        if (currentTheme === '784c8b99db731157518b28d2') {
+            document.documentElement.classList.add('theme-light');
+            // Safely try body as well if it exists
+            if (document.body) document.body.classList.add('theme-light');
+        } else {
+            document.documentElement.classList.remove('theme-light');
+            if (document.body) document.body.classList.remove('theme-light');
+        }
     } catch (e) {
         console.warn('Could not read theme config', e);
     }
@@ -727,6 +734,16 @@ class JobRadiusApp {
                     localStorage.setItem('jobradius_map_theme', newTheme);
                     themeBtns.forEach(b => b.classList.remove('active'));
                     e.target.classList.add('active');
+                    
+                    // Instantly apply the UI transition so it doesn't wait for the reload to feel responsive
+                    if (newTheme === '784c8b99db731157518b28d2') {
+                        document.documentElement.classList.add('theme-light');
+                        if (document.body) document.body.classList.add('theme-light');
+                    } else {
+                        document.documentElement.classList.remove('theme-light');
+                        if (document.body) document.body.classList.remove('theme-light');
+                    }
+                    
                     this._showToast('Theme saved! Reloading map...');
                     setTimeout(() => window.location.reload(), 1000);
                 });

@@ -8,6 +8,26 @@ import { RadiusManager } from './map/radiusManager.js';
 
 window.JobInfoOverlayClass = null;
 
+// ─── Theme Guard (redundant safety net) ──────────────────────────────────────
+// The PRIMARY theme application is the inline <script> in index.html <head>.
+// This IIFE is a FALLBACK for browsers serving a cached old index.html that
+// lacks the inline script. Both mechanisms are idempotent (adding a class
+// that already exists is a no-op). Do NOT remove this even though index.html
+// also handles it — that's the whole point of belt-and-suspenders resilience.
+(function applyThemeSafetyNet() {
+    try {
+        const savedTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
+        const isLight = savedTheme === '784c8b99db731157518b28d2';
+        if (isLight) {
+            document.documentElement.classList.add('theme-light');
+            if (document.body) document.body.classList.add('theme-light');
+        } else {
+            document.documentElement.classList.remove('theme-light');
+            if (document.body) document.body.classList.remove('theme-light');
+        }
+    } catch (e) { /* localStorage unavailable in private browsing on some browsers */ }
+})();
+
 class JobRadiusApp {
     constructor(startLocation) {
         this.mapController = new MapController('map');

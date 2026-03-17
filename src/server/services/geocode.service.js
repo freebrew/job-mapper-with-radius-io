@@ -55,6 +55,62 @@ const geocodeAddress = async (address) => {
     }
 };
 
+// Cache for business specific location queries
+const placesCache = new Map();
+
+/**
+ * Uses Google Places Text Search to find the exact location of a business.
+ * @param {string} companyName - e.g. "Starbucks"
+ * @param {string} cityRegion - e.g. "Vancouver, BC"
+ * @returns {Promise<{lat: number, lng: number, address: string} | null>}
+ */
+const resolveBusinessLocation = async (companyName, cityRegion) => {
+    if (!companyName || !cityRegion) return null;
+
+    const cacheKey = `${companyName}|${cityRegion}`.toLowerCase();
+    if (placesCache.has(cacheKey)) {
+        return placesCache.get(cacheKey);
+    }
+
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+        console.warn('[Places] GOOGLE_MAPS_API_KEY not set.');
+        return null;
+    }
+
+    // e.g., "Starbucks in Vancouver, BC"
+    const query = `${companyName} in ${cityRegion}`;
+
+    try {
+        const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.status === 'OK' && data.results && data.results.length > 0) {
+            // Take the best match
+            const bestMatch = data.results[0];
+            const loc = bestMatch.geometry.location;
+            const result = {
+                lat: loc.lat,
+                lng: loc.lng,
+                address: bestMatch.formatted_address
+            };
+            
+            console.log(`[Places] Found: "${companyName}" -> ${result.address} (${result.lat}, ${result.lng})`);
+            placesCache.set(cacheKey, result);
+            return result;
+        } else {
+            console.warn(`[Places] No exact match for "${query}"`);
+            placesCache.set(cacheKey, null); // cache the miss
+            return null;
+        }
+    } catch (error) {
+        console.error(`[Places] Error searching for "${query}":`, error.message);
+        return null;
+    }
+};
+
 module.exports = {
-    geocodeAddress
+    geocodeAddress,
+    resolveBusinessLocation
 };

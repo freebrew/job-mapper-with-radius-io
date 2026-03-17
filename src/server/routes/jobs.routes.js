@@ -3,7 +3,7 @@ const router = express.Router();
 const prisma = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
 const apifyService = require('../services/apify.service');
-const { geocodeAddress } = require('../services/geocode.service');
+const { geocodeAddress, resolveBusinessLocation } = require('../services/geocode.service');
 
 // ── Relevance Filter ──────────────────────────────────────────────────────────
 // Strip common English suffixes to get a comparable root word.
@@ -246,29 +246,45 @@ router.post('/search', requireAuth, async (req, res, next) => {
                         }
 
                         // ── Resolve coordinates ────────────────────────────────────
-                        let { lat, lng } = mapped;
+                        let { lat, lng, location } = mapped;
+                        const hasStreetAddress = /\d/.test(location);
+
+                        // If the job lacks a specific street address, try to resolve the business
+                        // location exactly using Google Places before falling back to generic city coords.
+                        if (!hasStreetAddress && mapped.company) {
+                            try {
+                                const businessCoords = await resolveBusinessLocation(mapped.company, searchCenter.address || location);
+                                if (businessCoords) {
+                                    lat = businessCoords.lat;
+                                    lng = businessCoords.lng;
+                                    location = businessCoords.address;
+                                }
+                            } catch (err) {
+                                console.warn(`[Jobs] Failed to resolve business location for ${mapped.company}:`, err.message);
+                            }
+                        }
 
                         if (!lat || !lng) {
                             // Apify returned the location as a plain string (e.g. "Ottawa, ON K1S 2L2")
                             // We must geocode it to get map-plottable coordinates.
                             try {
-                                const coords = await geocodeAddress(mapped.location);
+                                const coords = await geocodeAddress(location);
                                 if (coords) {
                                     lat = coords.lat;
                                     lng = coords.lng;
-                                    console.log(`[Jobs] Geocoded "${mapped.location}" → ${lat}, ${lng}`);
+                                    console.log(`[Jobs] Geocoded "${location}" → ${lat}, ${lng}`);
                                 } else {
                                     // Geocoder returned nothing — fall back to search centre
                                     // so the job still appears on the map rather than being dropped.
                                     lat = searchCenter.lat;
                                     lng = searchCenter.lng;
-                                    console.warn(`[Jobs] Geocode empty for "${mapped.location}" — using search centre`);
+                                    console.warn(`[Jobs] Geocode empty for "${location}" — using search centre`);
                                 }
                             } catch (geoErr) {
                                 // Network/quota error — fall back to search centre
                                 lat = searchCenter.lat;
                                 lng = searchCenter.lng;
-                                console.warn(`[Jobs] Geocode error for "${mapped.location}": ${geoErr.message} — using search centre`);
+                                console.warn(`[Jobs] Geocode error for "${location}": ${geoErr.message} — using search centre`);
                             }
                         }
 

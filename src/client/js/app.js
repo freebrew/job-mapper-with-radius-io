@@ -6,22 +6,7 @@ import { MapController } from './map/mapController.js';
 import { createJobInfoOverlay } from './map/jobInfoOverlay.js';
 import { RadiusManager } from './map/radiusManager.js';
 
-// Initialize UI Theme synchronously before the app or maps API even begin loading to prevent FOIT
-(function initUITheme() {
-    try {
-        const currentTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
-        if (currentTheme === '784c8b99db731157518b28d2') {
-            document.documentElement.classList.add('theme-light');
-            // Safely try body as well if it exists
-            if (document.body) document.body.classList.add('theme-light');
-        } else {
-            document.documentElement.classList.remove('theme-light');
-            if (document.body) document.body.classList.remove('theme-light');
-        }
-    } catch (e) {
-        console.warn('Could not read theme config', e);
-    }
-})();
+window.JobInfoOverlayClass = null;
 
 class JobRadiusApp {
     constructor(startLocation) {

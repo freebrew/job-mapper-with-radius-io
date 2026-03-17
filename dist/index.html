@@ -13,6 +13,22 @@
   <meta http-equiv="Expires" content="0" />
   <title>JobRadius - Multi-Radius Job Search</title>
 
+  <!-- Initialize UI Theme synchronously before the app or maps API even begin loading to prevent FOIT -->
+  <script>
+    (function initUITheme() {
+      try {
+        const currentTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
+        if (currentTheme === '784c8b99db731157518b28d2') {
+          document.documentElement.classList.add('theme-light');
+        } else {
+          document.documentElement.classList.remove('theme-light');
+        }
+      } catch (e) {
+        console.warn('Could not read theme config', e);
+      }
+    })();
+  </script>
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,7 +76,7 @@
       }
     })();
   </script>
-  <script type="module" crossorigin src="/assets/index-BRhjOyEf.js"></script>
+  <script type="module" crossorigin src="/assets/index-XDOZSooJ.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-CRNg5Qgg.css">
 </head>
 

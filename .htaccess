@@ -1,13 +1,16 @@
 Options -Indexes
 
-# Force no-cache on HTML files to prevent stale Vite JS bundle references
+# Force NO CACHE globally, then allow it for strictly static asset folders
 <IfModule mod_headers.c>
-    <FilesMatch "\.html$">
-        FileETag None
-        Header unset ETag
-        Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
-        Header set Pragma "no-cache"
-        Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
+    Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
+    
+    # Re-enable cache ONLY for timestamped assets (fingerprinted by Vite)
+    <FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+        Header set Cache-Control "max-age=31536000, public, immutable"
+        Header unset Pragma
+        Header unset Expires
     </FilesMatch>
 </IfModule>
 

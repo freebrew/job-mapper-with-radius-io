@@ -493,33 +493,56 @@ button {
   padding: 0 10px;
 }
 
-.btn-google-oauth {
+/* SSO Buttons — shared base */
+.btn-sso {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
   width: 100%;
   padding: 12px 16px;
-  background: #fff;
-  color: #3c4043;
-  border: 1px solid #dadce0;
   border-radius: 6px;
   font-size: 0.95rem;
   font-weight: 500;
-  font-family: 'Google Sans', Arial, sans-serif;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
-  margin-bottom: 20px;
+  transition: background 0.15s, box-shadow 0.15s, filter 0.15s;
+  margin-bottom: 8px;
+  border: 1px solid transparent;
 }
-
-.btn-google-oauth:hover {
-  background: #f8f9fa;
+.btn-sso:hover {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.08);
+}
+.btn-sso:active {
+  filter: brightness(0.95);
 }
 
-.btn-google-oauth:active {
-  background: #f1f3f4;
+/* Google */
+.btn-google-oauth {
+  background: #fff;
+  color: #3c4043;
+  border-color: #dadce0;
+  font-family: 'Google Sans', Arial, sans-serif;
+}
+.btn-google-oauth:hover { background: #f8f9fa; }
+
+/* Facebook */
+.btn-facebook-oauth {
+  background: #1877F2;
+  color: #fff;
+}
+
+/* Apple */
+.btn-apple-oauth {
+  background: #000;
+  color: #fff;
+}
+
+/* LinkedIn */
+.btn-linkedin-oauth {
+  background: #0A66C2;
+  color: #fff;
 }
 
 /* =========================================

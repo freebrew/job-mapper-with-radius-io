@@ -2180,9 +2180,16 @@ class JobRadiusApp {
             const pay = j.payMax
                 ? `$${Math.round(j.payMin || 0).toLocaleString()}–$${Math.round(j.payMax).toLocaleString()}`
                 : j.payMin ? `$${Math.round(j.payMin).toLocaleString()}` : '';
-            const pinnedDate = j.pinnedAt
-                ? new Date(j.pinnedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                : '';
+            
+            let dateLabel = '';
+            if (sortValue === 'datePosted' && j.postedDate) {
+                dateLabel = `Posted ${new Date(j.postedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+            } else if (sortValue === 'datePosted') {
+                dateLabel = 'Posted: Unknown';
+            } else if (j.pinnedAt) {
+                dateLabel = `Saved ${new Date(j.pinnedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+            }
+            
             const note = noteMap[j.indeedJobId] || '';
             const noteHtml = note
                 ? `<textarea class="saved-note-area" readonly rows="2" title="Saved note">${note}</textarea>`
@@ -2191,7 +2198,7 @@ class JobRadiusApp {
             <div class="saved-job-card" data-job-id="${j.indeedJobId}" title="Click to view job details" style="cursor:pointer">
                 <div class="saved-job-meta">
                     ${pay ? `<span class="saved-pay">${pay}</span>` : ''}
-                    <span class="saved-date">${pinnedDate}</span>
+                    <span class="saved-date">${dateLabel}</span>
                 </div>
                 <div class="saved-job-title">${j.title || 'Untitled'}</div>
                 ${j.company ? `<div class="saved-company">${j.company}</div>` : ''}

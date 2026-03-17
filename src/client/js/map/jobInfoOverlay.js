@@ -164,7 +164,6 @@ function _buildClass() {
                 // Rebuild to update lock icon
                 if (this.expanded) {
                     this.div.innerHTML = this._buildExpanded();
-                    this._wireActions();
                 } else {
                     this.div.innerHTML = this._buildCollapsed();
                 }

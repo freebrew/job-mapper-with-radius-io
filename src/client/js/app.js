@@ -314,7 +314,8 @@ class JobRadiusApp {
                                 isLocked: this.lockedJobs.has(job.indeedJobId),
                                 onExpand: (o) => { this.currentSelectedJob = o.job; this.showJobDetail(o.job); },
                                 onRoute: (j) => { this.currentSelectedJob = j; this.showInAppRoute(); },
-                                onHide: (j) => this.hideJob(j)
+                                onHide: (j) => this.hideJob(j),
+                                onLock: (j, locked) => { locked ? this.lockJob(j) : this.unlockJob(j); }
                             }
                         );
                         overlay.setMap(this.mapController.map);
@@ -1577,8 +1578,9 @@ class JobRadiusApp {
         if (!this.radiusManager.getZonesData().length) {
             const restored = this._restoreZones();
             if (!restored) {
-                // If no localStorage, fallback to default 20km zone
+                // If no localStorage, fallback to default 20km zone and 5km exclusion
                 this.radiusManager.addZone('inclusive', 20000, this.currentCenter);
+                this.radiusManager.addZone('exclusive', 5000, this.currentCenter);
             }
         }
 

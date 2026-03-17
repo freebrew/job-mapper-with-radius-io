@@ -247,7 +247,7 @@ router.post('/search', requireAuth, async (req, res, next) => {
 
                         // ── Resolve coordinates ────────────────────────────────────
                         let { lat, lng, location } = mapped;
-                        const hasStreetAddress = /\d/.test(location);
+                        const hasStreetAddress = /\b\d+\s+[a-zA-Z]+/.test(location);
 
                         // If the job lacks a specific street address, try to resolve the business
                         // location exactly using Google Places before falling back to generic city coords.

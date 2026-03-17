@@ -354,10 +354,14 @@ function _buildClass() {
                             fill="${dotColor}" opacity="0.9"/>
                 </svg>`;
 
-            // Quick pin button (only if not already locked)
-            const quickPinBtn = !this.isLocked 
-                ? `<button class="jo-quick-pin" data-action="quick-lock" title="Pin Job" style="position:absolute; top:-8px; right:-8px; background:#fff; border:1px solid #ccc; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; z-index:10; box-shadow:0 2px 4px rgba(0,0,0,0.2);">📌</button>`
-                : '';
+            // Quick pin button (Colored Red if unpinned, Green if pinned)
+            const pinBg = this.isLocked ? '#2ecc71' : '#ff4757';
+            const pinTitle = this.isLocked ? 'Unpin Job' : 'Pin Job';
+            const quickPinBtn = `
+                <button class="jo-quick-pin" data-action="quick-lock" title="${pinTitle}" 
+                    style="position:absolute; top:-8px; right:-8px; background:${pinBg}; border:1px solid rgba(255,255,255,0.4); border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; box-shadow:0 2px 4px rgba(0,0,0,0.3); transition: background 0.2s;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+                </button>`;
 
             // Mobile minimal pin
             if (window.innerWidth < 768) {
@@ -477,13 +481,16 @@ function _buildClass() {
 
             this.div.querySelector('[data-action="quick-lock"]')?.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (this.isLocked) return; // already locked
-                this.setLocked(true);
-                if (this.callbacks.onLock) this.callbacks.onLock(this.job, true);
+                const nowLocked = !this.isLocked;
+                this.setLocked(nowLocked);
+                if (this.callbacks.onLock) this.callbacks.onLock(this.job, nowLocked);
                 
-                // Optional: show a small animation or just hide the button since state updated
+                // Instantly update visual feedback
                 const btn = e.currentTarget;
-                if (btn) btn.style.display = 'none';
+                if (btn) {
+                    btn.style.background = nowLocked ? '#2ecc71' : '#ff4757';
+                    btn.title = nowLocked ? 'Unpin Job' : 'Pin Job';
+                }
             });
 
             this.div.querySelector('[data-action="note"]')?.addEventListener('click', (e) => {

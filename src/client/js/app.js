@@ -1890,8 +1890,7 @@ class JobRadiusApp {
                 return;
             }
 
-            // Don't re-add if already shown as a locked marker
-            if (this.lockedJobs.has(j.indeedJobId)) return;
+            const isAlreadyLocked = this.lockedJobs.has(j.indeedJobId);
 
             const overlay = createJobInfoOverlay(
                 { lat: j.lat, lng: j.lng },
@@ -1923,7 +1922,11 @@ class JobRadiusApp {
                     onHide: (job) => { this.hideJob(job); }
                 }
             );
-            overlay.setMap(this.mapController.map);
+            if (isAlreadyLocked) {
+                overlay.setMap(null); // Hide standard duplicate marker immediately if already pinned
+            } else {
+                overlay.setMap(this.mapController.map);
+            }
             this.jobMarkers.push(overlay);
         });
 
@@ -2089,6 +2092,11 @@ class JobRadiusApp {
         this.lockedJobs.set(job.indeedJobId, pinnedJob);
         this._saveLockedJobs();
         console.log(`[Lock] Locked: "${job.title}" (${job.indeedJobId})`);
+        
+        // Hide standard duplicate marker if it exists in current search
+        const standardMarker = this.jobMarkers.find(o => o.job.indeedJobId === job.indeedJobId);
+        if (standardMarker) standardMarker.setMap(null);
+
         // Re-plot locked markers so the newly locked one gets a gold border
         this._replotLockedJobs();
         // Update the Saved panel
@@ -2100,6 +2108,11 @@ class JobRadiusApp {
         this._saveLockedJobs();
         console.log(`[Lock] Unlocked: "${job.title}"`);
         this._replotLockedJobs();
+
+        // Restore standard marker if it exists in current search
+        const standardMarker = this.jobMarkers.find(o => o.job.indeedJobId === job.indeedJobId);
+        if (standardMarker) standardMarker.setMap(this.mapController.map);
+
         // Update the Saved panel
         this.renderSavedJobs();
     }

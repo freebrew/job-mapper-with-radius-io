@@ -57,6 +57,9 @@ function _buildClass() {
                 this.toggle();
             });
 
+            // Initialize event delegation routing for all injected map buttons
+            this._wireActions();
+
             // Hover: bump z-index only — NEVER re-insert the DOM node here.
             // Re-inserting on mouseenter/pointerdown breaks the Maps event chain.
             this.div.addEventListener('mouseenter', () => this._bumpZIndex());

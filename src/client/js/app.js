@@ -537,6 +537,7 @@ class JobRadiusApp {
 
         // Listen for radius changes — re-filter jobs and refit map around all zones
         this.radiusManager.onChange(zones => {
+            this._saveZones(zones);
             this.updateRadiusUI();
             this._refilterJobs();
             // Fit viewport around all circles (accounting for panel offsets)
@@ -1572,9 +1573,13 @@ class JobRadiusApp {
             }
         }
 
-        // Add first inclusive zone if none exist
+        // Restore previous zones or add default
         if (!this.radiusManager.getZonesData().length) {
-            this.radiusManager.addZone('inclusive', 20000, this.currentCenter);
+            const restored = this._restoreZones();
+            if (!restored) {
+                // If no localStorage, fallback to default 20km zone
+                this.radiusManager.addZone('inclusive', 20000, this.currentCenter);
+            }
         }
 
         // Mobile UX: Hide the bottom sheet completely when a search begins

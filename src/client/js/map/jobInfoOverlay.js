@@ -358,10 +358,10 @@ function _buildClass() {
             const pinBg = this.isLocked ? '#2ecc71' : '#ff4757';
             const pinTitle = this.isLocked ? 'Unpin Job' : 'Pin Job';
             const quickPinBtn = `
-                <button class="jo-quick-pin" data-action="quick-lock" title="${pinTitle}" 
-                    style="position:absolute; top:-8px; right:-8px; background:${pinBg}; border:1px solid rgba(255,255,255,0.4); border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; box-shadow:0 2px 4px rgba(0,0,0,0.3); transition: background 0.2s;">
-                    <svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
-                </button>`;
+                <div class="jo-quick-pin" data-action="quick-lock" title="${pinTitle}" 
+                    style="position:absolute; top:-12px; right:-12px; background:${pinBg}; border:2px solid #1e293b; border-radius:50%; width:30px; height:30px; min-width:30px; min-height:30px; box-sizing:border-box; padding:0; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; box-shadow:0 3px 6px rgba(0,0,0,0.5); transition: transform 0.1s, background 0.2s;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="#ffffff"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+                </div>`;
 
             // Mobile minimal pin
             if (window.innerWidth < 768) {

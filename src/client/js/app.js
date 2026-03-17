@@ -2361,6 +2361,9 @@ class JobRadiusApp {
             overlay.setMap(this.mapController.map);
             this.lockedMarkers.push(overlay);
         });
+
+        // Re-calculate cluster fans after Google Maps draws them
+        setTimeout(() => this.resolveOverlaps(), 400);
     }
 
     // ── Admin Panel Metrics ──────────────────────────────────────

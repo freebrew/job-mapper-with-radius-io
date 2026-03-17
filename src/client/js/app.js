@@ -566,8 +566,11 @@ class JobRadiusApp {
 
         // Listen for radius changes — re-filter jobs and refit map around all zones
         this.radiusManager.onChange(zones => {
-            this._saveZones(zones);
-            this.updateRadiusUI();
+            try {
+                this._saveZones(zones);
+                this.updateRadiusUI();
+            } catch (e) { console.warn('[Zones] onChange error:', e.message); }
+            // Always re-filter regardless of save/UI errors
             this._refilterJobs();
             // Fit viewport around all circles (accounting for panel offsets)
             if (zones.length > 0) {
@@ -1553,6 +1556,38 @@ class JobRadiusApp {
                 this._refilterJobs();
             });
         });
+    }
+
+    /**
+     * Persist zone configuration to localStorage so zones survive page refresh.
+     */
+    _saveZones(zones) {
+        try {
+            localStorage.setItem('jobradius_zones', JSON.stringify(zones));
+        } catch (e) { console.warn('[Zones] Could not save zones:', e.message); }
+    }
+
+    /**
+     * Restore zone configuration from localStorage and re-create circles on the map.
+     * @returns {boolean} true if zones were successfully restored
+     */
+    _restoreZones() {
+        try {
+            const saved = localStorage.getItem('jobradius_zones');
+            if (!saved) return false;
+            const zones = JSON.parse(saved);
+            if (!Array.isArray(zones) || zones.length === 0) return false;
+
+            zones.forEach(z => {
+                if (!z.center || z.center.lat == null || z.center.lng == null) return;
+                this.radiusManager.addZone(z.type, z.radiusMeters, z.center);
+            });
+            this.updateRadiusUI();
+            return true;
+        } catch (e) {
+            console.warn('[Zones] Could not restore zones:', e.message);
+            return false;
+        }
     }
 
     /**

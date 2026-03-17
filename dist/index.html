@@ -13,25 +13,15 @@
   <meta http-equiv="Expires" content="0" />
   <title>JobRadius - Multi-Radius Job Search</title>
 
-  <!-- Initialize UI Theme synchronously before the app or maps API even begin loading to prevent FOIT -->
+  <!-- Initialize UI Theme + color-scheme synchronously to prevent FOUC/dark-mode override -->
   <script>
-    (function initUITheme() {
+    (function() {
       try {
-        var raw = localStorage.getItem('jobradius_map_theme');
-        var currentTheme = raw || '1a69e9680804148ef13dfe31';
-        console.log('[THEME-DIAG] inline script: raw=' + JSON.stringify(raw) + ', resolved=' + currentTheme);
-        if (currentTheme === '784c8b99db731157518b28d2') {
-          document.documentElement.classList.add('theme-light');
-          document.documentElement.style.colorScheme = 'light';
-          console.log('[THEME-DIAG] → Applied theme-light + color-scheme:light');
-        } else {
-          document.documentElement.classList.remove('theme-light');
-          document.documentElement.style.colorScheme = 'dark';
-          console.log('[THEME-DIAG] → Removed theme-light (dark mode, color-scheme:dark)');
-        }
-      } catch (e) {
-        console.warn('Could not read theme config', e);
-      }
+        var t = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
+        var isLight = t === '784c8b99db731157518b28d2';
+        document.documentElement.classList.toggle('theme-light', isLight);
+        document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
+      } catch (e) { /* private browsing fallback */ }
     })();
   </script>
 
@@ -82,7 +72,7 @@
       }
     })();
   </script>
-  <script type="module" crossorigin src="/assets/index-DQYDZzZ_.js"></script>
+  <script type="module" crossorigin src="/assets/index-_8wZ2g8P.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-C5Le5Vmn.css">
 </head>
 

@@ -10,72 +10,28 @@ window.JobInfoOverlayClass = null;
 
 // ─── Theme Guard (redundant safety net) ──────────────────────────────────────
 // The PRIMARY theme application is the inline <script> in index.html <head>.
-// This IIFE is a FALLBACK for browsers serving a cached old index.html that
-// lacks the inline script. Both mechanisms are idempotent (adding a class
-// that already exists is a no-op). Do NOT remove this even though index.html
-// also handles it — that's the whole point of belt-and-suspenders resilience.
+// This IIFE is a FALLBACK for browsers serving a cached index.html that
+// lacks the inline script. Both mechanisms are idempotent (classList.add on
+// an existing class is a no-op). Do NOT remove this — belt-and-suspenders.
 (function applyThemeSafetyNet() {
     try {
-        const raw = localStorage.getItem('jobradius_map_theme');
-        const savedTheme = raw || '1a69e9680804148ef13dfe31';
+        const savedTheme = localStorage.getItem('jobradius_map_theme') || '1a69e9680804148ef13dfe31';
         const isLight = savedTheme === '784c8b99db731157518b28d2';
-        console.log('[THEME-DIAG] IIFE safety net: raw=' + JSON.stringify(raw) + ', resolved=' + savedTheme + ', isLight=' + isLight);
-        if (isLight) {
-            document.documentElement.classList.add('theme-light');
-            if (document.body) document.body.classList.add('theme-light');
-        } else {
-            document.documentElement.classList.remove('theme-light');
-            if (document.body) document.body.classList.remove('theme-light');
-        }
 
-        // Diagnostic: Log computed CSS variable values once body is available
-        const logComputedTheme = () => {
-            const b = document.body;
-            if (!b) return;
-            const bgDark = getComputedStyle(b).getPropertyValue('--bg-dark').trim();
-            const bgPanel = getComputedStyle(b).getPropertyValue('--bg-panel').trim();
-            const bgColor = getComputedStyle(b).backgroundColor;
-            console.log('[THEME-DIAG] Computed body: --bg-dark=' + bgDark + ', --bg-panel=' + bgPanel + ', bgColor=' + bgColor);
-            console.log('[THEME-DIAG] html.classList=' + document.documentElement.className);
-            console.log('[THEME-DIAG] body.classList=' + b.className);
-        };
+        // Apply theme class + color-scheme to <html> (prevents Chrome Auto Dark Mode override)
+        document.documentElement.classList.toggle('theme-light', isLight);
+        document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
 
-        // Wait for body to be available, then log and install observer
+        // Apply to <body> if available now, otherwise on DOMContentLoaded
         if (document.body) {
-            logComputedTheme();
+            document.body.classList.toggle('theme-light', isLight);
         }
-        // Also log after DOMContentLoaded (catches any late changes)
         document.addEventListener('DOMContentLoaded', () => {
-            // Ensure body also has the class
-            if (isLight && document.body) {
-                document.body.classList.add('theme-light');
-            }
-            logComputedTheme();
-        });
-
-        // MutationObserver: catch if ANYTHING removes theme-light from <html>
-        const observer = new MutationObserver((mutations) => {
-            for (const m of mutations) {
-                if (m.type === 'attributes' && m.attributeName === 'class') {
-                    const hasLight = m.target.classList.contains('theme-light');
-                    console.log('[THEME-DIAG] ⚠ CLASS CHANGED on <' + m.target.tagName.toLowerCase() + '>: ' +
-                        m.target.className + ' (theme-light=' + hasLight + ')');
-                    if (!hasLight && isLight) {
-                        console.warn('[THEME-DIAG] 🔴 theme-light was REMOVED! Re-adding it.');
-                        m.target.classList.add('theme-light');
-                    }
-                }
+            if (document.body) {
+                document.body.classList.toggle('theme-light', isLight);
             }
         });
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-        if (document.body) {
-            observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-        } else {
-            document.addEventListener('DOMContentLoaded', () => {
-                observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-            });
-        }
-    } catch (e) { console.warn('[THEME-DIAG] IIFE error:', e); }
+    } catch (e) { /* localStorage may be unavailable in some private browsing modes */ }
 })();
 
 class JobRadiusApp {
@@ -785,22 +741,17 @@ class JobRadiusApp {
                 }
                 
                 btn.addEventListener('click', () => {
-                    // Use `btn` (closure) not `e.target` — e.target may be a child element with no data-map-id
+                    // Use `btn` (closure) not `e.target` — e.target may be a child element
                     const newTheme = btn.getAttribute('data-map-id');
-                    console.log('[THEME-DIAG] Click handler: btn data-map-id=' + JSON.stringify(newTheme));
+                    const isLight = newTheme === '784c8b99db731157518b28d2';
                     localStorage.setItem('jobradius_map_theme', newTheme);
-                    console.log('[THEME-DIAG] Click handler: localStorage now=' + JSON.stringify(localStorage.getItem('jobradius_map_theme')));
                     themeBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     
-                    // Instantly apply the UI transition so it doesn't wait for the reload to feel responsive
-                    if (newTheme === '784c8b99db731157518b28d2') {
-                        document.documentElement.classList.add('theme-light');
-                        if (document.body) document.body.classList.add('theme-light');
-                    } else {
-                        document.documentElement.classList.remove('theme-light');
-                        if (document.body) document.body.classList.remove('theme-light');
-                    }
+                    // Instantly apply theme + color-scheme so the transition feels responsive
+                    document.documentElement.classList.toggle('theme-light', isLight);
+                    document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
+                    if (document.body) document.body.classList.toggle('theme-light', isLight);
                     
                     this._showToast('Theme saved! Reloading map...');
                     setTimeout(() => window.location.reload(), 1000);

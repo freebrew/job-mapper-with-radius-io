@@ -1,0 +1,4 @@
+AuthName "jobradius.agent-swarm.net statistics"
+AuthType Basic
+AuthUserFile /home/agent-swarm/domains/jobradius.agent-swarm.net/.awstats-htpasswd
+require valid-user

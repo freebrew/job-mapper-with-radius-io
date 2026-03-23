@@ -1,0 +1,769 @@
+[2026-03-22 18:28:06] OK    Node.js is healthy on port 3001
+[2026-03-22 18:29:01] INFO  Node PID changed: 590078 → 590052 (external restart detected)
+[2026-03-22 18:36:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 18:36:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 18:36:01] WARN  Killing stale process on port 3001 (PID 590052)
+[2026-03-22 18:36:03] INFO  Node.js started with PID 594058
+[2026-03-22 18:36:06] OK    Node.js is healthy on port 3001
+[2026-03-22 18:37:01] INFO  Node PID changed: 594058 → 594032 (external restart detected)
+[2026-03-22 18:40:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 18:40:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 18:40:02] WARN  Killing stale process on port 3001 (PID 594032)
+[2026-03-22 18:40:04] INFO  Node.js started with PID 595964
+[2026-03-22 18:40:07] OK    Node.js is healthy on port 3001
+[2026-03-22 18:41:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 18:41:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 18:41:02] WARN  Killing stale process on port 3001 (PID 595964)
+[2026-03-22 18:41:03] INFO  Node.js started with PID 596856
+[2026-03-22 18:41:06] OK    Node.js is healthy on port 3001
+[2026-03-22 18:42:01] INFO  Node PID changed: 596856 → 596832 (external restart detected)
+[2026-03-22 18:43:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 18:43:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 18:43:01] WARN  Killing stale process on port 3001 (PID 596832)
+[2026-03-22 18:43:03] INFO  Node.js started with PID 597799
+[2026-03-22 18:43:06] OK    Node.js is healthy on port 3001
+[2026-03-22 18:44:01] INFO  Node PID changed: 597799 → 597771 (external restart detected)
+[2026-03-22 18:56:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 18:56:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 18:56:01] WARN  Killing stale process on port 3001 (PID 597771)
+[2026-03-22 18:56:03] INFO  Node.js started with PID 604017
+[2026-03-22 18:56:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-22 18:57:01] INFO  Node PID changed: 604017 → 603986 (external restart detected)
+[2026-03-22 19:00:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:00:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:00:02] WARN  Killing stale process on port 3001 (PID 603986)
+[2026-03-22 19:00:04] INFO  Node.js started with PID 605843
+[2026-03-22 19:00:08] OK    Node.js is healthy on port 3001
+[2026-03-22 19:04:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:04:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:04:01] WARN  Killing stale process on port 3001 (PID 605843)
+[2026-03-22 19:04:03] INFO  Node.js started with PID 608889
+[2026-03-22 19:04:06] OK    Node.js is healthy on port 3001
+[2026-03-22 19:05:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:05:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:05:01] WARN  Killing stale process on port 3001 (PID 608889)
+[2026-03-22 19:05:02] INFO  Node.js started with PID 609635
+[2026-03-22 19:05:06] OK    Node.js is healthy on port 3001
+[2026-03-22 19:15:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:15:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:15:01] WARN  Killing stale process on port 3001 (PID 609635)
+[2026-03-22 19:15:03] INFO  Node.js started with PID 617174
+[2026-03-22 19:15:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-22 19:16:01] INFO  Node PID changed: 617174 → 617130 (external restart detected)
+[2026-03-22 19:17:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:17:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:17:01] WARN  Killing stale process on port 3001 (PID 617130)
+[2026-03-22 19:17:03] INFO  Node.js started with PID 618303
+[2026-03-22 19:17:06] OK    Node.js is healthy on port 3001
+[2026-03-22 19:18:01] INFO  Node PID changed: 618303 → 618277 (external restart detected)
+[2026-03-22 19:32:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:32:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:32:01] WARN  Killing stale process on port 3001 (PID 618277)
+[2026-03-22 19:32:02] INFO  Node.js started with PID 625518
+[2026-03-22 19:32:06] OK    Node.js is healthy on port 3001
+[2026-03-22 19:33:01] INFO  Node PID changed: 625518 → 625488 (external restart detected)
+[2026-03-22 19:36:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:36:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:36:01] WARN  Killing stale process on port 3001 (PID 625488)
+[2026-03-22 19:36:03] INFO  Node.js started with PID 627411
+[2026-03-22 19:36:06] OK    Node.js is healthy on port 3001
+[2026-03-22 19:37:01] INFO  Node PID changed: 627411 → 627386 (external restart detected)
+[2026-03-22 19:39:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:39:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:39:01] WARN  Killing stale process on port 3001 (PID 627386)
+[2026-03-22 19:39:03] INFO  Node.js started with PID 628845
+[2026-03-22 19:39:06] OK    Node.js is healthy on port 3001
+[2026-03-22 19:40:01] INFO  Node PID changed: 628845 → 628817 (external restart detected)
+[2026-03-22 19:41:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:41:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:41:01] WARN  Killing stale process on port 3001 (PID 628817)
+[2026-03-22 19:41:03] INFO  Node.js started with PID 629946
+[2026-03-22 19:41:06] OK    Node.js is healthy on port 3001
+[2026-03-22 19:42:01] INFO  Node PID changed: 629946 → 629916 (external restart detected)
+[2026-03-22 19:43:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:43:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:43:01] WARN  Killing stale process on port 3001 (PID 629916)
+[2026-03-22 19:43:03] INFO  Node.js started with PID 630853
+[2026-03-22 19:43:06] OK    Node.js is healthy on port 3001
+[2026-03-22 19:44:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:44:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:44:01] WARN  Killing stale process on port 3001 (PID 630829)
+[2026-03-22 19:44:02] INFO  Node.js started with PID 631361
+[2026-03-22 19:44:06] OK    Node.js is healthy on port 3001
+[2026-03-22 19:45:01] INFO  Node PID changed: 631361 → 631335 (external restart detected)
+[2026-03-22 19:57:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:57:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:57:01] WARN  Killing stale process on port 3001 (PID 631335)
+[2026-03-22 19:57:02] INFO  Node.js started with PID 637581
+[2026-03-22 19:57:05] OK    Node.js is healthy on port 3001
+[2026-03-22 19:58:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:58:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:58:02] WARN  Killing stale process on port 3001 (PID 637563)
+[2026-03-22 19:58:03] INFO  Node.js started with PID 638053
+[2026-03-22 19:58:06] OK    Node.js is healthy on port 3001
+[2026-03-22 19:59:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 19:59:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 19:59:01] WARN  Killing stale process on port 3001 (PID 638029)
+[2026-03-22 19:59:03] INFO  Node.js started with PID 638509
+[2026-03-22 19:59:06] OK    Node.js is healthy on port 3001
+[2026-03-22 20:00:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:00:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:00:02] WARN  Killing stale process on port 3001 (PID 638486)
+[2026-03-22 20:00:04] INFO  Node.js started with PID 639055
+[2026-03-22 20:00:07] OK    Node.js is healthy on port 3001
+[2026-03-22 20:07:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:07:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:07:02] WARN  Killing stale process on port 3001 (PID 639055)
+[2026-03-22 20:07:03] INFO  Node.js started with PID 644304
+[2026-03-22 20:07:06] OK    Node.js is healthy on port 3001
+[2026-03-22 20:09:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:09:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:09:02] WARN  Killing stale process on port 3001 (PID 644304)
+[2026-03-22 20:09:04] INFO  Node.js started with PID 645875
+[2026-03-22 20:09:07] OK    Node.js is healthy on port 3001
+[2026-03-22 20:10:01] INFO  Node PID changed: 645875 → 645739 (external restart detected)
+[2026-03-22 20:22:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:22:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:22:02] WARN  Killing stale process on port 3001 (PID 645739)
+[2026-03-22 20:22:03] INFO  Node.js started with PID 652204
+[2026-03-22 20:22:06] OK    Node.js is healthy on port 3001
+[2026-03-22 20:23:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:23:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:23:02] WARN  Killing stale process on port 3001 (PID 652181)
+[2026-03-22 20:23:03] INFO  Node.js started with PID 652749
+[2026-03-22 20:23:06] OK    Node.js is healthy on port 3001
+[2026-03-22 20:24:01] INFO  Node PID changed: 652749 → 652722 (external restart detected)
+[2026-03-22 20:28:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:28:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:28:02] WARN  Killing stale process on port 3001 (PID 652722)
+[2026-03-22 20:28:03] INFO  Node.js started with PID 655680
+[2026-03-22 20:28:06] OK    Node.js is healthy on port 3001
+[2026-03-22 20:34:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:34:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:34:02] WARN  Killing stale process on port 3001 (PID 655680)
+[2026-03-22 20:34:03] INFO  Node.js started with PID 660612
+[2026-03-22 20:34:06] OK    Node.js is healthy on port 3001
+[2026-03-22 20:35:02] INFO  Node PID changed: 660612 → 660554 (external restart detected)
+[2026-03-22 20:38:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:38:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:38:02] WARN  Killing stale process on port 3001 (PID 660554)
+[2026-03-22 20:38:03] INFO  Node.js started with PID 662928
+[2026-03-22 20:38:06] OK    Node.js is healthy on port 3001
+[2026-03-22 20:39:02] INFO  Node PID changed: 662928 → 662905 (external restart detected)
+[2026-03-22 20:51:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:51:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:51:01] WARN  Killing stale process on port 3001 (PID 662905)
+[2026-03-22 20:51:02] INFO  Node.js started with PID 670093
+[2026-03-22 20:51:06] OK    Node.js is healthy on port 3001
+[2026-03-22 20:54:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:54:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:54:01] WARN  Killing stale process on port 3001 (PID 670093)
+[2026-03-22 20:54:03] INFO  Node.js started with PID 672390
+[2026-03-22 20:54:06] OK    Node.js is healthy on port 3001
+[2026-03-22 20:55:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 20:55:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 20:55:01] WARN  Killing stale process on port 3001 (PID 672332)
+[2026-03-22 20:55:03] INFO  Node.js started with PID 673179
+[2026-03-22 20:55:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-22 21:00:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:00:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:00:02] WARN  Killing stale process on port 3001 (PID 673179)
+[2026-03-22 21:00:04] INFO  Node.js started with PID 676999
+[2026-03-22 21:00:07] OK    Node.js is healthy on port 3001
+[2026-03-22 21:06:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:06:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:06:01] WARN  Killing stale process on port 3001 (PID 676999)
+[2026-03-22 21:06:03] INFO  Node.js started with PID 681486
+[2026-03-22 21:06:06] OK    Node.js is healthy on port 3001
+[2026-03-22 21:07:01] INFO  Node PID changed: 681486 → 681469 (external restart detected)
+[2026-03-22 21:10:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:10:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:10:01] WARN  Killing stale process on port 3001 (PID 681469)
+[2026-03-22 21:10:03] INFO  Node.js started with PID 683757
+[2026-03-22 21:10:06] OK    Node.js is healthy on port 3001
+[2026-03-22 21:17:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:17:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:17:01] WARN  Killing stale process on port 3001 (PID 683757)
+[2026-03-22 21:17:02] INFO  Node.js started with PID 689560
+[2026-03-22 21:17:05] OK    Node.js is healthy on port 3001
+[2026-03-22 21:18:02] INFO  Node PID changed: 689560 → 689538 (external restart detected)
+[2026-03-22 21:19:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:19:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:19:01] WARN  Killing stale process on port 3001 (PID 689538)
+[2026-03-22 21:19:02] INFO  Node.js started with PID 690546
+[2026-03-22 21:19:05] OK    Node.js is healthy on port 3001
+[2026-03-22 21:38:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:38:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:38:02] WARN  Killing stale process on port 3001 (PID 690546)
+[2026-03-22 21:38:03] INFO  Node.js started with PID 705271
+[2026-03-22 21:38:06] OK    Node.js is healthy on port 3001
+[2026-03-22 21:39:02] INFO  Node PID changed: 705271 → 705221 (external restart detected)
+[2026-03-22 21:42:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:42:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:42:01] WARN  Killing stale process on port 3001 (PID 705221)
+[2026-03-22 21:42:03] INFO  Node.js started with PID 707684
+[2026-03-22 21:42:06] OK    Node.js is healthy on port 3001
+[2026-03-22 21:44:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:44:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:44:01] WARN  Killing stale process on port 3001 (PID 707684)
+[2026-03-22 21:44:03] INFO  Node.js started with PID 709089
+[2026-03-22 21:44:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-22 21:45:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:45:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:45:01] WARN  Killing stale process on port 3001 (PID 709089)
+[2026-03-22 21:45:03] INFO  Node.js started with PID 709856
+[2026-03-22 21:45:06] OK    Node.js is healthy on port 3001
+[2026-03-22 21:46:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:46:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:46:01] WARN  Killing stale process on port 3001 (PID 709856)
+[2026-03-22 21:46:03] INFO  Node.js started with PID 710684
+[2026-03-22 21:46:06] OK    Node.js is healthy on port 3001
+[2026-03-22 21:51:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:51:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:51:02] WARN  Killing stale process on port 3001 (PID 710684)
+[2026-03-22 21:51:03] INFO  Node.js started with PID 714443
+[2026-03-22 21:51:06] OK    Node.js is healthy on port 3001
+[2026-03-22 21:52:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:52:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:52:01] WARN  Killing stale process on port 3001 (PID 714388)
+[2026-03-22 21:52:03] INFO  Node.js started with PID 714924
+[2026-03-22 21:52:06] OK    Node.js is healthy on port 3001
+[2026-03-22 21:53:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:53:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:53:01] WARN  Killing stale process on port 3001 (PID 714900)
+[2026-03-22 21:53:03] INFO  Node.js started with PID 715384
+[2026-03-22 21:53:06] OK    Node.js is healthy on port 3001
+[2026-03-22 21:54:01] INFO  Node PID changed: 715384 → 715361 (external restart detected)
+[2026-03-22 21:58:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 21:58:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 21:58:01] WARN  Killing stale process on port 3001 (PID 715361)
+[2026-03-22 21:58:02] INFO  Node.js started with PID 718556
+[2026-03-22 21:58:05] OK    Node.js is healthy on port 3001
+[2026-03-22 21:59:01] INFO  Node PID changed: 718556 → 718535 (external restart detected)
+[2026-03-22 22:01:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 22:01:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 22:01:01] WARN  Killing stale process on port 3001 (PID 718535)
+[2026-03-22 22:01:02] INFO  Node.js started with PID 720951
+[2026-03-22 22:01:05] OK    Node.js is healthy on port 3001
+[2026-03-22 22:02:01] INFO  Node PID changed: 720951 → 720930 (external restart detected)
+[2026-03-22 22:05:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 22:05:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 22:05:01] WARN  Killing stale process on port 3001 (PID 720930)
+[2026-03-22 22:05:03] INFO  Node.js started with PID 723576
+[2026-03-22 22:05:06] OK    Node.js is healthy on port 3001
+[2026-03-22 22:07:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 22:07:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 22:07:02] WARN  Killing stale process on port 3001 (PID 723576)
+[2026-03-22 22:07:03] INFO  Node.js started with PID 725769
+[2026-03-22 22:07:06] OK    Node.js is healthy on port 3001
+[2026-03-22 22:17:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 22:17:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 22:17:01] WARN  Killing stale process on port 3001 (PID 725769)
+[2026-03-22 22:17:03] INFO  Node.js started with PID 735653
+[2026-03-22 22:17:06] OK    Node.js is healthy on port 3001
+[2026-03-22 22:18:01] INFO  Node PID changed: 735653 → 735616 (external restart detected)
+[2026-03-22 22:25:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 22:25:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 22:25:01] WARN  Killing stale process on port 3001 (PID 735616)
+[2026-03-22 22:25:03] INFO  Node.js started with PID 740657
+[2026-03-22 22:25:06] OK    Node.js is healthy on port 3001
+[2026-03-22 22:40:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 22:40:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 22:40:02] WARN  Killing stale process on port 3001 (PID 740657)
+[2026-03-22 22:40:03] INFO  Node.js started with PID 754331
+[2026-03-22 22:40:06] OK    Node.js is healthy on port 3001
+[2026-03-22 22:41:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 22:41:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 22:41:01] WARN  Killing stale process on port 3001 (PID 754331)
+[2026-03-22 22:41:03] INFO  Node.js started with PID 755360
+[2026-03-22 22:41:06] OK    Node.js is healthy on port 3001
+[2026-03-22 22:42:01] INFO  Node PID changed: 755360 → 755298 (external restart detected)
+[2026-03-22 22:47:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 22:47:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 22:47:01] WARN  Killing stale process on port 3001 (PID 755298)
+[2026-03-22 22:47:02] INFO  Node.js started with PID 758655
+[2026-03-22 22:47:05] OK    Node.js is healthy on port 3001
+[2026-03-22 22:48:02] INFO  Node PID changed: 758655 → 758617 (external restart detected)
+[2026-03-22 22:49:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 22:49:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 22:49:01] WARN  Killing stale process on port 3001 (PID 758617)
+[2026-03-22 22:49:02] INFO  Node.js started with PID 759954
+[2026-03-22 22:49:05] OK    Node.js is healthy on port 3001
+[2026-03-22 22:50:02] INFO  Node PID changed: 759954 → 759928 (external restart detected)
+[2026-03-22 22:55:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 22:55:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 22:55:01] WARN  Killing stale process on port 3001 (PID 759928)
+[2026-03-22 22:55:03] INFO  Node.js started with PID 763198
+[2026-03-22 22:55:06] OK    Node.js is healthy on port 3001
+[2026-03-22 23:00:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 23:00:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 23:00:02] WARN  Killing stale process on port 3001 (PID 763198)
+[2026-03-22 23:00:03] INFO  Node.js started with PID 767753
+[2026-03-22 23:00:06] OK    Node.js is healthy on port 3001
+[2026-03-22 23:01:01] INFO  Node PID changed: 767753 → 767659 (external restart detected)
+[2026-03-22 23:07:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 23:07:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 23:07:01] WARN  Killing stale process on port 3001 (PID 767659)
+[2026-03-22 23:07:03] INFO  Node.js started with PID 771381
+[2026-03-22 23:07:06] OK    Node.js is healthy on port 3001
+[2026-03-22 23:08:01] INFO  Node PID changed: 771381 → 771346 (external restart detected)
+[2026-03-22 23:12:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 23:12:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 23:12:01] WARN  Killing stale process on port 3001 (PID 771346)
+[2026-03-22 23:12:02] INFO  Node.js started with PID 774857
+[2026-03-22 23:12:05] OK    Node.js is healthy on port 3001
+[2026-03-22 23:13:01] INFO  Node PID changed: 774857 → 774829 (external restart detected)
+[2026-03-22 23:20:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 23:20:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 23:20:01] WARN  Killing stale process on port 3001 (PID 774829)
+[2026-03-22 23:20:03] INFO  Node.js started with PID 779243
+[2026-03-22 23:20:06] OK    Node.js is healthy on port 3001
+[2026-03-22 23:21:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 23:21:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 23:21:01] WARN  Killing stale process on port 3001 (PID 779243)
+[2026-03-22 23:21:03] INFO  Node.js started with PID 780229
+[2026-03-22 23:21:06] OK    Node.js is healthy on port 3001
+[2026-03-22 23:22:01] INFO  Node PID changed: 780229 → 780172 (external restart detected)
+[2026-03-22 23:25:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 23:25:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 23:25:02] WARN  Killing stale process on port 3001 (PID 780172)
+[2026-03-22 23:25:03] INFO  Node.js started with PID 782452
+[2026-03-22 23:25:06] OK    Node.js is healthy on port 3001
+[2026-03-22 23:26:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 23:26:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 23:26:02] WARN  Killing stale process on port 3001 (PID 782452)
+[2026-03-22 23:26:03] INFO  Node.js started with PID 783493
+[2026-03-22 23:26:06] OK    Node.js is healthy on port 3001
+[2026-03-22 23:47:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 23:47:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 23:47:02] WARN  Killing stale process on port 3001 (PID 783493)
+[2026-03-22 23:47:03] INFO  Node.js started with PID 800214
+[2026-03-22 23:47:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-22 23:52:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-22 23:52:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-22 23:52:01] WARN  Killing stale process on port 3001 (PID 800214)
+[2026-03-22 23:52:03] INFO  Node.js started with PID 803924
+[2026-03-22 23:52:06] OK    Node.js is healthy on port 3001
+[2026-03-22 23:53:01] INFO  Node PID changed: 803924 → 803878 (external restart detected)
+[2026-03-23 00:01:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:01:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:01:01] WARN  Killing stale process on port 3001 (PID 803878)
+[2026-03-23 00:01:03] INFO  Node.js started with PID 808599
+[2026-03-23 00:01:06] OK    Node.js is healthy on port 3001
+[2026-03-23 00:02:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:02:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:02:01] WARN  Killing stale process on port 3001 (PID 808599)
+[2026-03-23 00:02:03] INFO  Node.js started with PID 809196
+[2026-03-23 00:02:06] OK    Node.js is healthy on port 3001
+[2026-03-23 00:03:01] INFO  Node PID changed: 809196 → 809143 (external restart detected)
+[2026-03-23 00:07:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:07:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:07:01] WARN  Killing stale process on port 3001 (PID 809143)
+[2026-03-23 00:07:03] INFO  Node.js started with PID 811079
+[2026-03-23 00:07:06] OK    Node.js is healthy on port 3001
+[2026-03-23 00:08:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:08:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:08:01] WARN  Killing stale process on port 3001 (PID 811079)
+[2026-03-23 00:08:03] INFO  Node.js started with PID 811725
+[2026-03-23 00:08:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 00:09:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:09:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:09:01] WARN  Killing stale process on port 3001 (PID 811664)
+[2026-03-23 00:09:03] INFO  Node.js started with PID 812175
+[2026-03-23 00:09:06] OK    Node.js is healthy on port 3001
+[2026-03-23 00:18:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:18:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:18:01] WARN  Killing stale process on port 3001 (PID 812175)
+[2026-03-23 00:18:02] INFO  Node.js started with PID 818601
+[2026-03-23 00:18:06] OK    Node.js is healthy on port 3001
+[2026-03-23 00:26:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:26:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:26:01] WARN  Killing stale process on port 3001 (PID 818601)
+[2026-03-23 00:26:02] INFO  Node.js started with PID 824121
+[2026-03-23 00:26:05] OK    Node.js is healthy on port 3001
+[2026-03-23 00:31:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:31:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:31:01] WARN  Killing stale process on port 3001 (PID 824121)
+[2026-03-23 00:31:03] INFO  Node.js started with PID 827567
+[2026-03-23 00:31:06] OK    Node.js is healthy on port 3001
+[2026-03-23 00:32:01] INFO  Node PID changed: 827567 → 827541 (external restart detected)
+[2026-03-23 00:48:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:48:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:48:01] WARN  Killing stale process on port 3001 (PID 827541)
+[2026-03-23 00:48:03] INFO  Node.js started with PID 834391
+[2026-03-23 00:48:06] OK    Node.js is healthy on port 3001
+[2026-03-23 00:49:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:49:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:49:01] WARN  Killing stale process on port 3001 (PID 834371)
+[2026-03-23 00:49:03] INFO  Node.js started with PID 834792
+[2026-03-23 00:49:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 00:50:01] INFO  Node PID changed: 834792 → 834763 (external restart detected)
+[2026-03-23 00:52:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:52:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:52:01] WARN  Killing stale process on port 3001 (PID 834763)
+[2026-03-23 00:52:02] INFO  Node.js started with PID 836119
+[2026-03-23 00:52:05] OK    Node.js is healthy on port 3001
+[2026-03-23 00:58:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 00:58:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 00:58:01] WARN  Killing stale process on port 3001 (PID 836119)
+[2026-03-23 00:58:03] INFO  Node.js started with PID 840194
+[2026-03-23 00:58:06] OK    Node.js is healthy on port 3001
+[2026-03-23 01:08:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:08:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:08:01] WARN  Killing stale process on port 3001 (PID 840194)
+[2026-03-23 01:08:02] INFO  Node.js started with PID 846981
+[2026-03-23 01:08:05] OK    Node.js is healthy on port 3001
+[2026-03-23 01:09:02] INFO  Node PID changed: 846981 → 846953 (external restart detected)
+[2026-03-23 01:10:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:10:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:10:01] WARN  Killing stale process on port 3001 (PID 846953)
+[2026-03-23 01:10:03] INFO  Node.js started with PID 847844
+[2026-03-23 01:10:06] OK    Node.js is healthy on port 3001
+[2026-03-23 01:15:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:15:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:15:01] WARN  Killing stale process on port 3001 (PID 847844)
+[2026-03-23 01:15:03] INFO  Node.js started with PID 851258
+[2026-03-23 01:15:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 01:16:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:16:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:16:02] WARN  Killing stale process on port 3001 (PID 851258)
+[2026-03-23 01:16:03] INFO  Node.js started with PID 852085
+[2026-03-23 01:16:06] OK    Node.js is healthy on port 3001
+[2026-03-23 01:20:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:20:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:20:01] WARN  Killing stale process on port 3001 (PID 852085)
+[2026-03-23 01:20:02] INFO  Node.js started with PID 854717
+[2026-03-23 01:20:06] OK    Node.js is healthy on port 3001
+[2026-03-23 01:21:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:21:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:21:01] WARN  Killing stale process on port 3001 (PID 854652)
+[2026-03-23 01:21:03] INFO  Node.js started with PID 855316
+[2026-03-23 01:21:06] OK    Node.js is healthy on port 3001
+[2026-03-23 01:22:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:22:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:22:01] WARN  Killing stale process on port 3001 (PID 855297)
+[2026-03-23 01:22:03] INFO  Node.js started with PID 855725
+[2026-03-23 01:22:06] OK    Node.js is healthy on port 3001
+[2026-03-23 01:23:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:23:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:23:01] WARN  Killing stale process on port 3001 (PID 855699)
+[2026-03-23 01:23:03] INFO  Node.js started with PID 856160
+[2026-03-23 01:23:06] OK    Node.js is healthy on port 3001
+[2026-03-23 01:24:01] INFO  Node PID changed: 856160 → 856135 (external restart detected)
+[2026-03-23 01:34:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:34:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:34:01] WARN  Killing stale process on port 3001 (PID 856135)
+[2026-03-23 01:34:02] INFO  Node.js started with PID 860557
+[2026-03-23 01:34:05] OK    Node.js is healthy on port 3001
+[2026-03-23 01:35:03] INFO  Node PID changed: 860557 → 860534 (external restart detected)
+[2026-03-23 01:50:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:50:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:50:02] WARN  Killing stale process on port 3001 (PID 860534)
+[2026-03-23 01:50:03] INFO  Node.js started with PID 867110
+[2026-03-23 01:50:07] OK    Node.js is healthy on port 3001
+[2026-03-23 01:55:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 01:55:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 01:55:01] WARN  Killing stale process on port 3001 (PID 867110)
+[2026-03-23 01:55:03] INFO  Node.js started with PID 870543
+[2026-03-23 01:55:06] OK    Node.js is healthy on port 3001
+[2026-03-23 01:56:01] INFO  Node PID changed: 870543 → 870521 (external restart detected)
+[2026-03-23 02:01:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:01:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:01:01] WARN  Killing stale process on port 3001 (PID 870521)
+[2026-03-23 02:01:03] INFO  Node.js started with PID 873133
+[2026-03-23 02:01:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:02:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:02:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:02:01] WARN  Killing stale process on port 3001 (PID 873113)
+[2026-03-23 02:02:03] INFO  Node.js started with PID 873534
+[2026-03-23 02:02:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:03:01] INFO  Node PID changed: 873534 → 873512 (external restart detected)
+[2026-03-23 02:04:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:04:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:04:01] WARN  Killing stale process on port 3001 (PID 873512)
+[2026-03-23 02:04:03] INFO  Node.js started with PID 874324
+[2026-03-23 02:04:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:05:01] INFO  Node PID changed: 874324 → 874300 (external restart detected)
+[2026-03-23 02:06:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:06:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:06:02] WARN  Killing stale process on port 3001 (PID 874300)
+[2026-03-23 02:06:03] INFO  Node.js started with PID 875250
+[2026-03-23 02:06:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:07:01] INFO  Node PID changed: 875250 → 875227 (external restart detected)
+[2026-03-23 02:15:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:15:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:15:01] WARN  Killing stale process on port 3001 (PID 875227)
+[2026-03-23 02:15:03] INFO  Node.js started with PID 878875
+[2026-03-23 02:15:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:18:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:18:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:18:01] WARN  Killing stale process on port 3001 (PID 878875)
+[2026-03-23 02:18:03] INFO  Node.js started with PID 880934
+[2026-03-23 02:18:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:19:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:19:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:19:01] WARN  Killing stale process on port 3001 (PID 880885)
+[2026-03-23 02:19:03] INFO  Node.js started with PID 881369
+[2026-03-23 02:19:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 02:20:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:20:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:20:01] WARN  Killing stale process on port 3001 (PID 881345)
+[2026-03-23 02:20:03] INFO  Node.js started with PID 881794
+[2026-03-23 02:20:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:28:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:28:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:28:01] WARN  Killing stale process on port 3001 (PID 881794)
+[2026-03-23 02:28:02] INFO  Node.js started with PID 887251
+[2026-03-23 02:28:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 02:29:01] INFO  Node PID changed: 887251 → 887228 (external restart detected)
+[2026-03-23 02:30:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:30:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:30:01] WARN  Killing stale process on port 3001 (PID 887228)
+[2026-03-23 02:30:03] INFO  Node.js started with PID 888065
+[2026-03-23 02:30:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:33:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:33:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:33:01] WARN  Killing stale process on port 3001 (PID 888065)
+[2026-03-23 02:33:03] INFO  Node.js started with PID 890233
+[2026-03-23 02:33:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:37:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:37:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:37:01] WARN  Killing stale process on port 3001 (PID 890233)
+[2026-03-23 02:37:03] INFO  Node.js started with PID 892969
+[2026-03-23 02:37:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:43:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:43:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:43:01] WARN  Killing stale process on port 3001 (PID 892969)
+[2026-03-23 02:43:03] INFO  Node.js started with PID 897109
+[2026-03-23 02:43:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 02:44:01] INFO  Node PID changed: 897109 → 897063 (external restart detected)
+[2026-03-23 02:52:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 02:52:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 02:52:01] WARN  Killing stale process on port 3001 (PID 897063)
+[2026-03-23 02:52:03] INFO  Node.js started with PID 900791
+[2026-03-23 02:52:06] OK    Node.js is healthy on port 3001
+[2026-03-23 02:53:01] INFO  Node PID changed: 900791 → 900767 (external restart detected)
+[2026-03-23 06:05:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:05:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:05:02] WARN  Killing stale process on port 3001 (PID 900767)
+[2026-03-23 06:05:04] INFO  Node.js started with PID 964729
+[2026-03-23 06:05:07] OK    Node.js is healthy on port 3001
+[2026-03-23 06:06:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:06:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:06:02] WARN  Killing stale process on port 3001 (PID 964729)
+[2026-03-23 06:06:03] INFO  Node.js started with PID 965499
+[2026-03-23 06:06:06] OK    Node.js is healthy on port 3001
+[2026-03-23 06:07:01] INFO  Node PID changed: 965499 → 965444 (external restart detected)
+[2026-03-23 06:08:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:08:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:08:02] WARN  Killing stale process on port 3001 (PID 965444)
+[2026-03-23 06:08:03] INFO  Node.js started with PID 966200
+[2026-03-23 06:08:06] OK    Node.js is healthy on port 3001
+[2026-03-23 06:09:02] INFO  Node PID changed: 966200 → 966180 (external restart detected)
+[2026-03-23 06:13:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:13:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:13:01] WARN  Killing stale process on port 3001 (PID 966180)
+[2026-03-23 06:13:03] INFO  Node.js started with PID 968636
+[2026-03-23 06:13:06] OK    Node.js is healthy on port 3001
+[2026-03-23 06:14:01] INFO  Node PID changed: 968636 → 968617 (external restart detected)
+[2026-03-23 06:17:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:17:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:17:02] WARN  Killing stale process on port 3001 (PID 968617)
+[2026-03-23 06:17:03] INFO  Node.js started with PID 970659
+[2026-03-23 06:17:06] OK    Node.js is healthy on port 3001
+[2026-03-23 06:18:01] INFO  Node PID changed: 970659 → 970626 (external restart detected)
+[2026-03-23 06:22:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:22:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:22:01] WARN  Killing stale process on port 3001 (PID 970626)
+[2026-03-23 06:22:03] INFO  Node.js started with PID 972639
+[2026-03-23 06:22:06] OK    Node.js is healthy on port 3001
+[2026-03-23 06:23:01] INFO  Node PID changed: 972639 → 972617 (external restart detected)
+[2026-03-23 06:36:21] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:36:21] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:36:22] WARN  Killing stale process on port 3001 (PID 972617)
+[2026-03-23 06:36:24] INFO  Node.js started with PID 977011
+[2026-03-23 06:36:28] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 06:38:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:38:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:38:01] WARN  Killing stale process on port 3001 (PID 977011)
+[2026-03-23 06:38:03] INFO  Node.js started with PID 978661
+[2026-03-23 06:38:06] OK    Node.js is healthy on port 3001
+[2026-03-23 06:39:01] INFO  Node PID changed: 978661 → 978642 (external restart detected)
+[2026-03-23 06:40:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:40:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:40:01] WARN  Killing stale process on port 3001 (PID 978642)
+[2026-03-23 06:40:03] INFO  Node.js started with PID 979532
+[2026-03-23 06:40:06] OK    Node.js is healthy on port 3001
+[2026-03-23 06:41:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:41:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:41:01] WARN  Killing stale process on port 3001 (PID 979509)
+[2026-03-23 06:41:02] INFO  Node.js started with PID 980118
+[2026-03-23 06:41:05] OK    Node.js is healthy on port 3001
+[2026-03-23 06:42:02] INFO  Node PID changed: 980118 → 980089 (external restart detected)
+[2026-03-23 06:48:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:48:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:48:01] WARN  Killing stale process on port 3001 (PID 980089)
+[2026-03-23 06:48:02] INFO  Node.js started with PID 982768
+[2026-03-23 06:48:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 06:49:01] INFO  Node PID changed: 982768 → 982750 (external restart detected)
+[2026-03-23 06:51:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:51:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:51:02] WARN  Killing stale process on port 3001 (PID 982750)
+[2026-03-23 06:51:03] INFO  Node.js started with PID 984103
+[2026-03-23 06:51:06] OK    Node.js is healthy on port 3001
+[2026-03-23 06:52:01] INFO  Node PID changed: 984103 → 984082 (external restart detected)
+[2026-03-23 06:54:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:54:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:54:02] WARN  Killing stale process on port 3001 (PID 984082)
+[2026-03-23 06:54:03] INFO  Node.js started with PID 985189
+[2026-03-23 06:54:06] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 06:55:02] INFO  Node PID changed: 985189 → 985170 (external restart detected)
+[2026-03-23 06:56:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:56:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:56:01] WARN  Killing stale process on port 3001 (PID 985170)
+[2026-03-23 06:56:03] INFO  Node.js started with PID 986129
+[2026-03-23 06:56:06] OK    Node.js is healthy on port 3001
+[2026-03-23 06:57:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 06:57:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 06:57:01] WARN  Killing stale process on port 3001 (PID 986107)
+[2026-03-23 06:57:03] INFO  Node.js started with PID 986526
+[2026-03-23 06:57:06] OK    Node.js is healthy on port 3001
+[2026-03-23 06:58:01] INFO  Node PID changed: 986526 → 986503 (external restart detected)
+[2026-03-23 07:03:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 07:03:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 07:03:01] WARN  Killing stale process on port 3001 (PID 986503)
+[2026-03-23 07:03:02] INFO  Node.js started with PID 988869
+[2026-03-23 07:03:05] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 07:04:02] INFO  Node PID changed: 988869 → 988845 (external restart detected)
+[2026-03-23 07:06:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 07:06:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 07:06:01] WARN  Killing stale process on port 3001 (PID 988845)
+[2026-03-23 07:06:02] INFO  Node.js started with PID 990036
+[2026-03-23 07:06:05] OK    Node.js is healthy on port 3001
+[2026-03-23 07:07:02] INFO  Node PID changed: 990036 → 990012 (external restart detected)
+[2026-03-23 07:09:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 07:09:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 07:09:01] WARN  Killing stale process on port 3001 (PID 990012)
+[2026-03-23 07:09:02] INFO  Node.js started with PID 991097
+[2026-03-23 07:09:05] ERROR Node.js failed to bind to port 3001 after start!
+[2026-03-23 07:10:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 07:10:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 07:10:02] WARN  Killing stale process on port 3001 (PID 991004)
+[2026-03-23 07:10:04] INFO  Node.js started with PID 991490
+[2026-03-23 07:10:07] OK    Node.js is healthy on port 3001
+[2026-03-23 07:11:02] INFO  Node PID changed: 991490 → 991450 (external restart detected)
+[2026-03-23 07:24:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 07:24:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 07:24:01] WARN  Killing stale process on port 3001 (PID 991450)
+[2026-03-23 07:24:03] INFO  Node.js started with PID 996501
+[2026-03-23 07:24:06] OK    Node.js is healthy on port 3001
+[2026-03-23 07:25:01] INFO  Node PID changed: 996501 → 996479 (external restart detected)
+[2026-03-23 07:28:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 07:28:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 07:28:02] WARN  Killing stale process on port 3001 (PID 996479)
+[2026-03-23 07:28:03] INFO  Node.js started with PID 997971
+[2026-03-23 07:28:06] OK    Node.js is healthy on port 3001
+[2026-03-23 07:29:01] INFO  Node PID changed: 997971 → 997941 (external restart detected)
+[2026-03-23 07:31:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 07:31:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 07:31:02] WARN  Killing stale process on port 3001 (PID 997941)
+[2026-03-23 07:31:03] INFO  Node.js started with PID 999188
+[2026-03-23 07:31:06] OK    Node.js is healthy on port 3001
+[2026-03-23 07:32:01] INFO  Node PID changed: 999188 → 999167 (external restart detected)
+[2026-03-23 07:36:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 07:36:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 07:36:02] WARN  Killing stale process on port 3001 (PID 999167)
+[2026-03-23 07:36:03] INFO  Node.js started with PID 1000973
+[2026-03-23 07:36:06] OK    Node.js is healthy on port 3001
+[2026-03-23 07:37:01] INFO  Node PID changed: 1000973 → 1000950 (external restart detected)
+[2026-03-23 07:57:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 07:57:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 07:57:01] WARN  Killing stale process on port 3001 (PID 1000950)
+[2026-03-23 07:57:02] INFO  Node.js started with PID 1008440
+[2026-03-23 07:57:05] OK    Node.js is healthy on port 3001
+[2026-03-23 07:58:02] INFO  Node PID changed: 1008440 → 1008407 (external restart detected)
+[2026-03-23 08:00:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 08:00:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 08:00:01] WARN  Killing stale process on port 3001 (PID 1008407)
+[2026-03-23 08:00:03] INFO  Node.js started with PID 1009419
+[2026-03-23 08:00:06] OK    Node.js is healthy on port 3001
+[2026-03-23 08:07:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 08:07:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 08:07:01] WARN  Killing stale process on port 3001 (PID 1009419)
+[2026-03-23 08:07:02] INFO  Node.js started with PID 1013968
+[2026-03-23 08:07:05] OK    Node.js is healthy on port 3001
+[2026-03-23 08:08:01] INFO  Node PID changed: 1013968 → 1013939 (external restart detected)
+[2026-03-23 08:10:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 08:10:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 08:10:02] WARN  Killing stale process on port 3001 (PID 1013939)
+[2026-03-23 08:10:03] INFO  Node.js started with PID 1015049
+[2026-03-23 08:10:06] OK    Node.js is healthy on port 3001
+[2026-03-23 08:15:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 08:15:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 08:15:02] WARN  Killing stale process on port 3001 (PID 1015049)
+[2026-03-23 08:15:03] INFO  Node.js started with PID 1018221
+[2026-03-23 08:15:07] OK    Node.js is healthy on port 3001
+[2026-03-23 08:18:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 08:18:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 08:18:01] WARN  Killing stale process on port 3001 (PID 1018221)
+[2026-03-23 08:18:02] INFO  Node.js started with PID 1020171
+[2026-03-23 08:18:05] OK    Node.js is healthy on port 3001
+[2026-03-23 08:19:02] INFO  Node PID changed: 1020171 → 1020122 (external restart detected)
+[2026-03-23 08:20:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 08:20:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 08:20:01] WARN  Killing stale process on port 3001 (PID 1020122)
+[2026-03-23 08:20:03] INFO  Node.js started with PID 1020876
+[2026-03-23 08:20:06] OK    Node.js is healthy on port 3001
+[2026-03-23 08:21:01] INFO  Node PID changed: 1020876 → 1020837 (external restart detected)
+[2026-03-23 08:24:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 08:24:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 08:24:02] WARN  Killing stale process on port 3001 (PID 1020837)
+[2026-03-23 08:24:03] INFO  Node.js started with PID 1022373
+[2026-03-23 08:24:06] OK    Node.js is healthy on port 3001
+[2026-03-23 08:25:02] INFO  Node PID changed: 1022373 → 1022347 (external restart detected)
+[2026-03-23 08:33:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 08:33:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 08:33:01] WARN  Killing stale process on port 3001 (PID 1022347)
+[2026-03-23 08:33:03] INFO  Node.js started with PID 1025628
+[2026-03-23 08:33:06] OK    Node.js is healthy on port 3001
+[2026-03-23 08:34:01] INFO  Node PID changed: 1025628 → 1025608 (external restart detected)
+[2026-03-23 08:56:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 08:56:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 08:56:01] WARN  Killing stale process on port 3001 (PID 1025608)
+[2026-03-23 08:56:03] INFO  Node.js started with PID 1033923
+[2026-03-23 08:56:06] OK    Node.js is healthy on port 3001
+[2026-03-23 08:57:01] INFO  Node PID changed: 1033923 → 1033899 (external restart detected)
+[2026-03-23 09:00:02] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 09:00:02] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 09:00:03] WARN  Killing stale process on port 3001 (PID 1033899)
+[2026-03-23 09:00:05] INFO  Node.js started with PID 1035205
+[2026-03-23 09:00:08] OK    Node.js is healthy on port 3001
+[2026-03-23 09:04:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 09:04:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 09:04:01] WARN  Killing stale process on port 3001 (PID 1035205)
+[2026-03-23 09:04:03] INFO  Node.js started with PID 1037786
+[2026-03-23 09:04:06] OK    Node.js is healthy on port 3001
+[2026-03-23 09:05:01] INFO  Node PID changed: 1037786 → 1037767 (external restart detected)
+[2026-03-23 09:16:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 09:16:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 09:16:01] WARN  Killing stale process on port 3001 (PID 1037767)
+[2026-03-23 09:16:03] INFO  Node.js started with PID 1042286
+[2026-03-23 09:16:06] OK    Node.js is healthy on port 3001
+[2026-03-23 09:17:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 09:17:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 09:17:01] WARN  Killing stale process on port 3001 (PID 1042267)
+[2026-03-23 09:17:03] INFO  Node.js started with PID 1042638
+[2026-03-23 09:17:06] OK    Node.js is healthy on port 3001
+[2026-03-23 09:18:01] INFO  Node PID changed: 1042638 → 1042619 (external restart detected)
+[2026-03-23 09:31:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 09:31:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 09:31:01] WARN  Killing stale process on port 3001 (PID 1042619)
+[2026-03-23 09:31:03] INFO  Node.js started with PID 1047664
+[2026-03-23 09:31:06] OK    Node.js is healthy on port 3001
+[2026-03-23 09:32:01] INFO  Node PID changed: 1047664 → 1047641 (external restart detected)
+[2026-03-23 18:33:01] WARN  Node.js NOT running on port 3001 — initiating restart
+[2026-03-23 18:33:01] INFO  Starting Node.js backend (PORT=3001)...
+[2026-03-23 18:33:01] WARN  Killing stale process on port 3001 (PID 1047641)
+[2026-03-23 18:33:02] INFO  Node.js started with PID 1268662
+[2026-03-23 18:33:05] OK    Node.js is healthy on port 3001
+[2026-03-23 18:34:01] INFO  Node PID changed: 1268662 → 1268642 (external restart detected)

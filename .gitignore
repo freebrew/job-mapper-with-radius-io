@@ -1,0 +1,29 @@
+# Environment variables (secrets)
+.env
+.env.*
+!.env.example
+
+# Server/hosting specific
+homes/
+logs/
+awstats/
+tmp/
+etc/php.ini
+etc/php8.3/
+bin/
+cgi-bin/
+.awstats-htpasswd
+.virtualmin-src
+
+# Backups
+public_html.bak*/
+
+# Dataset files
+dataset_*.json
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
